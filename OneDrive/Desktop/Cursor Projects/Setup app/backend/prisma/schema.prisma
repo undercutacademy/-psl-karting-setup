@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionType {
+  Practice1
+  Practice2
+  Practice3
+  Practice4
+  Practice5
+  Practice6
+  HappyHour
+  WarmUp
+  Qualifying
+  Race1
+  Race2
+  PreFinal
+  Final
+  Heat1
+  Heat2
+  Heat3
+  Heat4
+  Heat5
+  Heat6
+  Heat7
+  SuperHeat1
+  SuperHeat2
+}
+
+enum ClassCode {
+  Micro
+  Mini
+  Sr
+  Kz
+  Ka
+  Jr
+}
+
+enum RearHubsMaterial {
+  Aluminium
+  Magnesium
+}
+
+enum FrontHeight {
+  Low
+  Medium
+  High
+  Standard
+}
+
+enum BackHeight {
+  Low
+  Medium
+  High
+  Standard
+}
+
+enum FrontHubsMaterial {
+  Aluminium
+  Magnesium
+}
+
+enum FrontBar {
+  Nylon
+  Standard
+  Black
+  None
+}
+
+enum Spindle {
+  Blue
+  Standard
+  Red
+  Green
+  Gold
+}
+
+model User {
+  id        String       @id @default(uuid())
+  email     String       @unique
+  firstName String
+  lastName  String
+  password  String?      // Only for managers
+  isManager Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  submissions Submission[]
+}
+
+model Submission {
+  id                String            @id @default(uuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionType       SessionType
+  classCode         ClassCode
+  track             String
+  championship      String
+  division          String
+  engineNumber      String
+  gearRatio         String?
+  driveSprocket     String
+  drivenSprocket    String
+  carburatorNumber  String
+  tyreModel         String
+  tyreAge           String
+  tyreColdPressure  String
+  chassis           String
+  axle              String
+  rearHubsMaterial  RearHubsMaterial
+  rearHubsLength    String
+  frontHeight       FrontHeight
+  backHeight        BackHeight
+  frontHubsMaterial FrontHubsMaterial
+  frontBar          FrontBar
+  spindle           Spindle
+  caster            String
+  seatPosition      String
+  lapTime           String?
+  observation       String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}

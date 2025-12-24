@@ -1,0 +1,453 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { getSubmissionById, updateSubmission } from '@/lib/api';
+import { Submission, SessionType, ClassCode, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@/types/submission';
+
+const TRACKS = [
+  'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz Piquet',
+  'St Pete', 'New Castle', 'New Castle Sharkfin', 'New Castle CCW', 'ROK Rio 2024',
+  'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace Trackhouse',
+  'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
+  'Hamilton', 'Tremblant', 'Icar SH Karting', 'Mosport', 'Portimao'
+];
+
+const CHAMPIONSHIPS = [
+  'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
+  'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
+  'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
+  'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025'
+];
+
+const DIVISIONS = [
+  'Micro', 'Mini', 'KA100 Jr', 'KA100 Sr', 'KA100 Master', 'Pro Shifter', 'Shifter Master',
+  'X30 Junior', 'X30 Senior', 'ROK Micro', 'ROK Mini', 'VLR Junior', 'VLR Senior',
+  'VLR Master', 'Shifter Master', 'ROK Shifter', 'ROK Master', 'ROK Junior', 'ROK PRO GP',
+  'ROK SV', 'Micro Max', 'Mini Max', 'Junior Max', 'Senior Max', 'Master Max', 'DD2',
+  'DD2 Master', '206 Cadet', '206 Junior', '206 Senior', 'OKN', 'OKNJ', 'KZ2', 'KZ1', 'KZM', 'OK', 'OKJ'
+];
+
+const TYRE_MODELS = [
+  'Mg Red', 'Mg Yellow', 'MG Wet', 'Evinco Blue', 'Evinco Blue SKH2', 'Evinco Red SKM2',
+  'Evinco WET', 'Levanto', 'Levanto WET', 'Bridgestone', 'Vega Red', 'Vega Blue',
+  'Vega Yellow', 'Mojo D5', 'Mojo D2', 'Dunlop', 'Dunlop WET'
+];
+
+export default function EditSubmissionPage() {
+  const params = useParams();
+  const router = useRouter();
+  const [submission, setSubmission] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<Partial<Submission>>({});
+
+  useEffect(() => {
+    loadSubmission();
+  }, [params.id]);
+
+  const loadSubmission = async () => {
+    try {
+      const data = await getSubmissionById(params.id as string);
+      setSubmission(data);
+      setFormData(data);
+    } catch (error) {
+      console.error('Error loading submission:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await updateSubmission(params.id as string, formData);
+      router.push(`/manager/submission/${params.id}`);
+    } catch (error) {
+      console.error('Error updating submission:', error);
+      alert('Failed to update submission');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!submission) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Submission not found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">Edit Submission</h1>
+          <p className="text-gray-600">Edit the submission details below</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* General Information */}
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <h2 className="mb-4 text-xl font-semibold">General Information</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Session Type *</label>
+                <select
+                  value={formData.sessionType}
+                  onChange={(e) => setFormData({ ...formData, sessionType: e.target.value as SessionType })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(SessionType).map((session) => (
+                    <option key={session} value={session}>{session}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Class Code *</label>
+                <select
+                  value={formData.classCode}
+                  onChange={(e) => setFormData({ ...formData, classCode: e.target.value as ClassCode })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(ClassCode).map((code) => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Track *</label>
+                <select
+                  value={formData.track}
+                  onChange={(e) => setFormData({ ...formData, track: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  <option value="">Please Select</option>
+                  {TRACKS.map((track) => (
+                    <option key={track} value={track}>{track}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Championship *</label>
+                <select
+                  value={formData.championship}
+                  onChange={(e) => setFormData({ ...formData, championship: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  <option value="">Please Select</option>
+                  {CHAMPIONSHIPS.map((champ) => (
+                    <option key={champ} value={champ}>{champ}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Division *</label>
+                <select
+                  value={formData.division}
+                  onChange={(e) => setFormData({ ...formData, division: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  <option value="">Please Select</option>
+                  {DIVISIONS.map((div) => (
+                    <option key={div} value={div}>{div}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Engine Setup */}
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <h2 className="mb-4 text-xl font-semibold">Engine Setup</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Engine Number *</label>
+                <input
+                  type="text"
+                  value={formData.engineNumber}
+                  onChange={(e) => setFormData({ ...formData, engineNumber: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Gear Ratio</label>
+                <input
+                  type="text"
+                  value={formData.gearRatio || ''}
+                  onChange={(e) => setFormData({ ...formData, gearRatio: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Drive Sprocket *</label>
+                <input
+                  type="text"
+                  value={formData.driveSprocket}
+                  onChange={(e) => setFormData({ ...formData, driveSprocket: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Driven Sprocket *</label>
+                <input
+                  type="text"
+                  value={formData.drivenSprocket}
+                  onChange={(e) => setFormData({ ...formData, drivenSprocket: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Carburator Number *</label>
+                <input
+                  type="text"
+                  value={formData.carburatorNumber}
+                  onChange={(e) => setFormData({ ...formData, carburatorNumber: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tyres Data */}
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <h2 className="mb-4 text-xl font-semibold">Tyres Data</h2>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tyre Model *</label>
+                <select
+                  value={formData.tyreModel}
+                  onChange={(e) => setFormData({ ...formData, tyreModel: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  <option value="">Please Select</option>
+                  {TYRE_MODELS.map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tyre Age *</label>
+                <input
+                  type="text"
+                  value={formData.tyreAge}
+                  onChange={(e) => setFormData({ ...formData, tyreAge: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Cold Pressure *</label>
+                <input
+                  type="text"
+                  value={formData.tyreColdPressure}
+                  onChange={(e) => setFormData({ ...formData, tyreColdPressure: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Kart Setup */}
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <h2 className="mb-4 text-xl font-semibold">Kart Setup</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Chassis *</label>
+                <input
+                  type="text"
+                  value={formData.chassis}
+                  onChange={(e) => setFormData({ ...formData, chassis: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Axle *</label>
+                <input
+                  type="text"
+                  value={formData.axle}
+                  onChange={(e) => setFormData({ ...formData, axle: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Rear Hubs Material *</label>
+                <select
+                  value={formData.rearHubsMaterial}
+                  onChange={(e) => setFormData({ ...formData, rearHubsMaterial: e.target.value as RearHubsMaterial })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(RearHubsMaterial).map((material) => (
+                    <option key={material} value={material}>{material}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Rear Hubs Length *</label>
+                <input
+                  type="text"
+                  value={formData.rearHubsLength}
+                  onChange={(e) => setFormData({ ...formData, rearHubsLength: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Front Height *</label>
+                <select
+                  value={formData.frontHeight}
+                  onChange={(e) => setFormData({ ...formData, frontHeight: e.target.value as FrontHeight })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(FrontHeight).map((height) => (
+                    <option key={height} value={height}>{height}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Back Height *</label>
+                <select
+                  value={formData.backHeight}
+                  onChange={(e) => setFormData({ ...formData, backHeight: e.target.value as BackHeight })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(BackHeight).map((height) => (
+                    <option key={height} value={height}>{height}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Front Hubs Material *</label>
+                <select
+                  value={formData.frontHubsMaterial}
+                  onChange={(e) => setFormData({ ...formData, frontHubsMaterial: e.target.value as FrontHubsMaterial })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(FrontHubsMaterial).map((material) => (
+                    <option key={material} value={material}>{material}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Front Bar *</label>
+                <select
+                  value={formData.frontBar}
+                  onChange={(e) => setFormData({ ...formData, frontBar: e.target.value as FrontBar })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(FrontBar).map((bar) => (
+                    <option key={bar} value={bar}>{bar}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Spindle *</label>
+                <select
+                  value={formData.spindle}
+                  onChange={(e) => setFormData({ ...formData, spindle: e.target.value as Spindle })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                >
+                  {Object.values(Spindle).map((spindle) => (
+                    <option key={spindle} value={spindle}>{spindle}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Caster *</label>
+                <input
+                  type="text"
+                  value={formData.caster}
+                  onChange={(e) => setFormData({ ...formData, caster: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Seat Position (cm) *</label>
+                <input
+                  type="text"
+                  value={formData.seatPosition}
+                  onChange={(e) => setFormData({ ...formData, seatPosition: e.target.value })}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Conclusion */}
+          <div className="rounded-lg bg-white p-6 shadow-md">
+            <h2 className="mb-4 text-xl font-semibold">Conclusion</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Lap Time</label>
+                <input
+                  type="text"
+                  value={formData.lapTime || ''}
+                  onChange={(e) => setFormData({ ...formData, lapTime: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Observation</label>
+                <textarea
+                  value={formData.observation || ''}
+                  onChange={(e) => setFormData({ ...formData, observation: e.target.value })}
+                  rows={4}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="rounded bg-gray-300 px-6 py-2 text-gray-700 hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
