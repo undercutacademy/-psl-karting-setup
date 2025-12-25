@@ -22,7 +22,7 @@ export default function ViewSubmissionPage() {
 
   const loadSubmission = async () => {
     try {
-      const data = await getSubmissionById(params.id as string);
+      const data = await getSubmissionById(params.id as string, params.teamSlug as string);
       setSubmission(data);
     } catch (error) {
       console.error('Error loading submission:', error);
@@ -231,7 +231,7 @@ export default function ViewSubmissionPage() {
 
           <div className="flex gap-4">
             <button
-              onClick={() => router.push(`/manager/submission/${params.id}/edit`)}
+              onClick={() => router.push(`/${params.teamSlug}/manager/submission/${params.id}/edit`)}
               className="rounded bg-red-600 px-6 py-2 text-white hover:bg-red-700"
             >
               Edit Submission

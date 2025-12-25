@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -12,16 +12,21 @@ export default function ManagerLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
+  const teamSlug = params.teamSlug as string;
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Determine the expected login path for this team
+  const loginPath = `/${teamSlug}/manager/login`;
 
   useEffect(() => {
     const managerEmail = localStorage.getItem('managerEmail');
     const managerUser = localStorage.getItem('managerUser');
 
     if (!managerEmail || !managerUser) {
-      if (pathname !== '/manager/login') {
-        router.push('/manager/login');
+      if (pathname !== loginPath) {
+        router.push(loginPath);
       } else {
         setIsAuthenticated(false);
         setLoading(false);
@@ -30,12 +35,12 @@ export default function ManagerLayout({
       setIsAuthenticated(true);
       setLoading(false);
     }
-  }, [router, pathname]);
+  }, [router, pathname, loginPath]);
 
   const handleLogout = () => {
     localStorage.removeItem('managerEmail');
     localStorage.removeItem('managerUser');
-    router.push('/manager/login');
+    router.push(loginPath);
   };
 
   if (loading) {
@@ -49,7 +54,8 @@ export default function ManagerLayout({
     );
   }
 
-  if (pathname === '/manager/login') {
+  // If we are on the login page, just render children without the nav bar
+  if (pathname === loginPath) {
     return <>{children}</>;
   }
 
@@ -64,7 +70,7 @@ export default function ManagerLayout({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/">
+              <Link href={`/${teamSlug}`}>
                 <Image
                   src="/psl-logo.png"
                   alt="PSL Karting"
@@ -81,7 +87,7 @@ export default function ManagerLayout({
             </div>
             <div className="flex items-center gap-4">
               <Link
-                href="/manager/dashboard"
+                href={`/${teamSlug}/manager/dashboard`}
                 className="text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
               >
                 📊 Dashboard

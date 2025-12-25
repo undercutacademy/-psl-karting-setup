@@ -54,12 +54,13 @@ export default function EditSubmissionPage() {
 
   const loadSubmission = async () => {
     try {
-      const data = await getSubmissionById(params.id as string);
+      const data = await getSubmissionById(params.id as string, params.teamSlug as string);
       setSubmission(data);
       setFormData(data);
     } catch (error) {
       console.error('Error loading submission:', error);
     } finally {
+      // ...
       setLoading(false);
     }
   };
@@ -68,8 +69,8 @@ export default function EditSubmissionPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await updateSubmission(params.id as string, formData);
-      router.push(`/manager/submission/${params.id}`);
+      await updateSubmission(params.id as string, formData, params.teamSlug as string);
+      router.push(`/${params.teamSlug}/manager/submission/${params.id}`);
     } catch (error) {
       console.error('Error updating submission:', error);
       alert('Failed to update submission');

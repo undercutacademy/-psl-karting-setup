@@ -6,10 +6,27 @@ import { generateSubmissionPDF } from '../services/pdfService';
 const router = Router();
 const prisma = new PrismaClient();
 
-// Get all submissions
+// Get all submissions for a team
 router.get('/', async (req, res) => {
   try {
+    const { teamSlug } = req.query;
+
+    if (!teamSlug || typeof teamSlug !== 'string') {
+      return res.status(400).json({ error: 'Team slug is required' });
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { slug: teamSlug },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
     const submissions = await prisma.submission.findMany({
+      where: {
+        teamId: team.id,
+      },
       include: {
         user: true,
       },
@@ -24,10 +41,24 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get last submission by email
+// Get last submission by email per team
 router.get('/last/:email', async (req, res) => {
   try {
     const { email } = req.params;
+    const { teamSlug } = req.query;
+
+    if (!teamSlug || typeof teamSlug !== 'string') {
+      return res.status(400).json({ error: 'Team slug is required' });
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { slug: teamSlug },
+    });
+
+    if (!team) {
+      return res.json(null); // Return null if team doesn't exist to avoid breaking flow
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -37,7 +68,10 @@ router.get('/last/:email', async (req, res) => {
     }
 
     const submission = await prisma.submission.findFirst({
-      where: { userId: user.id },
+      where: {
+        userId: user.id,
+        teamId: team.id
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -96,7 +130,19 @@ router.get('/:id/pdf', async (req, res) => {
 // Create submission
 router.post('/', async (req, res) => {
   try {
-    const { userEmail, firstName, lastName, ...submissionData } = req.body;
+    const { userEmail, firstName, lastName, teamSlug, ...submissionData } = req.body;
+
+    if (!teamSlug) {
+      return res.status(400).json({ error: 'Team slug is required' });
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { slug: teamSlug },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
 
     // Find or create user
     let user = await prisma.user.findUnique({
@@ -109,17 +155,20 @@ router.post('/', async (req, res) => {
           email: userEmail,
           firstName,
           lastName,
+          teamId: team.id, // Assign to team
         },
       });
     } else {
-      // Update user name if provided
-      if (firstName || lastName) {
+      // Update user name if provided and link to team if not linked
+      const updateData: any = {};
+      if (firstName) updateData.firstName = firstName;
+      if (lastName) updateData.lastName = lastName;
+      if (!user.teamId) updateData.teamId = team.id;
+
+      if (Object.keys(updateData).length > 0) {
         user = await prisma.user.update({
           where: { id: user.id },
-          data: {
-            firstName: firstName || user.firstName,
-            lastName: lastName || user.lastName,
-          },
+          data: updateData,
         });
       }
     }
@@ -131,6 +180,7 @@ router.post('/', async (req, res) => {
       data: {
         ...cleanSubmissionData,
         userId: user.id,
+        teamId: team.id,
       },
       include: {
         user: true,
@@ -193,19 +243,32 @@ router.delete('/:id', async (req, res) => {
 // Bulk delete submissions
 router.post('/bulk-delete', async (req, res) => {
   try {
-    const { ids } = req.body;
+    const { ids, teamSlug } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'No submission IDs provided' });
     }
 
-    await prisma.submission.deleteMany({
+    if (!teamSlug) {
+      return res.status(400).json({ error: 'Team slug is required' });
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { slug: teamSlug },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const result = await prisma.submission.deleteMany({
       where: {
         id: { in: ids },
+        teamId: team.id, // Only delete if belongs to this team
       },
     });
 
-    res.json({ success: true, message: `${ids.length} submission(s) deleted` });
+    res.json({ success: true, message: `${result.count} submission(s) deleted` });
   } catch (error) {
     console.error('Error bulk deleting submissions:', error);
     res.status(500).json({ error: 'Failed to delete submissions' });
