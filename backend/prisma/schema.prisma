@@ -93,12 +93,26 @@ model User {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   submissions Submission[]
+  teamId      String?
+  team        Team?        @relation(fields: [teamId], references: [id])
+}
+
+model Team {
+  id          String       @id @default(uuid())
+  slug        String       @unique
+  name        String
+  users       User[]
+  submissions Submission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Submission {
   id                String            @id @default(uuid())
   userId            String
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId            String?
+  team              Team?             @relation(fields: [teamId], references: [id])
   sessionType       SessionType
   classCode         ClassCode         @default(Sr)
   track             String
@@ -130,5 +144,6 @@ model Submission {
   updatedAt         DateTime          @updatedAt
 
   @@index([userId])
+  @@index([teamId])
   @@index([createdAt])
 }

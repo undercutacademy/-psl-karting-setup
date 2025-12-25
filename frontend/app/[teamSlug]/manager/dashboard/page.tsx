@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllSubmissions } from '@/lib/api';
+import { getAllSubmissions, updateSubmission } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -45,6 +45,8 @@ const getDivisionColor = (division: string) => {
 
 export default function ManagerDashboard() {
   const router = useRouter();
+  const params = useParams();
+  const teamSlug = params.teamSlug as string;
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export default function ManagerDashboard() {
 
   const loadSubmissions = async () => {
     try {
-      const data = await getAllSubmissions();
+      const data = await getAllSubmissions(teamSlug);
       setSubmissions(data);
       setFilteredSubmissions(data);
     } catch (error: any) {
@@ -123,13 +125,7 @@ export default function ManagerDashboard() {
       // But since filterSubmissions depends on 'submissions' state which is async, let's just trigger update
 
       // Wait for API
-      const response = await fetch(`${API_URL}/submissions/${submission.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isFavorite: updated }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update favorite status');
+      await updateSubmission(submission.id, { isFavorite: updated }, teamSlug);
 
       // If API fails, we could revert, but for now assuming success or user will refresh
     } catch (error) {
@@ -145,7 +141,7 @@ export default function ManagerDashboard() {
 
   const handleExportPDF = async (submissionId: string) => {
     try {
-      const response = await fetch(`${API_URL}/submissions/${submissionId}/pdf`);
+      const response = await fetch(`${API_URL}/submissions/${submissionId}/pdf?teamSlug=${encodeURIComponent(teamSlug)}`);
       if (!response.ok) throw new Error('Failed to generate PDF');
 
       const blob = await response.blob();
@@ -164,11 +160,11 @@ export default function ManagerDashboard() {
   };
 
   const handleView = (submissionId: string) => {
-    router.push(`/manager/submission/${submissionId}`);
+    router.push(`/${teamSlug}/manager/submission/${submissionId}`);
   };
 
   const handleEdit = (submissionId: string) => {
-    router.push(`/manager/submission/${submissionId}/edit`);
+    router.push(`/${teamSlug}/manager/submission/${submissionId}/edit`);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -200,7 +196,7 @@ export default function ManagerDashboard() {
       const response = await fetch(`${API_URL}/submissions/bulk-delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+        body: JSON.stringify({ ids: Array.from(selectedIds), teamSlug }),
       });
 
       if (!response.ok) throw new Error('Failed to delete submissions');

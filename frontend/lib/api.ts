@@ -2,9 +2,9 @@ import { Submission, User } from '@/types/submission';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-export async function getUserByEmail(email: string): Promise<User | null> {
+export async function getUserByEmail(email: string, teamSlug: string): Promise<User | null> {
   try {
-    const response = await fetch(`${API_URL}/users/email/${encodeURIComponent(email)}`);
+    const response = await fetch(`${API_URL}/users/email/${encodeURIComponent(email)}?teamSlug=${encodeURIComponent(teamSlug)}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (error) {
@@ -13,9 +13,9 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   }
 }
 
-export async function getLastSubmissionByEmail(email: string): Promise<Submission | null> {
+export async function getLastSubmissionByEmail(email: string, teamSlug: string): Promise<Submission | null> {
   try {
-    const response = await fetch(`${API_URL}/submissions/last/${encodeURIComponent(email)}`);
+    const response = await fetch(`${API_URL}/submissions/last/${encodeURIComponent(email)}?teamSlug=${encodeURIComponent(teamSlug)}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (error) {
@@ -24,7 +24,7 @@ export async function getLastSubmissionByEmail(email: string): Promise<Submissio
   }
 }
 
-export async function createSubmission(submission: Submission, userEmail: string, firstName: string, lastName: string): Promise<Submission> {
+export async function createSubmission(submission: Submission, userEmail: string, firstName: string, lastName: string, teamSlug: string): Promise<Submission> {
   try {
     const response = await fetch(`${API_URL}/submissions`, {
       method: 'POST',
@@ -36,6 +36,7 @@ export async function createSubmission(submission: Submission, userEmail: string
         userEmail,
         firstName,
         lastName,
+        teamSlug,
       }),
     });
 
@@ -53,9 +54,9 @@ export async function createSubmission(submission: Submission, userEmail: string
   }
 }
 
-export async function getAllSubmissions(): Promise<Submission[]> {
+export async function getAllSubmissions(teamSlug: string): Promise<Submission[]> {
   try {
-    const response = await fetch(`${API_URL}/submissions`);
+    const response = await fetch(`${API_URL}/submissions?teamSlug=${encodeURIComponent(teamSlug)}`);
     if (!response.ok) {
       throw new Error('Failed to fetch submissions');
     }
@@ -68,9 +69,9 @@ export async function getAllSubmissions(): Promise<Submission[]> {
   }
 }
 
-export async function getSubmissionById(id: string): Promise<Submission> {
+export async function getSubmissionById(id: string, teamSlug: string): Promise<Submission> {
   try {
-    const response = await fetch(`${API_URL}/submissions/${id}`);
+    const response = await fetch(`${API_URL}/submissions/${id}?teamSlug=${encodeURIComponent(teamSlug)}`);
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Failed to fetch submission' }));
       throw new Error(error.error || 'Failed to fetch submission');
@@ -84,14 +85,14 @@ export async function getSubmissionById(id: string): Promise<Submission> {
   }
 }
 
-export async function updateSubmission(id: string, submission: Partial<Submission>): Promise<Submission> {
+export async function updateSubmission(id: string, submission: Partial<Submission>, teamSlug: string): Promise<Submission> {
   try {
     const response = await fetch(`${API_URL}/submissions/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(submission),
+      body: JSON.stringify({ ...submission, teamSlug }),
     });
 
     if (!response.ok) {
@@ -107,4 +108,3 @@ export async function updateSubmission(id: string, submission: Partial<Submissio
     throw new Error('Network error. Please check your connection and try again.');
   }
 }
-

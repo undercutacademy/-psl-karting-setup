@@ -1,7 +1,13 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 
 export default function SuccessPage() {
+  const params = useParams();
+  const teamSlug = params.teamSlug as string;
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden p-8">
       {/* Racing stripes background */}
@@ -42,13 +48,13 @@ export default function SuccessPage() {
 
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
-              href="/form"
+              href={`/${teamSlug}/form`}
               className="flex-1 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:from-red-500 hover:to-red-400 hover:shadow-lg hover:shadow-red-500/30 text-center"
             >
               🏎️ Submit Another
             </Link>
             <Link
-              href="/"
+              href={`/${teamSlug}`}
               className="flex-1 rounded-lg bg-gray-700 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:bg-gray-600 text-center"
             >
               ← Home

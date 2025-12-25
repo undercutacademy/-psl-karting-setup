@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { getLastSubmissionByEmail, createSubmission } from '@/lib/api';
 import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@/types/submission';
@@ -47,6 +47,8 @@ const labelClass = "block text-sm font-bold text-gray-300 uppercase tracking-wid
 
 export default function FormPage() {
   const router = useRouter();
+  const params = useParams();
+  const teamSlug = params.teamSlug as string;
   const [currentStep, setCurrentStep] = useState(1);
   const [hasSetupChanged, setHasSetupChanged] = useState<boolean | null>(null);
   const [email, setEmail] = useState('');
@@ -87,7 +89,7 @@ export default function FormPage() {
   const handleEmailCheck = async () => {
     if (!email) return;
     setLoading(true);
-    const submission = await getLastSubmissionByEmail(email);
+    const submission = await getLastSubmissionByEmail(email, teamSlug);
     setLastSubmission(submission);
     if (submission) {
       setFormData(submission);
@@ -110,8 +112,8 @@ export default function FormPage() {
 
     setSubmitting(true);
     try {
-      await createSubmission(formData as Submission, email, firstName || '', lastName || '');
-      router.push('/form/success');
+      await createSubmission(formData as Submission, email, firstName || '', lastName || '', teamSlug);
+      router.push(`/${teamSlug}/form/success`);
     } catch (error: any) {
       console.error('Error submitting form:', error);
       alert(error.message || 'Error submitting form. Please try again.');

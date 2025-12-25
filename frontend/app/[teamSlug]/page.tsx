@@ -1,7 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function Home() {
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ teamSlug: string }>;
+}) {
+  const { teamSlug } = await params;
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden p-8">
       {/* Racing stripes background */}
@@ -38,7 +44,7 @@ export default function Home() {
         <div className="rounded-2xl bg-gray-900/80 border border-gray-800 p-8 shadow-2xl backdrop-blur-xl">
           <div className="grid gap-6 md:grid-cols-2">
             <Link
-              href="/form"
+              href={`/${teamSlug}/form`}
               className="group flex flex-col items-center justify-center rounded-xl border-2 border-red-500/30 bg-gradient-to-br from-red-500/10 to-red-600/5 p-8 transition-all hover:border-red-500 hover:shadow-lg hover:shadow-red-500/20 hover:scale-105"
             >
               <div className="mb-4 text-5xl group-hover:animate-bounce">🏎️</div>
@@ -54,7 +60,7 @@ export default function Home() {
             </Link>
 
             <Link
-              href="/manager/dashboard"
+              href={`/${teamSlug}/manager/dashboard`}
               className="group flex flex-col items-center justify-center rounded-xl border-2 border-gray-600/30 bg-gradient-to-br from-gray-500/10 to-gray-600/5 p-8 transition-all hover:border-gray-500 hover:shadow-lg hover:shadow-white/10 hover:scale-105"
             >
               <div className="mb-4 text-5xl group-hover:animate-bounce">📊</div>

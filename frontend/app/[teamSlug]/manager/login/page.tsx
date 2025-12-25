@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -9,6 +9,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export default function ManagerLoginPage() {
   const router = useRouter();
+  const params = useParams();
+  const teamSlug = params.teamSlug as string;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export default function ManagerLoginPage() {
       localStorage.setItem('managerEmail', email);
       localStorage.setItem('managerUser', JSON.stringify(data.user));
 
-      router.push('/manager/dashboard');
+      router.push(`/${teamSlug}/manager/dashboard`);
     } catch (err: any) {
       setError(err.message || 'Failed to login');
     } finally {
@@ -61,7 +63,7 @@ export default function ManagerLoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center">
-          <Link href="/">
+          <Link href={`/${teamSlug}`}>
             <Image
               src="/psl-logo.png"
               alt="PSL Karting"
@@ -137,7 +139,7 @@ export default function ManagerLoginPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+            <Link href={`/${teamSlug}`} className="text-gray-400 hover:text-white transition-colors">
               ← Back to Home
             </Link>
           </div>
