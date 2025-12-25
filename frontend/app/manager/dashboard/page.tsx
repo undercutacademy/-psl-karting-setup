@@ -12,6 +12,37 @@ const inputClass = "block w-full rounded-lg border-2 border-gray-700 bg-gray-800
 const selectClass = "block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white backdrop-blur-sm transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 hover:border-gray-600 cursor-pointer";
 const labelClass = "block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2";
 
+// Color Helpers
+const getSessionColor = (type: string) => {
+  const t = type.toLowerCase();
+  if (t.includes('qualifying')) return 'bg-yellow-500/20 text-yellow-500';
+  if (t.includes('final') || t.includes('heat') || t.includes('super')) return 'bg-red-500/20 text-red-500';
+  if (t.includes('warm')) return 'bg-cyan-500/20 text-cyan-400';
+  if (t.includes('practice')) return 'bg-blue-500/20 text-blue-400';
+  if (t.includes('happy')) return 'bg-green-500/20 text-green-400';
+  return 'bg-gray-500/20 text-gray-400';
+};
+
+const getDivisionColor = (division: string) => {
+  if (!division) return 'text-gray-400';
+  const d = division.toLowerCase();
+
+  // Green for small karts
+  if (d.includes('micro') || d.includes('mini')) return 'text-green-400';
+
+  // Blue/Teal for Junior
+  if (d.includes('junior') || d.includes('jr')) return 'text-teal-400';
+
+  // Purple/Indigo for Senior/Master
+  if (d.includes('senior') || d.includes('sr') || d.includes('master')) return 'text-indigo-400';
+
+  // Red/Rose for Shifter/KZ (Fastest)
+  if (d.includes('shifter') || d.includes('kz') || d.includes('dd2')) return 'text-rose-400';
+
+  // Default
+  return 'text-gray-300';
+};
+
 export default function ManagerDashboard() {
   const router = useRouter();
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -22,6 +53,7 @@ export default function ManagerDashboard() {
   const [filterSession, setFilterSession] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
 
   useEffect(() => {
     loadSubmissions();
@@ -70,7 +102,45 @@ export default function ManagerDashboard() {
       filtered = filtered.filter((sub) => sub.sessionType === filterSession);
     }
 
+
+    if (showFavorites) {
+      filtered = filtered.filter((sub) => sub.isFavorite);
+    }
+
     setFilteredSubmissions(filtered);
+  };
+
+  const toggleFavorite = async (e: React.MouseEvent, submission: any) => {
+    e.stopPropagation();
+    try {
+      const updated = !submission.isFavorite;
+      // Optimistic update
+      const newSubmissions = submissions.map(s =>
+        s.id === submission.id ? { ...s, isFavorite: updated } : s
+      );
+      setSubmissions(newSubmissions);
+      // We need to re-filter immediately to reflect optimistic changes if we are on the favorites tab
+      // But since filterSubmissions depends on 'submissions' state which is async, let's just trigger update
+
+      // Wait for API
+      const response = await fetch(`${API_URL}/submissions/${submission.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFavorite: updated }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update favorite status');
+
+      // If API fails, we could revert, but for now assuming success or user will refresh
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      alert('Failed to update favorite status');
+      // Revert on error
+      const reverted = submissions.map(s =>
+        s.id === submission.id ? { ...s, isFavorite: submission.isFavorite } : s
+      );
+      setSubmissions(reverted);
+    }
   };
 
   const handleExportPDF = async (submissionId: string) => {
@@ -147,8 +217,115 @@ export default function ManagerDashboard() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (selectedIds.size === 0) return;
+
+    // Get selected submissions
+    const selectedSubmissions = submissions.filter(s => selectedIds.has(s.id));
+
+    // Define CSV headers
+    const headers = [
+      'Date',
+      'Driver First Name',
+      'Driver Last Name',
+      'Session Type',
+      'Track',
+      'Championship',
+      'Division',
+      'Engine Number',
+      'Gear Ratio',
+      'Drive Sprocket',
+      'Driven Sprocket',
+      'Carburator Number',
+      'Tyre Model',
+      'Tyre Age',
+      'Cold Pressure',
+      'Chassis',
+      'Axle',
+      'Rear Hubs Material',
+      'Rear Hubs Length',
+      'Front Height',
+      'Back Height',
+      'Front Hubs Material',
+      'Front Bar',
+      'Spindle',
+      'Caster',
+      'Seat Position',
+      'Lap Time',
+      'Observation'
+    ];
+
+    // Build CSV rows
+    const rows = selectedSubmissions.map(sub => {
+      const userName = sub.user || {};
+      return [
+        sub.createdAt ? new Date(sub.createdAt).toLocaleDateString('en-GB') : '',
+        userName.firstName || '',
+        userName.lastName || '',
+        sub.sessionType || '',
+        sub.track || '',
+        sub.championship || '',
+        sub.division || '',
+        sub.engineNumber || '',
+        sub.gearRatio || '',
+        sub.driveSprocket || '',
+        sub.drivenSprocket || '',
+        sub.carburatorNumber || '',
+        sub.tyreModel || '',
+        sub.tyreAge || '',
+        sub.tyreColdPressure || '',
+        sub.chassis || '',
+        sub.axle || '',
+        sub.rearHubsMaterial || '',
+        sub.rearHubsLength || '',
+        sub.frontHeight || '',
+        sub.backHeight || '',
+        sub.frontHubsMaterial || '',
+        sub.frontBar || '',
+        sub.spindle || '',
+        sub.caster || '',
+        sub.seatPosition || '',
+        sub.lapTime || '',
+        // Escape quotes and commas in observation
+        `"${(sub.observation || '').replace(/"/g, '""')}"`
+      ];
+    });
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => {
+        // Escape cells that contain commas or quotes (except observation which is already quoted)
+        const cellStr = String(cell);
+        if (cellStr.startsWith('"') && cellStr.endsWith('"')) return cellStr;
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(','))
+    ].join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().split('T')[0];
+    a.download = `setups-export-${timestamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+
   const uniqueTracks = Array.from(new Set(submissions.map((s) => s.track).filter(Boolean)));
   const uniqueSessions = Array.from(new Set(submissions.map((s) => s.sessionType).filter(Boolean)));
+
+  // Re-run filter when showFavorites changes or submissions update
+  useEffect(() => {
+    filterSubmissions();
+  }, [showFavorites, submissions, searchTerm, filterTrack, filterSession]);
 
   const allSelected = filteredSubmissions.length > 0 && selectedIds.size === filteredSubmissions.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < filteredSubmissions.length;
@@ -174,7 +351,7 @@ export default function ManagerDashboard() {
         <div className="absolute top-0 right-1/4 mr-4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-8">
+      <div className="relative z-10 mx-auto max-w-[95%] px-4 py-8">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
@@ -185,18 +362,27 @@ export default function ManagerDashboard() {
           </div>
           <div className="flex items-center gap-4">
             {selectedIds.size > 0 && (
-              <button
-                onClick={handleBulkDelete}
-                disabled={deleting}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {deleting ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                ) : (
-                  <span>🗑️</span>
-                )}
-                Delete Selected ({selectedIds.size})
-              </button>
+              <>
+                <button
+                  onClick={handleExportCSV}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white font-bold uppercase tracking-wider hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  <span>📊</span>
+                  Export CSV ({selectedIds.size})
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {deleting ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  ) : (
+                    <span>🗑️</span>
+                  )}
+                  Delete Selected ({selectedIds.size})
+                </button>
+              </>
             )}
             <div className="px-4 py-2 rounded-full bg-red-500/20 border border-red-500/30">
               <span className="text-red-400 font-bold">
@@ -206,12 +392,39 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
+
         {/* Search and Filters */}
         <div className="mb-6 rounded-2xl bg-gray-900/80 border border-gray-800 p-6 shadow-xl backdrop-blur-xl">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-2xl">🔍</span>
-            <h2 className="text-lg font-bold text-white uppercase tracking-wider">Search & Filter</h2>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔍</span>
+              <h2 className="text-lg font-bold text-white uppercase tracking-wider">Search & Filter</h2>
+            </div>
+
+            {/* Favorites Tab / Filter */}
+            <div className="flex bg-gray-800/50 rounded-lg p-1 border border-gray-700">
+              <button
+                onClick={() => setShowFavorites(false)}
+                className={`px-4 py-2 rounded-md text-sm font-bold uppercase tracking-wider transition-all ${!showFavorites
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                All Sessions
+              </button>
+              <button
+                onClick={() => setShowFavorites(true)}
+                className={`px-4 py-2 rounded-md text-sm font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${showFavorites
+                  ? 'bg-yellow-500 text-black shadow-lg'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                <span>⭐</span>
+                Favorites
+              </button>
+            </div>
           </div>
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
               <label className={labelClass}>Search</label>
@@ -317,12 +530,24 @@ export default function ManagerDashboard() {
                         className={`hover:bg-gray-800/50 transition-colors ${isSelected ? 'bg-red-500/10' : ''}`}
                       >
                         <td className="px-4 py-4">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => handleSelectOne(submission.id, e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-600 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
-                          />
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => handleSelectOne(submission.id, e.target.checked)}
+                              className="w-4 h-4 rounded border-gray-600 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
+                            />
+                            <button
+                              onClick={(e) => toggleFavorite(e, submission)}
+                              className="focus:outline-none transition-transform hover:scale-110"
+                            >
+                              {submission.isFavorite ? (
+                                <span className="text-xl">⭐</span>
+                              ) : (
+                                <span className="text-xl opacity-30 grayscale hover:opacity-100 hover:grayscale-0">⭐</span>
+                              )}
+                            </button>
+                          </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
                           {submission.createdAt
@@ -333,15 +558,17 @@ export default function ManagerDashboard() {
                           <span className="text-sm font-semibold text-white">{userName}</span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400">
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${getSessionColor(submission.sessionType)}`}>
                             {submission.sessionType}
                           </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
                           {submission.track}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {submission.division}
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`text-sm font-bold ${getDivisionColor(submission.division)}`}>
+                            {submission.division}
+                          </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-400">
                           {submission.engineNumber || '-'}

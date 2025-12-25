@@ -100,6 +100,7 @@ export interface Submission {
   seatPosition: string;
   lapTime?: string;
   observation?: string;
+  isFavorite?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -118,13 +118,14 @@ model Submission {
   rearHubsLength    String
   frontHeight       FrontHeight
   backHeight        BackHeight
-  frontHubsMaterial FrontHubsMaterial
+  frontHubsMaterial FrontHubsMaterial?
   frontBar          FrontBar
   spindle           Spindle
   caster            String
   seatPosition      String
   lapTime           String?
   observation       String?
+  isFavorite        Boolean           @default(false)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

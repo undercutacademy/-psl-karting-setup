@@ -139,7 +139,7 @@ export function generateSubmissionPDF(submission: Submission, userName: string):
     // Kart Setup Section
     yPos = drawSectionHeader('Kart Setup', yPos);
     yPos = drawDataRow('Chassis', submission.chassis, 'Axle', submission.axle, yPos);
-    yPos = drawDataRow('Rear Hubs', `${submission.rearHubsMaterial} - ${submission.rearHubsLength}`, 'Front Hubs', submission.frontHubsMaterial, yPos);
+    yPos = drawDataRow('Rear Hubs', `${submission.rearHubsMaterial} - ${submission.rearHubsLength}`, 'Front Hubs', submission.frontHubsMaterial || '-', yPos);
     yPos = drawDataRow('Front Height', submission.frontHeight, 'Back Height', submission.backHeight, yPos);
     yPos = drawDataRow('Front Bar', submission.frontBar, 'Spindle', submission.spindle, yPos);
     yPos = drawDataRow('Caster', submission.caster, 'Seat Position', `${submission.seatPosition} cm`, yPos);

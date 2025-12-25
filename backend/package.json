@@ -29,6 +29,7 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
     "express": "^5.2.1",
     "nodemailer": "^7.0.12",
     "nodemon": "^3.1.11",
