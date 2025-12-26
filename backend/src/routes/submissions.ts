@@ -1,10 +1,124 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@prisma/client';
 import { sendUserConfirmationEmail, sendManagerNotificationEmail } from '../services/emailService';
 import { generateSubmissionPDF } from '../services/pdfService';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// Enum mappings: Frontend friendly values -> Prisma enum values
+const sessionTypeMap: Record<string, SessionType> = {
+  'Practice 1': SessionType.Practice1,
+  'Practice1': SessionType.Practice1,
+  'Practice 2': SessionType.Practice2,
+  'Practice2': SessionType.Practice2,
+  'Practice 3': SessionType.Practice3,
+  'Practice3': SessionType.Practice3,
+  'Practice 4': SessionType.Practice4,
+  'Practice4': SessionType.Practice4,
+  'Practice 5': SessionType.Practice5,
+  'Practice5': SessionType.Practice5,
+  'Practice 6': SessionType.Practice6,
+  'Practice6': SessionType.Practice6,
+  'Happy Hour': SessionType.HappyHour,
+  'HappyHour': SessionType.HappyHour,
+  'Warm Up': SessionType.WarmUp,
+  'WarmUp': SessionType.WarmUp,
+  'Qualifying': SessionType.Qualifying,
+  'Race 1': SessionType.Race1,
+  'Race1': SessionType.Race1,
+  'Race 2': SessionType.Race2,
+  'Race2': SessionType.Race2,
+  'Pre Final': SessionType.PreFinal,
+  'PreFinal': SessionType.PreFinal,
+  'Final': SessionType.Final,
+  'Heat 1': SessionType.Heat1,
+  'Heat1': SessionType.Heat1,
+  'Heat 2': SessionType.Heat2,
+  'Heat2': SessionType.Heat2,
+  'Heat 3': SessionType.Heat3,
+  'Heat3': SessionType.Heat3,
+  'Heat 4': SessionType.Heat4,
+  'Heat4': SessionType.Heat4,
+  'Heat 5': SessionType.Heat5,
+  'Heat5': SessionType.Heat5,
+  'Heat 6': SessionType.Heat6,
+  'Heat6': SessionType.Heat6,
+  'Heat 7': SessionType.Heat7,
+  'Heat7': SessionType.Heat7,
+  'Super Heat 1': SessionType.SuperHeat1,
+  'SuperHeat1': SessionType.SuperHeat1,
+  'Super Heat 2': SessionType.SuperHeat2,
+  'SuperHeat2': SessionType.SuperHeat2,
+};
+
+const rearHubsMaterialMap: Record<string, RearHubsMaterial> = {
+  'Aluminium': RearHubsMaterial.Aluminium,
+  'Magnesium': RearHubsMaterial.Magnesium,
+};
+
+const frontHeightMap: Record<string, FrontHeight> = {
+  'Low': FrontHeight.Low,
+  'Medium': FrontHeight.Medium,
+  'High': FrontHeight.High,
+  'Standard': FrontHeight.Standard,
+};
+
+const backHeightMap: Record<string, BackHeight> = {
+  'Low': BackHeight.Low,
+  'Medium': BackHeight.Medium,
+  'High': BackHeight.High,
+  'Standard': BackHeight.Standard,
+};
+
+const frontHubsMaterialMap: Record<string, FrontHubsMaterial> = {
+  'Aluminium': FrontHubsMaterial.Aluminium,
+  'Magnesium': FrontHubsMaterial.Magnesium,
+};
+
+const frontBarMap: Record<string, FrontBar> = {
+  'Nylon': FrontBar.Nylon,
+  'Standard': FrontBar.Standard,
+  'Black': FrontBar.Black,
+  'None': FrontBar.None,
+};
+
+const spindleMap: Record<string, Spindle> = {
+  'Blue': Spindle.Blue,
+  'Standard': Spindle.Standard,
+  'Red': Spindle.Red,
+  'Green': Spindle.Green,
+  'Gold': Spindle.Gold,
+};
+
+// Function to transform submission data with proper enum values
+function transformSubmissionData(data: any): any {
+  const transformed = { ...data };
+
+  if (data.sessionType && typeof data.sessionType === 'string') {
+    transformed.sessionType = sessionTypeMap[data.sessionType] || data.sessionType;
+  }
+  if (data.rearHubsMaterial && typeof data.rearHubsMaterial === 'string') {
+    transformed.rearHubsMaterial = rearHubsMaterialMap[data.rearHubsMaterial] || data.rearHubsMaterial;
+  }
+  if (data.frontHeight && typeof data.frontHeight === 'string') {
+    transformed.frontHeight = frontHeightMap[data.frontHeight] || data.frontHeight;
+  }
+  if (data.backHeight && typeof data.backHeight === 'string') {
+    transformed.backHeight = backHeightMap[data.backHeight] || data.backHeight;
+  }
+  if (data.frontHubsMaterial && typeof data.frontHubsMaterial === 'string') {
+    transformed.frontHubsMaterial = frontHubsMaterialMap[data.frontHubsMaterial] || data.frontHubsMaterial;
+  }
+  if (data.frontBar && typeof data.frontBar === 'string') {
+    transformed.frontBar = frontBarMap[data.frontBar] || data.frontBar;
+  }
+  if (data.spindle && typeof data.spindle === 'string') {
+    transformed.spindle = spindleMap[data.spindle] || data.spindle;
+  }
+
+  return transformed;
+}
 
 // Get all submissions for a team
 router.get('/', async (req, res) => {
@@ -176,9 +290,12 @@ router.post('/', async (req, res) => {
     // Create submission - exclude fields that shouldn't be copied
     const { id, createdAt, updatedAt, userId, user: _user, ...cleanSubmissionData } = submissionData;
 
+    // Transform enum values from frontend format to Prisma format
+    const transformedData = transformSubmissionData(cleanSubmissionData);
+
     const submission = await prisma.submission.create({
       data: {
-        ...cleanSubmissionData,
+        ...transformedData,
         userId: user.id,
         teamId: team.id,
       },
