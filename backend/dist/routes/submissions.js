@@ -272,20 +272,19 @@ router.post('/', async (req, res) => {
                 user: true,
             },
         });
-        // Send manager notification email only (non-blocking)
-        try {
-            const managerEmail = process.env.MANAGER_EMAIL;
-            if (managerEmail) {
-                await (0, emailService_1.sendManagerNotificationEmail)(managerEmail, `${user.firstName} ${user.lastName}`, submission);
-            }
-        }
-        catch (error) {
-            console.error('Failed to send manager notification email:', error);
-        }
+        // Send response immediately - don't wait for email
         res.status(201).json(submission);
+        // Send manager notification email in background (fire-and-forget)
+        const managerEmail = process.env.MANAGER_EMAIL;
+        if (managerEmail) {
+            (0, emailService_1.sendManagerNotificationEmail)(managerEmail, `${user.firstName} ${user.lastName}`, submission).catch((emailError) => {
+                console.error('Failed to send manager notification email:', emailError);
+            });
+        }
     }
     catch (error) {
         console.error('Error creating submission:', error);
+        console.error('Error details:', error.message, error.code);
         res.status(500).json({ error: 'Failed to create submission' });
     }
 });
