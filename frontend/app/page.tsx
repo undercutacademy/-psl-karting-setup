@@ -15,11 +15,11 @@ export default function LandingPage() {
             <div className="relative z-10 w-full max-w-md text-center">
                 <div className="mb-8">
                     <Image
-                        src="/psl-logo.png"
-                        alt="PSL Karting"
+                        src="/undercut-academy-logo.png"
+                        alt="Undercut Academy"
                         width={350}
                         height={140}
-                        className="drop-shadow-[0_0_40px_rgba(227,24,55,0.5)] mb-4 mx-auto"
+                        className="drop-shadow-[0_0_40px_rgba(255,255,255,0.2)] mb-4 mx-auto"
                         priority
                     />
                     <h1 className="text-3xl font-bold text-white uppercase tracking-wider mb-2">
