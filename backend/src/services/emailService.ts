@@ -107,7 +107,7 @@ export async function sendManagerNotificationEmail(
 
   try {
     const result = await resend.emails.send({
-      from: 'PSL Karting Setups <onboarding@resend.dev>',
+      from: 'PSL Karting Setups <noreply@undercutacademy.com>',
       to: managerEmail,
       subject: `New Setup Submission from ${userName} - ${submission.track}`,
       html: htmlContent,
