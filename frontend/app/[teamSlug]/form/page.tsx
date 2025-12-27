@@ -97,6 +97,13 @@ export default function FormPage() {
     setLoading(false);
   };
 
+  const handleNumberChange = (field: keyof Submission, value: string) => {
+    const cleanValue = value.replace(/[^0-9.]/g, '');
+    const parts = cleanValue.split('.');
+    const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : cleanValue;
+    setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -183,7 +190,7 @@ export default function FormPage() {
         </div>
 
         {/* Form Card */}
-        <form onSubmit={handleSubmit} className="rounded-2xl bg-gray-900/80 border border-gray-800 p-8 shadow-2xl backdrop-blur-xl">
+        <form onSubmit={handleSubmit} className="rounded-2xl bg-gray-900/80 border border-gray-800 p-5 md:p-8 shadow-2xl backdrop-blur-xl">
           {/* Racing accent line */}
           <div className="absolute top-0 left-8 right-8 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent rounded-full"></div>
 
@@ -256,7 +263,7 @@ export default function FormPage() {
 
               {!lastSubmission && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className={labelClass}>First Name *</label>
                       <input
@@ -307,7 +314,7 @@ export default function FormPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className={labelClass}>Championship *</label>
                       <select
@@ -377,24 +384,26 @@ export default function FormPage() {
                   <label className={labelClass}>Gear Ratio *</label>
                   <input
                     type="text"
+                    inputMode="decimal"
                     value={formData.gearRatio || ''}
-                    onChange={(e) => setFormData({ ...formData, gearRatio: e.target.value })}
+                    onChange={(e) => handleNumberChange('gearRatio', e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="e.g., 12/32"
+                    placeholder="e.g., 2.66"
                   />
                 </div>
               )}
 
               {/* Show Sprockets for non-shifter classes */}
               {!SHIFTER_DIVISIONS.includes(formData.division || '') && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Drive Sprocket (Engine) *</label>
                     <input
                       type="text"
+                      inputMode="decimal"
                       value={formData.driveSprocket}
-                      onChange={(e) => setFormData({ ...formData, driveSprocket: e.target.value })}
+                      onChange={(e) => handleNumberChange('driveSprocket', e.target.value)}
                       required
                       className={inputClass}
                       placeholder="e.g., 11"
@@ -404,8 +413,9 @@ export default function FormPage() {
                     <label className={labelClass}>Driven Sprocket (Gear) *</label>
                     <input
                       type="text"
+                      inputMode="decimal"
                       value={formData.drivenSprocket}
-                      onChange={(e) => setFormData({ ...formData, drivenSprocket: e.target.value })}
+                      onChange={(e) => handleNumberChange('drivenSprocket', e.target.value)}
                       required
                       className={inputClass}
                       placeholder="e.g., 78"
@@ -469,27 +479,29 @@ export default function FormPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Tyre Age *</label>
                   <input
                     type="text"
+                    inputMode="decimal"
                     value={formData.tyreAge}
-                    onChange={(e) => setFormData({ ...formData, tyreAge: e.target.value })}
+                    onChange={(e) => handleNumberChange('tyreAge', e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="e.g., New / 2 sessions"
+                    placeholder="e.g., 2"
                   />
                 </div>
                 <div>
                   <label className={labelClass}>Tyre Cold Pressure *</label>
                   <input
                     type="text"
+                    inputMode="decimal"
                     value={formData.tyreColdPressure}
-                    onChange={(e) => setFormData({ ...formData, tyreColdPressure: e.target.value })}
+                    onChange={(e) => handleNumberChange('tyreColdPressure', e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="e.g., 9.5 PSI"
+                    placeholder="e.g., 9.5"
                   />
                 </div>
               </div>
@@ -521,7 +533,7 @@ export default function FormPage() {
                 <h2 className="text-2xl font-bold text-white">Kart Setup</h2>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Chassis *</label>
                   <input
@@ -546,7 +558,7 @@ export default function FormPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Rear Hubs Material *</label>
                   <select
@@ -573,7 +585,7 @@ export default function FormPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Front Height *</label>
                   <select
@@ -602,7 +614,7 @@ export default function FormPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Front Hubs Material *</label>
                   <select
@@ -631,7 +643,7 @@ export default function FormPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Spindle *</label>
                   <select
@@ -649,11 +661,12 @@ export default function FormPage() {
                   <label className={labelClass}>Caster *</label>
                   <input
                     type="text"
+                    inputMode="decimal"
                     value={formData.caster}
-                    onChange={(e) => setFormData({ ...formData, caster: e.target.value })}
+                    onChange={(e) => handleNumberChange('caster', e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="e.g., 28°"
+                    placeholder="e.g., 28"
                   />
                 </div>
               </div>
@@ -662,11 +675,12 @@ export default function FormPage() {
                 <label className={labelClass}>Seat Position [cm] *</label>
                 <input
                   type="text"
+                  inputMode="decimal"
                   value={formData.seatPosition}
-                  onChange={(e) => setFormData({ ...formData, seatPosition: e.target.value })}
+                  onChange={(e) => handleNumberChange('seatPosition', e.target.value)}
                   required
                   className={inputClass}
-                  placeholder="Distance from back of seat to axle OD"
+                  placeholder="e.g. 62.5"
                 />
               </div>
 
@@ -704,7 +718,7 @@ export default function FormPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Session Type *</label>
                   <select
@@ -722,11 +736,12 @@ export default function FormPage() {
                   <label className={labelClass}>Tyre Cold Pressure *</label>
                   <input
                     type="text"
+                    inputMode="decimal"
                     value={formData.tyreColdPressure || ''}
-                    onChange={(e) => setFormData({ ...formData, tyreColdPressure: e.target.value })}
+                    onChange={(e) => handleNumberChange('tyreColdPressure', e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="e.g., 9.5 PSI"
+                    placeholder="e.g., 9.5"
                   />
                 </div>
               </div>
@@ -735,8 +750,9 @@ export default function FormPage() {
                 <label className={labelClass}>Lap Time</label>
                 <input
                   type="text"
+                  inputMode="decimal"
                   value={formData.lapTime || ''}
-                  onChange={(e) => setFormData({ ...formData, lapTime: e.target.value })}
+                  onChange={(e) => handleNumberChange('lapTime', e.target.value)}
                   className={inputClass}
                   placeholder="e.g., 45.123"
                 />
