@@ -17,13 +17,13 @@ export const metadata: Metadata = {
   title: "PSL Karting Setup App",
   description: "Karting setup management system",
   icons: {
-    icon: '/icon.png',
-    apple: '/apple-icon.png',
+    icon: '/icon.jpg',
+    apple: '/apple-icon.jpg',
   },
   openGraph: {
     title: 'PSL Karting Setup App',
     description: 'Karting setup management system',
-    images: ['/opengraph-image.png'],
+    images: ['/opengraph-image.jpg'],
   },
 };
 
