@@ -12,8 +12,26 @@ export async function generateMetadata({ params }: { params: Promise<{ teamSlug:
         return {
             title: 'PSL Karting Setup',
             icons: {
-                icon: '/psl-icon.png',
-                apple: '/psl-icon.png',
+                icon: '/icon.png',
+                apple: '/apple-icon.png',
+            },
+            openGraph: {
+                title: 'PSL Karting Setup',
+                description: 'Manage your PSL Karting setups with ease.',
+                images: [
+                    {
+                        url: '/opengraph-image.png',
+                        width: 800,
+                        height: 600,
+                        alt: 'PSL Karting Logo',
+                    },
+                ],
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: 'PSL Karting Setup',
+                description: 'Manage your PSL Karting setups with ease.',
+                images: ['/opengraph-image.png'],
             },
         };
     }
