@@ -44,14 +44,14 @@ export default function LandingPage() {
                     </Link>
 
                     <Link
-                        href="/demo-team"
-                        className="group flex items-center justify-between p-4 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-800/80 hover:border-red-500/50 transition-all opacity-50"
+                        href="/tkg-birelart"
+                        className="group flex items-center justify-between p-4 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-800/80 hover:border-red-500/50 transition-all"
                     >
-                        <span className="font-semibold text-white">
-                            Demo Team
+                        <span className="font-semibold text-white group-hover:text-red-400 transition-colors">
+                            TKG BirelArt
                         </span>
-                        <span className="text-gray-500 text-sm">
-                            (Coming Soon)
+                        <span className="text-gray-500 group-hover:translate-x-1 transition-transform">
+                            →
                         </span>
                     </Link>
                 </div>

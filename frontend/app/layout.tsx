@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://setups.undercutacademy.com'),
-  title: "PSL Karting Setup App",
+  title: "Setups - Undercut",
   description: "Karting setup management system",
   icons: {
-    icon: '/icon.jpg',
-    apple: '/apple-icon.jpg',
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
   },
   openGraph: {
     title: 'PSL Karting Setup App',

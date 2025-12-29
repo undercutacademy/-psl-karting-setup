@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import useTeamConfig from '@/hooks/useTeamConfig';
 
 export default function ManagerLayout({
   children,
@@ -14,6 +15,7 @@ export default function ManagerLayout({
   const pathname = usePathname();
   const params = useParams();
   const teamSlug = params.teamSlug as string;
+  const { config: teamConfig } = useTeamConfig(teamSlug);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -71,17 +73,20 @@ export default function ManagerLayout({
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href={`/${teamSlug}`}>
-                <Image
-                  src="/psl-logo.png"
-                  alt="PSL Karting"
-                  width={120}
-                  height={48}
-                  className="drop-shadow-[0_0_10px_rgba(227,24,55,0.3)]"
-                />
+                <div className="relative">
+                  <Image
+                    src={teamConfig?.logoUrl || '/psl-logo.png'}
+                    alt={teamConfig?.name || 'Team Manager'}
+                    width={120}
+                    height={48}
+                    className="drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] object-contain"
+                    style={{ maxHeight: '48px', width: 'auto' }}
+                  />
+                </div>
               </Link>
               <div className="hidden md:block">
                 <span className="text-lg font-bold text-white uppercase tracking-wider">
-                  Manager <span className="text-red-500">Portal</span>
+                  Manager <span style={{ color: teamConfig?.primaryColor || '#ef4444' }}>Portal</span>
                 </span>
               </div>
             </div>

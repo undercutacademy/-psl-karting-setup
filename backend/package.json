@@ -10,8 +10,7 @@
     "postinstall": "npm run prisma:generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "seed": "ts-node src/scripts/seed.ts"
+    "prisma:studio": "prisma studio"
   },
   "keywords": [],
   "author": "",
