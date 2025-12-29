@@ -21,10 +21,12 @@ app.get('/api/health', (req, res) => {
 import submissionsRouter from './routes/submissions';
 import usersRouter from './routes/users';
 import authRouter from './routes/auth';
+import teamsRouter from './routes/teams';
 
 app.use('/api/submissions', submissionsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/teams', teamsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

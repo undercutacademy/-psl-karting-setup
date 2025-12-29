@@ -99,13 +99,26 @@ model User {
 }
 
 model Team {
-  id          String       @id @default(uuid())
-  slug        String       @unique
-  name        String
-  users       User[]
-  submissions Submission[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              String       @id @default(uuid())
+  slug            String       @unique
+  name            String
+  
+  // Branding
+  logoUrl         String?
+  primaryColor    String       @default("#dc2626")
+  
+  // Email Configuration
+  managerEmails   String[]     // All emails that receive notifications
+  emailFromName   String?      // Custom "from" name for emails
+  
+  // Form Configuration (JSON)
+  formConfig      Json?        // Which fields are enabled/required
+  dropdownOptions Json?        // Custom tracks, championships, divisions
+  
+  users           User[]
+  submissions     Submission[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }
 
 model Submission {
@@ -140,6 +153,7 @@ model Submission {
   seatPosition      String
   lapTime           String?
   observation       String?
+  customData        Json?             // Team-specific field values
   isFavorite        Boolean           @default(false)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt

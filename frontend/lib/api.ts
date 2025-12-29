@@ -1,4 +1,5 @@
 import { Submission, User } from '@/types/submission';
+import { TeamConfig, TeamInfo } from '@/types/team';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -106,5 +107,39 @@ export async function updateSubmission(id: string, submission: Partial<Submissio
       throw error;
     }
     throw new Error('Network error. Please check your connection and try again.');
+  }
+}
+
+// Team API functions
+export async function getTeamConfig(teamSlug: string): Promise<TeamConfig | null> {
+  try {
+    const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/config`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching team config:', error);
+    return null;
+  }
+}
+
+export async function getTeamInfo(teamSlug: string): Promise<TeamInfo | null> {
+  try {
+    const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching team info:', error);
+    return null;
+  }
+}
+
+export async function getAllTeams(): Promise<TeamInfo[]> {
+  try {
+    const response = await fetch(`${API_URL}/teams`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    return [];
   }
 }

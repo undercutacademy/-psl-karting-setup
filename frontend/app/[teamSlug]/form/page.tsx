@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { getLastSubmissionByEmail, createSubmission } from '@/lib/api';
+import { getLastSubmissionByEmail, createSubmission, getTeamConfig } from '@/lib/api';
 import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@/types/submission';
+import { TeamConfig } from '@/types/team';
 
-const TRACKS = [
+// Default dropdown options (used when team config not available)
+const DEFAULT_TRACKS = [
   'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz Piquet',
   'St Pete', 'New Castle', 'New Castle Sharkfin', 'New Castle CCW', 'ROK Rio 2024',
   'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace Trackhouse',
@@ -14,14 +16,14 @@ const TRACKS = [
   'Hamilton', 'Tremblant', 'Icar SH Karting', 'Mosport', 'Portimao'
 ];
 
-const CHAMPIONSHIPS = [
+const DEFAULT_CHAMPIONSHIPS = [
   'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
   'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
   'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
   'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025'
 ];
 
-const DIVISIONS = [
+const DEFAULT_DIVISIONS = [
   'Micro', 'Mini', 'KA100 Jr', 'KA100 Sr', 'KA100 Master', 'Pro Shifter', 'Shifter Master',
   'X30 Junior', 'X30 Senior', 'ROK Micro', 'ROK Mini', 'VLR Junior', 'VLR Senior',
   'VLR Master', 'ROK Shifter', 'ROK Master', 'ROK Junior', 'ROK PRO GP',
@@ -34,7 +36,7 @@ const SHIFTER_DIVISIONS = [
   'KZ1', 'KZ2', 'KZM', 'Pro Shifter', 'Shifter Master', 'ROK Shifter', 'DD2', 'DD2 Master'
 ];
 
-const TYRE_MODELS = [
+const DEFAULT_TYRE_MODELS = [
   'Mg Red', 'Mg Yellow', 'MG Wet', 'Evinco Blue', 'Evinco Blue SKH2', 'Evinco Red SKM2',
   'Evinco WET', 'Levanto', 'Levanto WET', 'Bridgestone', 'Vega Red', 'Vega Blue',
   'Vega Yellow', 'Mojo D5', 'Mojo D2', 'Dunlop', 'Dunlop WET'
@@ -57,6 +59,22 @@ export default function FormPage() {
   const [lastSubmission, setLastSubmission] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
+
+  // Fetch team configuration on mount
+  useEffect(() => {
+    if (teamSlug) {
+      getTeamConfig(teamSlug).then(config => {
+        setTeamConfig(config);
+      });
+    }
+  }, [teamSlug]);
+
+  // Dynamic dropdown options from team config or defaults
+  const TRACKS = teamConfig?.dropdownOptions?.tracks || DEFAULT_TRACKS;
+  const CHAMPIONSHIPS = teamConfig?.dropdownOptions?.championships || DEFAULT_CHAMPIONSHIPS;
+  const DIVISIONS = teamConfig?.dropdownOptions?.divisions || DEFAULT_DIVISIONS;
+  const TYRE_MODELS = teamConfig?.dropdownOptions?.tyreModels || DEFAULT_TYRE_MODELS;
 
   const [formData, setFormData] = useState<Partial<Submission>>({
     sessionType: SessionType.Practice1,
@@ -150,8 +168,8 @@ export default function FormPage() {
         <div className="mb-8 flex flex-col items-center">
           <div className="relative mb-4">
             <Image
-              src="/psl-logo.png"
-              alt="PSL Karting"
+              src={teamConfig?.logoUrl || '/psl-logo.png'}
+              alt={teamConfig?.name || 'Team Logo'}
               width={300}
               height={120}
               className="drop-shadow-[0_0_30px_rgba(227,24,55,0.5)]"
@@ -159,7 +177,7 @@ export default function FormPage() {
             />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-wider uppercase">
-            Setup <span className="text-red-500">Manager</span>
+            Setup <span style={{ color: teamConfig?.primaryColor || '#ef4444' }}>Manager</span>
           </h1>
         </div>
 

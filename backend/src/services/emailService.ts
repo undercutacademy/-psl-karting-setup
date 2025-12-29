@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { Submission } from '@prisma/client';
+import { Submission, Team } from '@prisma/client';
 
 // Initialize Resend with API key
 const resendApiKey = process.env.RESEND_API_KEY;
@@ -26,7 +26,7 @@ export async function sendUserConfirmationEmail(
 export async function sendManagerNotificationEmail(
   managerEmail: string,
   userName: string,
-  submission: Submission
+  submission: Submission & { team?: Team | null }
 ): Promise<void> {
   console.log(`Attempting to send email notification to: ${managerEmail}`);
 
@@ -99,7 +99,7 @@ export async function sendManagerNotificationEmail(
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
-          <a href="https://setups.undercutacademy.com/psl-karting/manager/dashboard" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View in Dashboard</a>
+          <a href="https://setups.undercutacademy.com/${submission.team?.slug || 'psl-karting'}/manager/dashboard" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View in Dashboard</a>
         </div>
       </div>
     </div>

@@ -301,23 +301,53 @@ router.post('/', async (req, res) => {
       },
       include: {
         user: true,
+        team: true,
       },
     });
 
     // Send response immediately - don't wait for email
     res.status(201).json(submission);
 
-    // Send manager notification email in background (fire-and-forget)
-    const managerEmail = process.env.MANAGER_EMAIL;
-    if (managerEmail) {
-      sendManagerNotificationEmail(
-        managerEmail,
-        `${user.firstName} ${user.lastName}`,
-        submission
-      ).catch((emailError) => {
-        console.error('Failed to send manager notification email:', emailError);
-      });
-    }
+    // Send manager notification emails in background (fire-and-forget)
+    (async () => {
+      try {
+        const managerEmails = new Set<string>();
+
+        // Priority 1: Use team.managerEmails if configured
+        if (team.managerEmails && team.managerEmails.length > 0) {
+          team.managerEmails.forEach((email: string) => managerEmails.add(email));
+        } else {
+          // Fallback: Find managers who are members of this team
+          const teamManagers = await prisma.user.findMany({
+            where: {
+              teamId: team.id,
+              isManager: true,
+            },
+            select: { email: true },
+          });
+          teamManagers.forEach((m) => managerEmails.add(m.email));
+        }
+
+        // Add default manager email if set (backward compatibility)
+        if (process.env.MANAGER_EMAIL) {
+          managerEmails.add(process.env.MANAGER_EMAIL);
+        }
+
+        console.log(`Sending notification emails to ${managerEmails.size} managers for team ${team.slug}`);
+
+        for (const email of Array.from(managerEmails)) {
+          sendManagerNotificationEmail(
+            email,
+            `${user.firstName} ${user.lastName}`,
+            submission
+          ).catch((emailError) => {
+            console.error(`Failed to send manager notification email to ${email}:`, emailError);
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching managers for notification:', error);
+      }
+    })();
   } catch (error: any) {
     console.error('Error creating submission:', error);
     console.error('Error details:', error.message, error.code);
