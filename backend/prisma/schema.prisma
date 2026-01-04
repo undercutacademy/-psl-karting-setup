@@ -85,17 +85,18 @@ enum Spindle {
 }
 
 model User {
-  id        String       @id @default(uuid())
-  email     String       @unique
-  firstName String
-  lastName  String
-  password  String?      // Only for managers
-  isManager Boolean      @default(false)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  submissions Submission[]
-  teamId      String?
-  team        Team?        @relation(fields: [teamId], references: [id])
+  id           String       @id @default(uuid())
+  email        String       @unique
+  firstName    String
+  lastName     String
+  password     String?      // Only for managers
+  isManager    Boolean      @default(false)
+  isSuperAdmin Boolean      @default(false)  // Can access all team dashboards
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  submissions  Submission[]
+  teamId       String?
+  team         Team?        @relation(fields: [teamId], references: [id])
 }
 
 model Team {

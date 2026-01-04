@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,6 +15,27 @@ export default function ManagerLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [teamLogo, setTeamLogo] = useState('');
+  const [teamName, setTeamName] = useState('');
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const response = await fetch(`${API_URL}/teams/${teamSlug}`);
+        if (response.ok) {
+          const data = await response.json();
+          setTeamLogo(data.logoUrl);
+          setTeamName(data.name);
+        }
+      } catch (error) {
+        console.error('Error fetching team:', error);
+      }
+    };
+
+    if (teamSlug) {
+      fetchTeam();
+    }
+  }, [teamSlug]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +48,7 @@ export default function ManagerLoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, teamSlug }),
       });
 
       if (!response.ok) {
@@ -64,14 +85,19 @@ export default function ManagerLoginPage() {
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center">
           <Link href={`/${teamSlug}`}>
-            <Image
-              src="/psl-logo.png"
-              alt="PSL Karting"
-              width={250}
-              height={100}
-              className="drop-shadow-[0_0_30px_rgba(227,24,55,0.4)] mb-4"
-              priority
-            />
+            {teamLogo ? (
+              <Image
+                src={teamLogo}
+                alt={teamName || "Team Logo"}
+                width={250}
+                height={100}
+                className="drop-shadow-[0_0_30px_rgba(227,24,55,0.4)] mb-4"
+                priority
+              />
+            ) : (
+              // Fallback or Loading state
+              <div className="h-24 w-64 bg-gray-800/50 rounded animate-pulse mb-4"></div>
+            )}
           </Link>
         </div>
 

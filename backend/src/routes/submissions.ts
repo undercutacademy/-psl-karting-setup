@@ -244,6 +244,7 @@ router.get('/:id/pdf', async (req, res) => {
 // Create submission
 router.post('/', async (req, res) => {
   try {
+    console.log('Received submission request:', JSON.stringify(req.body, null, 2));
     const { userEmail, firstName, lastName, teamSlug, ...submissionData } = req.body;
 
     if (!teamSlug) {

@@ -25,6 +25,15 @@ export default async function Home({
         <div className="absolute top-0 right-1/4 mr-4 w-1 h-full bg-[var(--primary-color)] transform -skew-x-12" style={{ backgroundColor: primaryColor }} />
       </div>
 
+      {/* Home Button */}
+      <Link
+        href="/"
+        className="fixed top-6 left-6 z-50 flex items-center gap-2 rounded-full border border-gray-800 bg-gray-900/80 px-4 py-2 text-sm font-bold text-gray-500 uppercase tracking-wider backdrop-blur-md transition-all hover:border-white/30 hover:text-white hover:bg-gray-800 group"
+      >
+        <span className="text-lg group-hover:scale-110 transition-transform">🏠</span>
+        <span className="hidden md:inline text-xs">Switch Team</span>
+      </Link>
+
       {/* Top racing stripe */}
       <div className="absolute top-0 left-0 right-0 h-2" style={{ background: `linear-gradient(to right, ${primaryColor}, white, ${primaryColor})` }}></div>
 

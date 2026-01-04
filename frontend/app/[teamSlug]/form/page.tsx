@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { getLastSubmissionByEmail, createSubmission, getTeamConfig } from '@/lib/api';
 import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@/types/submission';
@@ -163,6 +164,15 @@ export default function FormPage() {
       {/* Checkered flag top border */}
       <div className="h-2 w-full bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
 
+      {/* Home Button */}
+      <Link
+        href="/"
+        className="fixed top-6 left-6 z-50 flex items-center gap-2 rounded-full border border-gray-700 bg-gray-900/80 px-4 py-2 text-sm font-bold text-gray-300 uppercase tracking-wider backdrop-blur-md transition-all hover:border-red-500 hover:text-white hover:shadow-lg hover:shadow-red-500/20 group"
+      >
+        <span className="text-lg group-hover:scale-110 transition-transform">🏠</span>
+        <span className="hidden md:inline">Teams</span>
+      </Link>
+
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-8">
         {/* Logo Header */}
         <div className="mb-8 flex flex-col items-center">
@@ -240,10 +250,10 @@ export default function FormPage() {
                 )}
               </div>
 
-              {lastSubmission && (
+              {lastSubmission && hasSetupChanged === null && (
                 <div className="rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 p-6">
                   <p className="mb-4 font-semibold text-white text-lg">
-                    🏁 Found previous setup from {lastSubmission.sessionType}, {lastSubmission.createdAt ? new Date(lastSubmission.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}, {lastSubmission.createdAt ? new Date(lastSubmission.createdAt).toLocaleDateString('en-GB') : 'last session'}
+                    🏁 Found previous setup from <span className="text-red-400">{lastSubmission.championship}</span> - {lastSubmission.sessionType}, {lastSubmission.createdAt ? new Date(lastSubmission.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}, {lastSubmission.createdAt ? new Date(lastSubmission.createdAt).toLocaleDateString('en-GB') : 'last session'}
                   </p>
                   <p className="mb-4 text-gray-300">Has your setup changed since then?</p>
                   <div className="flex gap-4">
@@ -269,7 +279,7 @@ export default function FormPage() {
                           ...lastSubmission,
                           sessionType: formData.sessionType || lastSubmission.sessionType,
                         });
-                        setCurrentStep(2);
+                        // Stay on step 1 so the driver can change championship/track/division if needed
                       }}
                       className="flex-1 rounded-lg bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-3 font-bold text-white uppercase tracking-wider transition-all hover:from-orange-500 hover:to-orange-400 hover:shadow-lg hover:shadow-orange-500/30"
                     >
@@ -279,32 +289,45 @@ export default function FormPage() {
                 </div>
               )}
 
-              {!lastSubmission && (
+              {(!lastSubmission || hasSetupChanged === true) && (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className={labelClass}>First Name *</label>
-                      <input
-                        type="text"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                        className={inputClass}
-                        placeholder="John"
-                      />
+                  {/* Show name fields only for new drivers (no last submission) */}
+                  {!lastSubmission && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelClass}>First Name *</label>
+                        <input
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          required
+                          className={inputClass}
+                          placeholder="John"
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Last Name *</label>
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          required
+                          className={inputClass}
+                          placeholder="Speed"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className={labelClass}>Last Name *</label>
-                      <input
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                        className={inputClass}
-                        placeholder="Speed"
-                      />
+                  )}
+
+                  {/* Info message for returning drivers who are changing setup */}
+                  {hasSetupChanged === true && (
+                    <div className="rounded-xl bg-orange-500/10 border border-orange-500/30 p-4">
+                      <p className="text-orange-400 font-semibold">
+                        ✎ Modify your setup details below. You can change the championship, track, or division if needed.
+                      </p>
                     </div>
-                  </div>
+                  )}
+
                   <div>
                     <label className={labelClass}>Session Type *</label>
                     <select

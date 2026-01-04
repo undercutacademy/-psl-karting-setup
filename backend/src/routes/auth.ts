@@ -14,10 +14,10 @@ function verifyPassword(password: string, hashedPassword: string): boolean {
   return hashPassword(password) === hashedPassword;
 }
 
-// Manager login (email + password based)
+// Manager login (email + password based, team-aware)
 router.post('/manager/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, teamSlug } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -29,6 +29,7 @@ router.post('/manager/login', async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { email },
+      include: { team: true },
     });
 
     if (!user || !user.isManager) {
@@ -40,7 +41,22 @@ router.post('/manager/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // In a real app, you'd generate a JWT token here
+    // Check team access: SuperAdmins can access any team, otherwise must match
+    if (teamSlug) {
+      const team = await prisma.team.findUnique({
+        where: { slug: teamSlug },
+      });
+
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      // If not a superadmin, must belong to the team
+      if (!user.isSuperAdmin && user.teamId !== team.id) {
+        return res.status(403).json({ error: 'You do not have access to this team dashboard' });
+      }
+    }
+
     res.json({
       success: true,
       user: {
@@ -48,6 +64,8 @@ router.post('/manager/login', async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        isSuperAdmin: user.isSuperAdmin,
+        teamId: user.teamId,
       },
     });
   } catch (error) {
@@ -72,3 +90,4 @@ router.get('/manager/check/:email', async (req, res) => {
 });
 
 export default router;
+
