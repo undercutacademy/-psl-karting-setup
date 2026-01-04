@@ -10,18 +10,18 @@ import { TeamConfig } from '@/types/team';
 
 // Default dropdown options (used when team config not available)
 const DEFAULT_TRACKS = [
-  'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz Piquet',
+  'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz', 'Speedsportz CCW', 'Piquet',
   'St Pete', 'New Castle', 'New Castle Sharkfin', 'New Castle CCW', 'ROK Rio 2024',
-  'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace Trackhouse',
+  'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
   'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
-  'Hamilton', 'Tremblant', 'Icar SH Karting', 'Mosport', 'Portimao'
+  'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex'
 ];
 
 const DEFAULT_CHAMPIONSHIPS = [
   'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
   'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
   'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
-  'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025'
+  'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'Supernats 2026'
 ];
 
 const DEFAULT_DIVISIONS = [
