@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 // PSL Karting team configuration with all dropdown options and form config
 const PSL_KARTING_CONFIG = {
-    managerEmails: ['kevin@pslkarting.com', 'franzparmentier@gmail.com'],
+    managerEmails: ['kevin@pslkarting.com', 'pslkartingdata@gmail.com', 'franzparmentier@gmail.com'],
     logoUrl: '/psl-logo.png',
     primaryColor: '#dc2626',
     emailFromName: 'PSL Karting Setups',

@@ -106,8 +106,10 @@ export async function sendManagerNotificationEmail(
   `;
 
   try {
+    const fromName = submission.team?.emailFromName || 'Setups - Undercut Academy';
+
     const result = await resend.emails.send({
-      from: 'Setups - Undercut Academy <setup@undercutacademy.com>',
+      from: `${fromName} <setup@undercutacademy.com>`,
       to: managerEmail,
       subject: `New Setup Submission from ${userName} - ${submission.track}`,
       html: htmlContent,
