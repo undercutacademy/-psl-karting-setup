@@ -61,13 +61,22 @@ export default function FormPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
+  const [configLoading, setConfigLoading] = useState(true);
 
   // Fetch team configuration on mount
   useEffect(() => {
     if (teamSlug) {
-      getTeamConfig(teamSlug).then(config => {
-        setTeamConfig(config);
-      });
+      setConfigLoading(true);
+      getTeamConfig(teamSlug)
+        .then(config => {
+          setTeamConfig(config);
+        })
+        .catch(error => {
+          console.error('Error loading team config:', error);
+        })
+        .finally(() => {
+          setConfigLoading(false);
+        });
     }
   }, [teamSlug]);
 
@@ -154,6 +163,18 @@ export default function FormPage() {
 
   const totalSteps = 5;
   const stepNames = ['Driver Info', 'Engine', 'Tyres', 'Chassis', 'Submit'];
+
+  // Show loading screen while config is being fetched
+  if (configLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-red-500 border-t-transparent mb-4"></div>
+          <p className="text-xl font-bold text-white uppercase tracking-wider">Loading Team Configuration...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
