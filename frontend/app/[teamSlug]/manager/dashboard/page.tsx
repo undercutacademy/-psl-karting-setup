@@ -485,6 +485,9 @@ export default function ManagerDashboard() {
                     Driver
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Championship
+                  </th>
+                  <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Session
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -507,7 +510,7 @@ export default function ManagerDashboard() {
               <tbody className="divide-y divide-gray-800">
                 {filteredSubmissions.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center">
+                    <td colSpan={10} className="px-6 py-12 text-center">
                       <div className="text-6xl mb-4">📭</div>
                       <p className="text-gray-500">
                         {submissions.length === 0 ? 'No submissions yet' : 'No submissions match your filters'}
@@ -552,6 +555,9 @@ export default function ManagerDashboard() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <span className="text-sm font-semibold text-white">{userName}</span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {submission.championship}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 rounded-full text-xs font-bold ${getSessionColor(submission.sessionType)}`}>
