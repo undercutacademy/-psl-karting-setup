@@ -2,33 +2,35 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getSubmissionById, updateSubmission } from '@/lib/api';
+import { getSubmissionById, updateSubmission, getTeamConfig } from '@/lib/api';
 import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@/types/submission';
+import { TeamConfig } from '@/types/team';
 
-const TRACKS = [
-  'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz Piquet',
+// Default options as fallback (matching form/page.tsx)
+const DEFAULT_TRACKS = [
+  'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz', 'Speedsportz CCW', 'Piquet',
   'St Pete', 'New Castle', 'New Castle Sharkfin', 'New Castle CCW', 'ROK Rio 2024',
-  'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace Trackhouse',
+  'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
   'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
-  'Hamilton', 'Tremblant', 'Icar SH Karting', 'Mosport', 'Portimao'
+  'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex'
 ];
 
-const CHAMPIONSHIPS = [
+const DEFAULT_CHAMPIONSHIPS = [
   'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
   'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
   'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
-  'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025'
+  'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'Supernats 2026'
 ];
 
-const DIVISIONS = [
+const DIVISIONS_FALLBACK = [
   'Micro', 'Mini', 'KA100 Jr', 'KA100 Sr', 'KA100 Master', 'Pro Shifter', 'Shifter Master',
   'X30 Junior', 'X30 Senior', 'ROK Micro', 'ROK Mini', 'VLR Junior', 'VLR Senior',
-  'VLR Master', 'Shifter Master', 'ROK Shifter', 'ROK Master', 'ROK Junior', 'ROK PRO GP',
+  'VLR Master', 'ROK Shifter', 'ROK Master', 'ROK Junior', 'ROK PRO GP',
   'ROK SV', 'Micro Max', 'Mini Max', 'Junior Max', 'Senior Max', 'Master Max', 'DD2',
   'DD2 Master', '206 Cadet', '206 Junior', '206 Senior', 'OKN', 'OKNJ', 'KZ2', 'KZ1', 'KZM', 'OK', 'OKJ'
 ];
 
-const TYRE_MODELS = [
+const TYRE_MODELS_FALLBACK = [
   'Mg Red', 'Mg Yellow', 'MG Wet', 'Evinco Blue', 'Evinco Blue SKH2', 'Evinco Red SKM2',
   'Evinco WET', 'Levanto', 'Levanto WET', 'Bridgestone', 'Vega Red', 'Vega Blue',
   'Vega Yellow', 'Mojo D5', 'Mojo D2', 'Dunlop', 'Dunlop WET'
@@ -46,24 +48,44 @@ export default function EditSubmissionPage() {
   const [submission, setSubmission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<Partial<Submission>>({});
+  const [formData, setFormData] = useState<any>({});
+  const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
 
   useEffect(() => {
-    loadSubmission();
-  }, [params.id]);
+    loadData();
+  }, [params.id, params.teamSlug]);
 
-  const loadSubmission = async () => {
+  const loadData = async () => {
     try {
-      const data = await getSubmissionById(params.id as string, params.teamSlug as string);
-      setSubmission(data);
-      setFormData(data);
+      setLoading(true);
+      const [submissionData, config] = await Promise.all([
+        getSubmissionById(params.id as string, params.teamSlug as string),
+        getTeamConfig(params.teamSlug as string)
+      ]);
+
+      setSubmission(submissionData);
+      setTeamConfig(config);
+
+      // Merge user details into formData for editing
+      setFormData({
+        ...submissionData,
+        firstName: submissionData.user?.firstName || '',
+        lastName: submissionData.user?.lastName || '',
+        userEmail: submissionData.user?.email || '',
+      });
     } catch (error) {
-      console.error('Error loading submission:', error);
+      console.error('Error loading data:', error);
     } finally {
-      // ...
       setLoading(false);
     }
   };
+
+  // Helper to handle track/championship options
+  const TRACKS = teamConfig?.dropdownOptions?.tracks || DEFAULT_TRACKS;
+  const CHAMPIONSHIPS = teamConfig?.dropdownOptions?.championships || DEFAULT_CHAMPIONSHIPS;
+  const DIVISIONS = teamConfig?.dropdownOptions?.divisions || DIVISIONS_FALLBACK;
+  const TYRE_MODELS = teamConfig?.dropdownOptions?.tyreModels || TYRE_MODELS_FALLBACK;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,9 +126,42 @@ export default function EditSubmissionPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* General Information */}
+          {/* Driver & General Information */}
           <div className="rounded-lg bg-white p-6 shadow-md">
-            <h2 className={sectionTitleClass}>General Information</h2>
+            <h2 className={sectionTitleClass}>Driver & General Information</h2>
+            <div className="mb-6 grid grid-cols-2 gap-4 border-b pb-6">
+              <div>
+                <label className={labelClass}>First Name *</label>
+                <input
+                  type="text"
+                  value={formData.firstName || ''}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  required
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Last Name *</label>
+                <input
+                  type="text"
+                  value={formData.lastName || ''}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  required
+                  className={inputClass}
+                />
+              </div>
+              <div className="col-span-2">
+                <label className={labelClass}>Email Address *</label>
+                <input
+                  type="email"
+                  value={formData.userEmail || ''}
+                  onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
+                  required
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Session Type *</label>
@@ -131,7 +186,7 @@ export default function EditSubmissionPage() {
                   className={selectClass}
                 >
                   <option value="">Please Select</option>
-                  {TRACKS.map((track) => (
+                  {TRACKS.map((track: string) => (
                     <option key={track} value={track}>{track}</option>
                   ))}
                 </select>
@@ -145,7 +200,7 @@ export default function EditSubmissionPage() {
                   className={selectClass}
                 >
                   <option value="">Please Select</option>
-                  {CHAMPIONSHIPS.map((champ) => (
+                  {CHAMPIONSHIPS.map((champ: string) => (
                     <option key={champ} value={champ}>{champ}</option>
                   ))}
                 </select>
@@ -159,7 +214,7 @@ export default function EditSubmissionPage() {
                   className={selectClass}
                 >
                   <option value="">Please Select</option>
-                  {DIVISIONS.map((div) => (
+                  {DIVISIONS.map((div: string) => (
                     <option key={div} value={div}>{div}</option>
                   ))}
                 </select>

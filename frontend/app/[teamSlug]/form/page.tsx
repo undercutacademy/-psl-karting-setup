@@ -112,6 +112,10 @@ export default function FormPage() {
     setLastSubmission(submission);
     if (submission) {
       setFormData(submission);
+      if ((submission as any).user) {
+        setFirstName((submission as any).user.firstName || '');
+        setLastName((submission as any).user.lastName || '');
+      }
     }
     setLoading(false);
   };
@@ -290,40 +294,38 @@ export default function FormPage() {
               )}
 
               {(!lastSubmission || hasSetupChanged === true) && (
-                <>
-                  {/* Show name fields only for new drivers (no last submission) */}
-                  {!lastSubmission && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className={labelClass}>First Name *</label>
-                        <input
-                          type="text"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          required
-                          className={inputClass}
-                          placeholder="John"
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClass}>Last Name *</label>
-                        <input
-                          type="text"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          required
-                          className={inputClass}
-                          placeholder="Speed"
-                        />
-                      </div>
+                <div className="space-y-6">
+                  {/* Name fields - Always show for new drivers, or when setup changed for returning drivers */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelClass}>First Name *</label>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        className={inputClass}
+                        placeholder="John"
+                      />
                     </div>
-                  )}
+                    <div>
+                      <label className={labelClass}>Last Name *</label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                        className={inputClass}
+                        placeholder="Speed"
+                      />
+                    </div>
+                  </div>
 
                   {/* Info message for returning drivers who are changing setup */}
                   {hasSetupChanged === true && (
                     <div className="rounded-xl bg-orange-500/10 border border-orange-500/30 p-4">
                       <p className="text-orange-400 font-semibold">
-                        ✎ Modify your setup details below. You can change the championship, track, or division if needed.
+                        ✎ Modify the driver name or setup details below. You can change the championship, track, or division if needed.
                       </p>
                     </div>
                   )}
@@ -393,7 +395,7 @@ export default function FormPage() {
                     Next Step
                     <span className="text-xl">→</span>
                   </button>
-                </>
+                </div>
               )}
             </div>
           )}

@@ -45,24 +45,24 @@ async function main() {
         },
         // TKG Birelart
         {
+            email: 'gavinbayliff@icloud.com',
+            password: 'tkgbirelartusa@setup',
+            firstName: 'Gavin',
+            lastName: 'Bayliff',
+            teamId: tkgTeam.id
+        },
+        {
+            email: 'finnbayliff@icloud.com',
+            password: 'tkgbirelartusa@setup',
+            firstName: 'Finn',
+            lastName: 'Bayliff',
+            teamId: tkgTeam.id
+        },
+        {
             email: 'data@tkgbirelartusa.com',
             password: 'tkgbirelartusa@setup',
             firstName: 'TKG',
             lastName: 'Data',
-            teamId: tkgTeam.id
-        },
-        {
-            email: 'fbayliff@tkgbirelartusa.com',
-            password: 'tkgbirelartusa@setup',
-            firstName: 'F',
-            lastName: 'Bayliff',
-            teamId: tkgTeam.id
-        },
-        {
-            email: 'gbayliff@trinitykartinggroup.com',
-            password: 'tkgbirelartusa@setup',
-            firstName: 'G',
-            lastName: 'Bayliff',
             teamId: tkgTeam.id
         }
     ];

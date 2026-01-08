@@ -107,17 +107,23 @@ export async function sendManagerNotificationEmail(
 
   try {
     const fromName = submission.team?.emailFromName || 'Setups - Undercut Academy';
+    const cleanEmail = managerEmail.trim().toLowerCase();
 
-    const result = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: `${fromName} <setup@undercutacademy.com>`,
-      to: managerEmail,
+      to: cleanEmail,
       subject: `New Setup Submission from ${userName} - ${submission.track}`,
       html: htmlContent,
     });
 
-    console.log(`Email sent successfully! ID: ${result.data?.id}`);
+    if (error) {
+      console.error(`Resend error sending to ${cleanEmail}:`, error);
+      throw new Error(`Failed to send email: ${error.message}`);
+    }
+
+    console.log(`Email sent successfully to ${cleanEmail}! ID: ${data?.id}`);
   } catch (error) {
-    console.error('Error sending manager notification email:', error);
+    console.error(`Error in sendManagerNotificationEmail for ${managerEmail}:`, error);
     throw error;
   }
 }

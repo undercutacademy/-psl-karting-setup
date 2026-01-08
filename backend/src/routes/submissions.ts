@@ -186,6 +186,7 @@ router.get('/last/:email', async (req, res) => {
         userId: user.id,
         teamId: team.id
       },
+      include: { user: true },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -316,7 +317,7 @@ router.post('/', async (req, res) => {
 
         // Priority 1: Use team.managerEmails if configured
         if (team.managerEmails && team.managerEmails.length > 0) {
-          team.managerEmails.forEach((email: string) => managerEmails.add(email));
+          team.managerEmails.forEach((email: string) => managerEmails.add(email.trim().toLowerCase()));
         } else {
           // Fallback: Find managers who are members of this team
           const teamManagers = await prisma.user.findMany({
@@ -326,25 +327,32 @@ router.post('/', async (req, res) => {
             },
             select: { email: true },
           });
-          teamManagers.forEach((m) => managerEmails.add(m.email));
+          teamManagers.forEach((m) => managerEmails.add(m.email.trim().toLowerCase()));
         }
 
         // Add default manager email if set (backward compatibility)
         if (process.env.MANAGER_EMAIL) {
-          managerEmails.add(process.env.MANAGER_EMAIL);
+          managerEmails.add(process.env.MANAGER_EMAIL.trim().toLowerCase());
         }
 
         console.log(`Sending notification emails to ${managerEmails.size} managers for team ${team.slug}`);
+        console.log(`Target emails: ${Array.from(managerEmails).join(', ')}`);
 
-        for (const email of Array.from(managerEmails)) {
-          sendManagerNotificationEmail(
-            email,
-            `${user.firstName} ${user.lastName}`,
-            submission
-          ).catch((emailError) => {
-            console.error(`Failed to send manager notification email to ${email}:`, emailError);
-          });
-        }
+        // Wait for all email attempts but catch individual errors
+        await Promise.all(
+          Array.from(managerEmails).map(async (email) => {
+            try {
+              const cleanEmail = email.trim().toLowerCase();
+              await sendManagerNotificationEmail(
+                cleanEmail,
+                `${user.firstName} ${user.lastName}`,
+                submission
+              );
+            } catch (emailError: any) {
+              console.error(`Failed to send manager notification email to ${email}:`, emailError.message);
+            }
+          })
+        );
       } catch (error) {
         console.error('Error fetching managers for notification:', error);
       }
@@ -360,16 +368,98 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { firstName, lastName, userEmail, email, teamSlug, ...submissionData } = req.body;
+
+    // Normalize email field name (support both 'userEmail' and 'email')
+    const finalEmail = userEmail || email;
+
+    // Get current submission to check existing user
+    const currentSubmission = await prisma.submission.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+
+    if (!currentSubmission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    let updatedUserId = currentSubmission.userId;
+
+    // Handle user updates or reassignment
+    if (finalEmail || firstName || lastName) {
+      const targetEmail = finalEmail || currentSubmission.user.email;
+
+      if (targetEmail.toLowerCase() === currentSubmission.user.email.toLowerCase()) {
+        // Same user, update their name if provided
+        const updateUserData: any = {};
+        if (firstName) updateUserData.firstName = firstName;
+        if (lastName) updateUserData.lastName = lastName;
+
+        if (Object.keys(updateUserData).length > 0) {
+          await prisma.user.update({
+            where: { id: currentSubmission.userId },
+            data: updateUserData,
+          });
+        }
+      } else {
+        // Different email, find or create the new user
+        let newUser = await prisma.user.findUnique({
+          where: { email: targetEmail },
+        });
+
+        if (!newUser) {
+          newUser = await prisma.user.create({
+            data: {
+              email: targetEmail,
+              firstName: firstName || currentSubmission.user.firstName,
+              lastName: lastName || currentSubmission.user.lastName,
+              teamId: currentSubmission.teamId,
+            },
+          });
+        } else {
+          // Update the existing user's name if provided
+          const updateUserData: any = {};
+          if (firstName) updateUserData.firstName = firstName;
+          if (lastName) updateUserData.lastName = lastName;
+          if (Object.keys(updateUserData).length > 0) {
+            await prisma.user.update({
+              where: { id: newUser.id },
+              data: updateUserData,
+            });
+          }
+        }
+        updatedUserId = newUser.id;
+      }
+    }
+
+    // Clean submission data - remove fields that shouldn't be updated or aren't in the model
+    const {
+      id: _id,
+      createdAt,
+      updatedAt,
+      userId: _userId,
+      user: _user,
+      team: _team,
+      teamId: _teamId,
+      ...cleanData
+    } = submissionData;
+
+    // Transform enum values
+    const transformedData = transformSubmissionData(cleanData);
+
     const submission = await prisma.submission.update({
       where: { id },
-      data: req.body,
+      data: {
+        ...transformedData,
+        userId: updatedUserId,
+      },
       include: { user: true },
     });
 
     res.json(submission);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating submission:', error);
-    res.status(500).json({ error: 'Failed to update submission' });
+    res.status(500).json({ error: `Failed to update submission: ${error.message}` });
   }
 });
 
