@@ -103,6 +103,7 @@ export interface Submission {
   isFavorite?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  user?: User;
 }
 
 export interface User {

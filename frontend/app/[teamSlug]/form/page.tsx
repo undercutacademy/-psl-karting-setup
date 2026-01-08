@@ -112,9 +112,9 @@ export default function FormPage() {
     setLastSubmission(submission);
     if (submission) {
       setFormData(submission);
-      if ((submission as any).user) {
-        setFirstName((submission as any).user.firstName || '');
-        setLastName((submission as any).user.lastName || '');
+      if (submission.user) {
+        setFirstName(submission.user.firstName || '');
+        setLastName(submission.user.lastName || '');
       }
     }
     setLoading(false);
