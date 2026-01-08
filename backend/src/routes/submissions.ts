@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@prisma/client';
-import { sendUserConfirmationEmail, sendManagerNotificationEmail } from '../services/emailService';
+import { sendUserConfirmationEmail, sendManagerNotificationEmail, sendManagerNotificationEmailBatch } from '../services/emailService';
 import { generateSubmissionPDF } from '../services/pdfService';
 
 const router = Router();
@@ -338,21 +338,18 @@ router.post('/', async (req, res) => {
         console.log(`Sending notification emails to ${managerEmails.size} managers for team ${team.slug}`);
         console.log(`Target emails: ${Array.from(managerEmails).join(', ')}`);
 
-        // Wait for all email attempts but catch individual errors
-        await Promise.all(
-          Array.from(managerEmails).map(async (email) => {
-            try {
-              const cleanEmail = email.trim().toLowerCase();
-              await sendManagerNotificationEmail(
-                cleanEmail,
-                `${user.firstName} ${user.lastName}`,
-                submission
-              );
-            } catch (emailError: any) {
-              console.error(`Failed to send manager notification email to ${email}:`, emailError.message);
-            }
-          })
-        );
+        // Send a single batch email to all managers instead of individual emails
+        // This helps avoid Resend free tier limitations on per-recipient verification
+        try {
+          await sendManagerNotificationEmailBatch(
+            Array.from(managerEmails),
+            `${user.firstName} ${user.lastName}`,
+            submission
+          );
+          console.log(`✅ Batch notification sent successfully to ${managerEmails.size} managers`);
+        } catch (emailError: any) {
+          console.error(`❌ Failed to send batch notification email:`, emailError.message);
+        }
       } catch (error) {
         console.error('Error fetching managers for notification:', error);
       }
