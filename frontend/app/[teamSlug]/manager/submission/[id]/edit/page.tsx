@@ -66,9 +66,13 @@ export default function EditSubmissionPage() {
       setSubmission(submissionData);
       setTeamConfig(config);
 
+      // Normalize sessionType to match frontend enum values (e.g. "Practice1" -> "Practice 1")
+      const normalizedSessionType = (SessionType as any)[submissionData.sessionType] || submissionData.sessionType;
+
       // Merge user details into formData for editing
       setFormData({
         ...submissionData,
+        sessionType: normalizedSessionType,
         firstName: submissionData.user?.firstName || '',
         lastName: submissionData.user?.lastName || '',
         userEmail: submissionData.user?.email || '',
@@ -92,7 +96,7 @@ export default function EditSubmissionPage() {
     setSaving(true);
     try {
       await updateSubmission(params.id as string, formData, params.teamSlug as string);
-      router.push(`/${params.teamSlug}/manager/submission/${params.id}`);
+      router.push(`/${params.teamSlug}/manager/dashboard`);
     } catch (error) {
       console.error('Error updating submission:', error);
       alert('Failed to update submission');

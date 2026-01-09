@@ -120,7 +120,8 @@ export default function FormPage() {
     const submission = await getLastSubmissionByEmail(email, teamSlug);
     setLastSubmission(submission);
     if (submission) {
-      setFormData(submission);
+      const { observation, lapTime, ...rest } = submission;
+      setFormData({ ...rest, observation: '', lapTime: '' });
       if (submission.user) {
         setFirstName(submission.user.firstName || '');
         setLastName(submission.user.lastName || '');
@@ -288,7 +289,9 @@ export default function FormPage() {
                         setHasSetupChanged(false);
                         setFormData({
                           ...lastSubmission,
-                          sessionType: formData.sessionType || lastSubmission.sessionType,
+                          sessionType: lastSubmission.sessionType,
+                          observation: '',
+                          lapTime: ''
                         });
                         setCurrentStep(5);
                       }}
@@ -302,7 +305,9 @@ export default function FormPage() {
                         setHasSetupChanged(true);
                         setFormData({
                           ...lastSubmission,
-                          sessionType: formData.sessionType || lastSubmission.sessionType,
+                          sessionType: lastSubmission.sessionType,
+                          observation: '',
+                          lapTime: ''
                         });
                         // Stay on step 1 so the driver can change championship/track/division if needed
                       }}
