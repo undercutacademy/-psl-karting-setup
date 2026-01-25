@@ -192,11 +192,11 @@ export default function FormPage() {
 
       {/* Home Button */}
       <Link
-        href="/"
+        href={`/${teamSlug}`}
         className="fixed top-6 left-6 z-50 flex items-center gap-2 rounded-full border border-gray-700 bg-gray-900/80 px-4 py-2 text-sm font-bold text-gray-300 uppercase tracking-wider backdrop-blur-md transition-all hover:border-red-500 hover:text-white hover:shadow-lg hover:shadow-red-500/20 group"
       >
         <span className="text-lg group-hover:scale-110 transition-transform">🏠</span>
-        <span className="hidden md:inline">Teams</span>
+        <span className="hidden md:inline">Home</span>
       </Link>
 
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-8">
