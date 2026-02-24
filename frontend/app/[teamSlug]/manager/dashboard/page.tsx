@@ -56,6 +56,7 @@ export default function ManagerDashboard() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     loadSubmissions();
@@ -185,29 +186,39 @@ export default function ManagerDashboard() {
     setSelectedIds(newSet);
   };
 
-  const handleBulkDelete = async () => {
+  const promptBulkDelete = () => {
     if (selectedIds.size === 0) return;
+    setShowDeleteConfirm(true);
+  };
 
-    const confirmMessage = `Are you sure you want to delete ${selectedIds.size} submission(s)? This action cannot be undone.`;
-    if (!confirm(confirmMessage)) return;
-
+  const executeBulkDelete = async () => {
+    console.log("User confirmed deletion. Starting request...");
     setDeleting(true);
     try {
       const response = await fetch(`${API_URL}/submissions/bulk-delete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ ids: Array.from(selectedIds), teamSlug }),
       });
 
-      if (!response.ok) throw new Error('Failed to delete submissions');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        console.error("Bulk delete failed with status:", response.status, errData);
+        throw new Error(errData.error || 'Failed to delete submissions');
+      }
 
+      console.log("Bulk delete successful. Refreshing list...");
       // Refresh the list
       await loadSubmissions();
       setSelectedIds(new Set());
-      alert(`Successfully deleted ${selectedIds.size} submission(s)`);
+      console.log("Bulk delete operation completed.");
+      setShowDeleteConfirm(false);
     } catch (error) {
       console.error('Error deleting submissions:', error);
-      alert('Failed to delete submissions');
+      window.alert('Failed to delete submissions. Check console for details.');
     } finally {
       setDeleting(false);
     }
@@ -367,7 +378,7 @@ export default function ManagerDashboard() {
                   Export CSV ({selectedIds.size})
                 </button>
                 <button
-                  onClick={handleBulkDelete}
+                  onClick={promptBulkDelete}
                   disabled={deleting}
                   className="px-4 py-2 rounded-lg bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
@@ -611,9 +622,47 @@ export default function ManagerDashboard() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-600 text-xs">
-          <p>Powered by <a href="https://undercutacademy.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors">Undercut Academy</a></p>
+          <p>Powered by <a href="https://overcutacademy.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors">Overcut Academy</a></p>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wider">Confirm <span className="text-red-500">Deletion</span></h3>
+              <p className="text-gray-400">
+                Are you sure you want to delete <strong className="text-white">{selectedIds.size}</strong> submission(s)? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="flex-1 px-4 py-3 rounded-lg font-bold text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-600 transition-colors disabled:opacity-50 uppercase tracking-wider"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeBulkDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-3 rounded-lg font-bold text-white bg-red-600 hover:bg-red-500 border border-red-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-wider"
+              >
+                {deleting ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

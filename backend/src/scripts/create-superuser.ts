@@ -8,8 +8,8 @@ function hashPassword(password: string): string {
 }
 
 async function main() {
-    const email = 'undercutacademy@gmail.com';
-    const password = 'Undercut@7748';
+    const email = 'overcutacademy@gmail.com';
+    const password = 'Overcut@7748';
     const hashedPassword = hashPassword(password);
 
     console.log(`Creating superuser: ${email}`);
@@ -23,7 +23,7 @@ async function main() {
         },
         create: {
             email,
-            firstName: 'Undercut',
+            firstName: 'Overcut',
             lastName: 'Academy',
             password: hashedPassword,
             isManager: true,

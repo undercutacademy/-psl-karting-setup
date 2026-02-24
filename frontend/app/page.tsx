@@ -15,8 +15,8 @@ export default function LandingPage() {
             <div className="relative z-10 w-full max-w-md text-center">
                 <div className="mb-8">
                     <Image
-                        src="/undercut-academy-logo.png"
-                        alt="Undercut Academy"
+                        src="/overcut-academy-logo.png"
+                        alt="Overcut Academy"
                         width={350}
                         height={140}
                         className="drop-shadow-[0_0_40px_rgba(255,255,255,0.2)] mb-4 mx-auto"

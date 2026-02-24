@@ -50,8 +50,8 @@ NODE_ENV=development
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=lucasnogueira48@gmail.com
-SMTP_PASS=Undercut@7748
-MANAGER_EMAIL=undercutacademy@gmail.com
+SMTP_PASS=Overcut@7748
+MANAGER_EMAIL=pslkartingdata@gmail.com
 ```
 
 **Important**: 

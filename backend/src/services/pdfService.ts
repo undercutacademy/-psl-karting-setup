@@ -168,7 +168,7 @@ export function generateSubmissionPDF(submission: Submission, userName: string):
     doc.rect(0, footerY, doc.page.width, 8).fill(COLORS.primary);
     doc.fontSize(8)
       .fillColor(COLORS.lightGray)
-      .text('Powered by Undercut Academy', 40, footerY - 15, {
+      .text('Powered by Overcut Academy', 40, footerY - 15, {
         width: pageWidth,
         align: 'center'
       });

@@ -105,7 +105,7 @@ export default async function Home({
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-600 text-xs">
-          <p>Powered by <a href="https://undercutacademy.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors">Undercut Academy</a></p>
+          <p>Powered by <a href="https://overcutacademy.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors">Overcut Academy</a></p>
         </div>
       </div>
     </div>

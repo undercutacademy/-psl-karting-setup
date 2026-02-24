@@ -100,18 +100,18 @@ export async function sendManagerNotificationEmail(
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
-          <a href="https://setups.undercutacademy.com/${submission.team?.slug || 'psl-karting'}/manager/dashboard" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View in Dashboard</a>
+          <a href="https://setups.overcutacademy.com/${submission.team?.slug || 'psl-karting'}/manager/dashboard" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View in Dashboard</a>
         </div>
       </div>
     </div>
   `;
 
   try {
-    const fromName = submission.team?.emailFromName || 'Setups - Undercut Academy';
+    const fromName = submission.team?.emailFromName || 'Setups - Overcut Academy';
     const cleanEmail = managerEmail.trim().toLowerCase();
 
     const { data, error } = await resend.emails.send({
-      from: `${fromName} <setup@undercutacademy.com>`,
+      from: `${fromName} <setup@overcutacademy.com>`,
       to: cleanEmail,
       subject: `New Setup Submission from ${userName} - ${submission.track}`,
       html: htmlContent,
@@ -211,21 +211,21 @@ export async function sendManagerNotificationEmailBatch(
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
-          <a href="https://setups.undercutacademy.com/${submission.team?.slug || 'psl-karting'}/manager/dashboard" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View in Dashboard</a>
+          <a href="https://setups.overcutacademy.com/${submission.team?.slug || 'psl-karting'}/manager/dashboard" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View in Dashboard</a>
         </div>
       </div>
     </div>
   `;
 
   try {
-    const fromName = submission.team?.emailFromName || 'Setups - Undercut Academy';
+    const fromName = submission.team?.emailFromName || 'Setups - Overcut Academy';
     const cleanEmails = managerEmails.map(email => email.trim().toLowerCase());
 
     console.log(`Sending batch email to: ${cleanEmails.join(', ')}`);
 
     // Send a single email to all managers
     const { data, error } = await resend.emails.send({
-      from: `${fromName} <setup@undercutacademy.com>`,
+      from: `${fromName} <setup@overcutacademy.com>`,
       to: cleanEmails, // Resend supports arrays for multiple recipients
       subject: `New Setup Submission from ${userName} - ${submission.track}`,
       html: htmlContent,

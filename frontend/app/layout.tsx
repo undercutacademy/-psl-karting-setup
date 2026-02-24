@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://setups.undercutacademy.com'),
-  title: "Setups - Undercut",
+  metadataBase: new URL('https://setups.overcutacademy.com'),
+  title: "Setups - Overcut",
   description: "Karting setup management system",
   icons: {
     icon: '/icon.png',
