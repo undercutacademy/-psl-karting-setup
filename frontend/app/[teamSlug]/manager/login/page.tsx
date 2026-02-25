@@ -13,6 +13,13 @@ export default function ManagerLoginPage() {
   const teamSlug = params.teamSlug as string;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    if (teamSlug === 'demo') {
+      setEmail('demo@overcut.com');
+      setPassword('setupdemo');
+    }
+  }, [teamSlug]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [teamLogo, setTeamLogo] = useState('');
