@@ -37,7 +37,19 @@ prisma/migrations/
 # IDE
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
+
+# Local Tools and Temp Files
+.temp_pdf/
+Old database/
+frontend/convert_webp.py
+frontend/process_glow.py
+frontend/test_glow.py
+frontend/test_*.png
+frontend/public/screenshots/
+backend/src/scripts/create-undercutacademy.ts
+backend/src/scripts/setup-bravar.ts
 
