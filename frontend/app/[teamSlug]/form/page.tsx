@@ -45,7 +45,7 @@ const REGION_DATA: Record<string, { tracks: string[], championships: string[], d
     championships: [],
     divisions: [],
   },
-  SouthAmerica: {
+  Brazil: {
     tracks: [
       'Kartódromo Granja Viana (SP)', 'Kartódromo Internacional Nova Odessa (SP)',
       'Kartódromo Ayrton Senna - Interlagos (SP)', 'Kartódromo Internacional Aldeia da Serra (SP)',
@@ -92,11 +92,11 @@ export interface TrackLayout {
 
 export const TRACK_LAYOUTS: Record<string, TrackLayout[]> = {
   'Kartódromo Ayrton Senna - Interlagos (SP)': [
-    { id: 'layout1', name: 'Layout 1', imageUrl: '/layouts/interlagos/1.webp' },
-    { id: 'layout2', name: 'Standard', imageUrl: '/layouts/interlagos/2.webp' },
-    { id: 'layout3', name: 'Layout 2', imageUrl: '/layouts/interlagos/3.webp' },
-    { id: 'layout4', name: 'Reverse', imageUrl: '/layouts/interlagos/4.webp' },
-    { id: 'layout5', name: 'Layout 5', imageUrl: '/layouts/interlagos/5.webp' },
+    { id: 'layout1', name: 'Original', imageUrl: '/layouts/interlagos/1.webp' },
+    { id: 'layout2', name: 'Layout 2', imageUrl: '/layouts/interlagos/2.webp' },
+    { id: 'layout3', name: 'Layout 3', imageUrl: '/layouts/interlagos/3.webp' },
+    { id: 'layout4', name: 'Layout 4', imageUrl: '/layouts/interlagos/4.webp' },
+    { id: 'layout5', name: 'Reverse', imageUrl: '/layouts/interlagos/5.webp' },
     { id: 'layout6', name: 'Layout 6', imageUrl: '/layouts/interlagos/6.webp' },
     { id: 'layout7', name: 'Layout 7', imageUrl: '/layouts/interlagos/7.webp' },
     { id: 'layout8', name: 'Layout 8', imageUrl: '/layouts/interlagos/8.webp' },
@@ -132,6 +132,7 @@ export default function FormPage() {
   const [configLoading, setConfigLoading] = useState(true);
   const [lang, setLang] = useState<Language>('en');
   const [selectedLayout, setSelectedLayout] = useState<string>('');
+  const [helpModal, setHelpModal] = useState<'seatPosition' | 'seatInclination' | null>(null);
 
   // Load saved language preference on mount
   useEffect(() => {
@@ -296,6 +297,37 @@ export default function FormPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
+      {/* Help Modal */}
+      {helpModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setHelpModal(null)}>
+          <div className="relative bg-gray-900 rounded-2xl border border-gray-700 p-6 max-w-3xl w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button type="button" className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors" onClick={() => setHelpModal(null)}>
+              <span className="text-3xl">&times;</span>
+            </button>
+            <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
+              <span className="text-2xl">📏</span>
+              {helpModal === 'seatPosition' ? getLabel('seatPosition') : getLabel('seatInclination')} - Guide
+            </h3>
+            <div className="relative w-full rounded-xl overflow-hidden flex items-center justify-center bg-gray-800/50 border border-gray-700/50 p-2">
+              <img
+                src={helpModal === 'seatPosition' ? '/Ajuste de banco/Seat_Position.png' : '/Ajuste de banco/Seat_Inclination.png'}
+                alt={helpModal}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setHelpModal(null)}
+                className="rounded-lg bg-gray-700 px-6 py-2 font-bold text-white uppercase tracking-wider transition-all hover:bg-gray-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Racing stripes background */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-1/4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
@@ -308,7 +340,7 @@ export default function FormPage() {
       <div className="h-2 w-full bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
 
       {/* Home Button */}
-      <div className="fixed top-6 left-6 z-50 flex gap-4">
+      <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50 flex gap-2 md:gap-4">
         <Link
           href={`/${teamSlug}`}
           className="flex items-center gap-2 rounded-full border border-gray-700 bg-gray-900/80 px-4 py-2 text-sm font-bold text-gray-300 uppercase tracking-wider backdrop-blur-md transition-all hover:border-red-500 hover:text-white hover:shadow-lg hover:shadow-red-500/20 group"
@@ -343,7 +375,7 @@ export default function FormPage() {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-4xl px-4 py-8">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 pt-24 pb-8 md:pt-12 md:pb-8">
         {/* Logo Header */}
         <div className="mb-8 flex flex-col items-center">
           <div className="relative mb-4">
@@ -362,12 +394,12 @@ export default function FormPage() {
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between mb-2">
+        <div className="mb-8 w-full max-w-full overflow-hidden px-1">
+          <div className="flex justify-between mb-2 w-full gap-1 sm:gap-2">
             {stepNames.map((name, index) => (
               <div
                 key={name}
-                className={`text-xs font-bold uppercase tracking-wider transition-colors ${index + 1 <= currentStep ? 'text-red-500' : 'text-gray-600'
+                className={`text-[9px] sm:text-xs text-center flex-1 w-0 leading-tight break-words font-bold uppercase tracking-tighter sm:tracking-wider transition-colors ${index + 1 <= currentStep ? 'text-red-500' : 'text-gray-600'
                   }`}
               >
                 {name}
@@ -555,8 +587,8 @@ export default function FormPage() {
                             type="button"
                             onClick={() => setSelectedLayout(layout.name)}
                             className={`relative min-w-[140px] md:min-w-[160px] h-[180px] flex-shrink-0 snap-start rounded-xl flex flex-col items-center justify-between p-4 transition-all duration-300 ${selectedLayout === layout.name
-                                ? 'border-[1.5px] border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-[#1a1c23]'
-                                : 'border border-gray-700/50 bg-[#1a1c23] hover:border-gray-500'
+                              ? 'border-[1.5px] border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-[#1a1c23]'
+                              : 'border border-gray-700/50 bg-[#1a1c23] hover:border-gray-500'
                               }`}
                           >
                             <div className="w-full h-24 flex-grow flex items-center justify-center p-2">
@@ -566,8 +598,8 @@ export default function FormPage() {
                                   src={layout.imageUrl}
                                   alt={layout.name}
                                   className={`max-w-full max-h-full object-contain transition-all duration-300 ${selectedLayout === layout.name
-                                      ? 'drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] filter brightness-110'
-                                      : 'opacity-50 grayscale'
+                                    ? 'drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] filter brightness-110'
+                                    : 'opacity-50 grayscale'
                                     }`}
                                   onError={(e) => {
                                     // Fallback for missing images
@@ -1057,7 +1089,19 @@ export default function FormPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('seatPosition') && (
                   <div>
-                    <label className={labelClass}>{getLabel('seatPosition')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('seatPosition')} *</label>
+                      {teamConfig?.name?.toLowerCase().includes('bravar') && (
+                        <button
+                          type="button"
+                          onClick={() => setHelpModal('seatPosition')}
+                          className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors border border-gray-600"
+                          title="How to measure"
+                        >
+                          ?
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -1071,7 +1115,19 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('seatInclination') && (
                   <div>
-                    <label className={labelClass}>{getLabel('seatInclination')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('seatInclination')} *</label>
+                      {teamConfig?.name?.toLowerCase().includes('bravar') && (
+                        <button
+                          type="button"
+                          onClick={() => setHelpModal('seatInclination')}
+                          className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors border border-gray-600"
+                          title="How to measure"
+                        >
+                          ?
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="text"
                       inputMode="decimal"

@@ -107,6 +107,7 @@ model Team {
   // Branding
   logoUrl         String?
   primaryColor    String       @default("#dc2626")
+  region          String       @default("NorthAmerica")
   
   // Email Configuration
   managerEmails   String[]     // All emails that receive notifications
@@ -115,6 +116,7 @@ model Team {
   // Form Configuration (JSON)
   formConfig      Json?        // Which fields are enabled/required
   dropdownOptions Json?        // Custom tracks, championships, divisions
+  customLabels    Json?        // Custom mapped form labels per team
   
   users           User[]
   submissions     Submission[]
@@ -133,27 +135,33 @@ model Submission {
   track             String
   championship      String
   division          String
-  engineNumber      String
+  engineNumber      String?
   gearRatio         String?
   driveSprocket     String?
   drivenSprocket    String?
   carburatorNumber  String?
-  tyreModel         String
-  tyreAge           String
+  tyreModel         String?
+  tyreAge           String?
   tyreColdPressure  String
-  chassis           String
-  axle              String
-  rearHubsMaterial  RearHubsMaterial
-  rearHubsLength    String
-  frontHeight       FrontHeight
-  backHeight        BackHeight
+  chassis           String?
+  axle              String?
+  rearHubsMaterial  RearHubsMaterial?
+  rearHubsLength    String?
+  frontHeight       FrontHeight?
+  backHeight        BackHeight?
   frontHubsMaterial FrontHubsMaterial?
-  frontBar          FrontBar
-  spindle           Spindle
-  caster            String
-  seatPosition      String
+  frontBar          FrontBar?
+  spindle           Spindle?
+  caster            String?
+  seatPosition      String?
+  seatInclination   String?
   lapTime           String?
   observation       String?
+  axleSize          String?
+  frontHubsLength   String?
+  camber            String?
+  rearTrackWidth    String?
+  sessionLaps       String?
   customData        Json?             // Team-specific field values
   isFavorite        Boolean           @default(false)
   createdAt         DateTime          @default(now())

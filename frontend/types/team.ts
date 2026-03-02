@@ -20,6 +20,8 @@ export interface TeamConfig {
     primaryColor: string;
     formConfig: FormConfig;
     dropdownOptions: DropdownOptions;
+    customLabels?: Record<string, string>;
+    region?: string;
 }
 
 export interface TeamInfo {

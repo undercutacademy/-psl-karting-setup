@@ -132,17 +132,17 @@ export function generateSubmissionPDF(submission: Submission, userName: string):
 
     // Tyres Section
     yPos = drawSectionHeader('Tyres Data', yPos);
-    yPos = drawDataRow('Tyre Model', submission.tyreModel, 'Tyre Age', submission.tyreAge, yPos);
-    yPos = drawDataRow('Cold Pressure', submission.tyreColdPressure, '', '', yPos);
+    yPos = drawDataRow('Tyre Model', submission.tyreModel || '-', 'Tyre Age', submission.tyreAge || '-', yPos);
+    yPos = drawDataRow('Cold Pressure', submission.tyreColdPressure || '-', '', '', yPos);
     yPos += 5;
 
     // Kart Setup Section
     yPos = drawSectionHeader('Kart Setup', yPos);
-    yPos = drawDataRow('Chassis', submission.chassis, 'Axle', submission.axle, yPos);
-    yPos = drawDataRow('Rear Hubs', `${submission.rearHubsMaterial} - ${submission.rearHubsLength}`, 'Front Hubs', submission.frontHubsMaterial || '-', yPos);
-    yPos = drawDataRow('Front Height', submission.frontHeight, 'Back Height', submission.backHeight, yPos);
-    yPos = drawDataRow('Front Bar', submission.frontBar, 'Spindle', submission.spindle, yPos);
-    yPos = drawDataRow('Caster', submission.caster, 'Seat Position', `${submission.seatPosition} cm`, yPos);
+    yPos = drawDataRow('Chassis', submission.chassis || '-', 'Axle', submission.axle || '-', yPos);
+    yPos = drawDataRow('Rear Hubs', `${submission.rearHubsMaterial || '-'} - ${submission.rearHubsLength || '-'}`, 'Front Hubs', submission.frontHubsMaterial || '-', yPos);
+    yPos = drawDataRow('Front Height', submission.frontHeight || '-', 'Back Height', submission.backHeight || '-', yPos);
+    yPos = drawDataRow('Front Bar', submission.frontBar || '-', 'Spindle', submission.spindle || '-', yPos);
+    yPos = drawDataRow('Caster', submission.caster || '-', 'Seat Position', submission.seatPosition ? `${submission.seatPosition} cm` : '-', yPos);
     yPos += 5;
 
     // Conclusion Section (if applicable)

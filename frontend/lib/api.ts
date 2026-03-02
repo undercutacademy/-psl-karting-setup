@@ -122,6 +122,28 @@ export async function getTeamConfig(teamSlug: string): Promise<TeamConfig | null
   }
 }
 
+export async function updateTeamConfig(teamSlug: string, configData: Partial<TeamConfig>): Promise<TeamConfig | null> {
+  try {
+    const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/config`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(configData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to update team config' }));
+      throw new Error(error.error || 'Failed to update team config');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating team config:', error);
+    throw error;
+  }
+}
+
 export async function getTeamInfo(teamSlug: string): Promise<TeamInfo | null> {
   try {
     const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}`);

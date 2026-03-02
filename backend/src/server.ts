@@ -31,8 +31,11 @@ app.use('/api/teams', teamsRouter);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-// Trigger restart 2
 // Graceful shutdown
-process.on('beforeExit', async () => {
+async function shutdown() {
   await prisma.$disconnect();
-});
+  process.exit(0);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

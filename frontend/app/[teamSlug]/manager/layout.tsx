@@ -93,9 +93,15 @@ export default function ManagerLayout({
             <div className="flex items-center gap-4">
               <Link
                 href={`/${teamSlug}/manager/dashboard`}
-                className="text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                className={`text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors ${pathname === `/${teamSlug}/manager/dashboard` ? 'bg-gray-800 text-white' : ''}`}
               >
                 📊 Dashboard
+              </Link>
+              <Link
+                href={`/${teamSlug}/manager/settings`}
+                className={`text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors ${pathname === `/${teamSlug}/manager/settings` ? 'bg-gray-800 text-white' : ''}`}
+              >
+                ⚙️ Settings
               </Link>
               <button
                 onClick={handleLogout}

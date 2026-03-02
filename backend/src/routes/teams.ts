@@ -12,7 +12,7 @@ const DEFAULT_FORM_CONFIG = {
         'tyreModel', 'tyreAge', 'tyreColdPressure',
         'chassis', 'axle', 'rearHubsMaterial', 'rearHubsLength',
         'frontHeight', 'backHeight', 'frontHubsMaterial', 'frontBar',
-        'spindle', 'caster', 'seatPosition', 'lapTime', 'observation'
+        'spindle', 'caster', 'seatPosition', 'seatInclination', 'lapTime', 'observation'
     ],
     requiredFields: [
         'sessionType', 'track', 'championship', 'division',
@@ -23,20 +23,55 @@ const DEFAULT_FORM_CONFIG = {
 };
 
 // Default dropdown options (used when team doesn't have custom options)
-const DEFAULT_DROPDOWN_OPTIONS = {
-    tracks: [
-        'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz', 'Speedsportz CCW', 'Piquet',
-        'St Pete', 'New Castle', 'New Castle Sharkfin', 'New Castle CCW', 'ROK Rio 2024',
-        'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
-        'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
-        'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex', 'Portimao'
-    ],
-    championships: [
-        'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
-        'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
-        'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
-        'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025'
-    ],
+const REGION_DROPDOWN_OPTIONS: Record<string, { tracks: string[], championships: string[], divisions?: string[] }> = {
+    NorthAmerica: {
+        tracks: [
+            'AMR Motorplex', 'AMR Motorplex CCW', 'Orlando', 'Orlando CCW', 'Speedsportz', 'Speedsportz CCW', 'Piquet',
+            'St Pete', 'New Castle', 'New Castle Sharkfin', 'New Castle CCW', 'ROK Rio 2024',
+            'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
+            'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
+            'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex', 'Portimao'
+        ],
+        championships: [
+            'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
+            'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
+            'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
+            'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025'
+        ]
+    },
+    Brazil: {
+        tracks: [
+            'Kartódromo Granja Viana (SP)',
+            'Kartódromo Internacional Nova Odessa (SP)',
+            'Kartódromo Ayrton Senna - Interlagos (SP)',
+            'Kartódromo Internacional Aldeia da Serra (SP)',
+            'Kartódromo San Marino (SP)',
+            'Kartódromo Internacional de Birigui - Speed Park (SP)',
+            'Kartódromo de Itu (SP)',
+            'Kartódromo Internacional Beto Carrero (SC)',
+            'Circuito Internacional Techspeed - Velopark (RS)',
+            'Kartódromo de Volta Redonda (RJ)',
+            'Kartódromo Raceland Internacional (PR)',
+            'Kartódromo Internacional da Serra (ES)',
+            'Kartódromo Internacional de Tarumã (RS)',
+            'Kartódromo de Guapimirim (RJ)',
+            'Kartódromo RBC Racing (MG)',
+            'Kartódromo Internacional Paladino (PB)',
+            'Kartódromo Luigi Borghesi - Londrina (PR)',
+            'Kartódromo Internacional de Imperatriz (MA)'
+        ],
+        championships: [
+            'Copa SP Light', 'Copa SP Granja Viana', 'Copa do Brasil', 'Copa SpeedPark',
+            'Campeonato Brasileiro', 'Open BRK', 'Open Copa', 'V11 Cup', 'Copa Beto Carrero', 'Campeonato Mineiro'
+        ],
+        divisions: [
+            'Mirim', 'Cadete', 'Mini 2T', 'F4 Junior', 'OKNJ', 'OKN', 'F4 Graduados', 'F4 Senior',
+            'Shifter', 'Shifter Master', 'Sprinter', 'Senior Am', 'Senior Pro', 'Super Senior', 'S60'
+        ]
+    }
+};
+
+const COMMON_DROPDOWN_OPTIONS = {
     divisions: [
         'Micro', 'Mini', 'KA100 Jr', 'KA100 Sr', 'KA100 Master', 'Pro Shifter', 'Shifter Master',
         'X30 Junior', 'X30 Senior', 'ROK Micro', 'ROK Mini', 'VLR Junior', 'VLR Senior',
@@ -66,6 +101,8 @@ router.get('/:slug/config', async (req, res) => {
                 primaryColor: true,
                 formConfig: true,
                 dropdownOptions: true,
+                customLabels: true,
+                region: true,
             },
         });
 
@@ -78,9 +115,13 @@ router.get('/:slug/config', async (req, res) => {
             ? { ...DEFAULT_FORM_CONFIG, ...(team.formConfig as object) }
             : DEFAULT_FORM_CONFIG;
 
+        const teamRegion = team.region || 'NorthAmerica';
+        const regionOptions = REGION_DROPDOWN_OPTIONS[teamRegion] || REGION_DROPDOWN_OPTIONS.NorthAmerica;
+        const baseDropdownOptions = { ...COMMON_DROPDOWN_OPTIONS, ...regionOptions };
+
         const dropdownOptions = team.dropdownOptions
-            ? { ...DEFAULT_DROPDOWN_OPTIONS, ...(team.dropdownOptions as object) }
-            : DEFAULT_DROPDOWN_OPTIONS;
+            ? { ...baseDropdownOptions, ...(team.dropdownOptions as object) }
+            : baseDropdownOptions;
 
         res.json({
             id: team.id,
@@ -90,6 +131,8 @@ router.get('/:slug/config', async (req, res) => {
             primaryColor: team.primaryColor,
             formConfig,
             dropdownOptions,
+            customLabels: team.customLabels || {},
+            region: teamRegion,
         });
     } catch (error) {
         console.error('Error fetching team config:', error);
@@ -144,6 +187,69 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error('Error fetching teams:', error);
         res.status(500).json({ error: 'Failed to fetch teams' });
+    }
+});
+
+// Update team configuration
+router.put('/:slug/config', async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { customLabels, formConfig: newFormConfig } = req.body;
+
+        const team = await prisma.team.findUnique({
+            where: { slug },
+        });
+
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+
+        const updatedTeam = await prisma.team.update({
+            where: { slug },
+            data: {
+                customLabels: customLabels !== undefined ? customLabels : team.customLabels,
+                formConfig: newFormConfig !== undefined ? newFormConfig : team.formConfig,
+            },
+            select: {
+                id: true,
+                slug: true,
+                name: true,
+                logoUrl: true,
+                primaryColor: true,
+                formConfig: true,
+                dropdownOptions: true,
+                customLabels: true,
+                region: true,
+            }
+        });
+
+        // Merge team-specific config with defaults for response
+        const formConfig = updatedTeam.formConfig
+            ? { ...DEFAULT_FORM_CONFIG, ...(updatedTeam.formConfig as object) }
+            : DEFAULT_FORM_CONFIG;
+
+        const teamRegion = updatedTeam.region || 'NorthAmerica';
+        const regionOptions = REGION_DROPDOWN_OPTIONS[teamRegion] || REGION_DROPDOWN_OPTIONS.NorthAmerica;
+        const baseDropdownOptions = { ...COMMON_DROPDOWN_OPTIONS, ...regionOptions };
+
+        const dropdownOptions = updatedTeam.dropdownOptions
+            ? { ...baseDropdownOptions, ...(updatedTeam.dropdownOptions as object) }
+            : baseDropdownOptions;
+
+        res.json({
+            id: updatedTeam.id,
+            slug: updatedTeam.slug,
+            name: updatedTeam.name,
+            logoUrl: updatedTeam.logoUrl,
+            primaryColor: updatedTeam.primaryColor,
+            formConfig,
+            dropdownOptions,
+            customLabels: updatedTeam.customLabels || {},
+            region: teamRegion,
+        });
+    } catch (error) {
+        console.error('Error updating team config:', error);
+        res.status(500).json({ error: 'Failed to update team configuration' });
     }
 });
 
