@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const TKG_CONFIG = {
     managerEmails: ['data@tkgbirelartusa.com', 'fbayliff@tkgbirelartusa.com', 'gbayliff@trinitykartinggroup.com', 'gavinbayliff@icloud.com'],
     logoUrl: '/tkg-logo.png', // New logo
-    primaryColor: '#da291c', // Birel Red
+    primaryColor: '#22c55e', // TKG Green
     emailFromName: 'TKG BirelArt Setups',
     formConfig: {
         enabledFields: [

@@ -129,7 +129,7 @@ async function main() {
                 slug: teamSlug,
                 name: teamName,
                 managerEmails: [], // User said they will provide emails later
-                primaryColor: '#ff0000', // Default red? Birelart is Red.
+                primaryColor: '#22c55e', // TKG Green
             }
         });
     } else {

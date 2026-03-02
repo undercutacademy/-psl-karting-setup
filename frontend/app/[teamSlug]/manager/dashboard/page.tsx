@@ -10,8 +10,8 @@ import { TRANSLATIONS, Language } from '@/lib/translations';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-const inputClass = "block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 backdrop-blur-sm transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 hover:border-gray-600";
-const selectClass = "block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white backdrop-blur-sm transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 hover:border-gray-600 cursor-pointer";
+const inputClass = "block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 backdrop-blur-sm transition-all focus:border-[var(--team-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--team-primary)]/50 hover:border-gray-600";
+const selectClass = "block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white backdrop-blur-sm transition-all focus:border-[var(--team-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--team-primary)]/50 hover:border-gray-600 cursor-pointer";
 const labelClass = "block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2";
 
 // Color Helpers
@@ -353,21 +353,29 @@ export default function ManagerDashboard() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="text-center">
-          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent"></div>
+          <div
+            className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-t-transparent"
+            style={{ borderColor: teamConfig?.primaryColor || '#dc2626', borderRightColor: 'transparent' }}
+          ></div>
           <p className="text-lg text-gray-400">{t.checkingSetup || 'Loading submissions...'}</p>
         </div>
       </div>
     );
   }
 
+  const primaryColor = teamConfig?.primaryColor || '#dc2626';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden"
+      style={{ '--team-primary': primaryColor } as any}
+    >
       {/* Racing stripes background */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-1/4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 left-1/4 ml-4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 right-1/4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 right-1/4 mr-4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
+        <div className="absolute top-0 left-1/4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
+        <div className="absolute top-0 left-1/4 ml-4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
+        <div className="absolute top-0 right-1/4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
+        <div className="absolute top-0 right-1/4 mr-4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
       </div>
 
       <div className="relative z-10 mx-auto max-w-[95%] px-4 py-8">
@@ -375,7 +383,7 @@ export default function ManagerDashboard() {
         <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white uppercase tracking-wider">
-              {t.setupSubmissions ? t.setupSubmissions.split(' ')[0] : 'Setup'} <span className="text-red-500">{t.setupSubmissions ? t.setupSubmissions.split(' ').slice(1).join(' ') : 'Submissions'}</span>
+              {t.setupSubmissions ? t.setupSubmissions.split(' ')[0] : 'Setup'} <span style={{ color: primaryColor }}>{t.setupSubmissions ? t.setupSubmissions.split(' ').slice(1).join(' ') : 'Submissions'}</span>
             </h1>
             <p className="text-gray-400">{t.viewManageSetups}</p>
           </div>
@@ -403,8 +411,11 @@ export default function ManagerDashboard() {
                 </button>
               </>
             )}
-            <div className="px-4 py-2 rounded-full bg-red-500/20 border border-red-500/30">
-              <span className="text-red-400 font-bold">
+            <div
+              className="px-4 py-2 rounded-full"
+              style={{ backgroundColor: `${primaryColor}33`, border: `1px solid ${primaryColor}4D` }}
+            >
+              <span style={{ color: primaryColor }} className="font-bold">
                 {filteredSubmissions.length} submission{filteredSubmissions.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -425,9 +436,10 @@ export default function ManagerDashboard() {
               <button
                 onClick={() => setShowFavorites(false)}
                 className={`px-4 py-2 rounded-md text-sm font-bold uppercase tracking-wider transition-all ${!showFavorites
-                  ? 'bg-red-600 text-white shadow-lg'
+                  ? 'text-white shadow-lg'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
+                style={!showFavorites ? { backgroundColor: primaryColor } : {}}
               >
                 {t.allSessions}
               </button>
@@ -498,7 +510,8 @@ export default function ManagerDashboard() {
                         if (el) el.indeterminate = someSelected;
                       }}
                       onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-600 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
+                      className="w-4 h-4 rounded border-gray-600 focus:ring-offset-gray-900"
+                      style={{ accentColor: primaryColor }}
                     />
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -549,7 +562,8 @@ export default function ManagerDashboard() {
                     return (
                       <tr
                         key={submission.id}
-                        className={`hover:bg-gray-800/50 transition-colors ${isSelected ? 'bg-red-500/10' : ''}`}
+                        className="hover:bg-gray-800/50 transition-colors"
+                        style={isSelected ? { backgroundColor: `${primaryColor}1A` } : {}}
                       >
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
@@ -557,7 +571,8 @@ export default function ManagerDashboard() {
                               type="checkbox"
                               checked={isSelected}
                               onChange={(e) => handleSelectOne(submission.id, e.target.checked)}
-                              className="w-4 h-4 rounded border-gray-600 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900"
+                              className="w-4 h-4 rounded border-gray-600 focus:ring-offset-gray-900"
+                              style={{ accentColor: primaryColor }}
                             />
                             <button
                               onClick={(e) => toggleFavorite(e, submission)}
@@ -611,7 +626,8 @@ export default function ManagerDashboard() {
                             </button>
                             <button
                               onClick={() => handleExportPDF(submission.id)}
-                              className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 font-semibold text-sm hover:bg-red-500/30 transition-colors"
+                              className="px-3 py-1 rounded-lg font-semibold text-sm transition-colors"
+                              style={{ backgroundColor: `${primaryColor}33`, color: primaryColor }}
                             >
                               PDF
                             </button>
@@ -643,10 +659,13 @@ export default function ManagerDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border"
+                style={{ backgroundColor: `${primaryColor}1A`, borderColor: `${primaryColor}33` }}
+              >
                 <span className="text-3xl">⚠️</span>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wider">{t.confirmDeletion?.split(' ')[0] || 'Confirm'} <span className="text-red-500">{t.confirmDeletion?.split(' ').slice(1).join(' ') || 'Deletion'}</span></h3>
+              <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wider">{t.confirmDeletion?.split(' ')[0] || 'Confirm'} <span style={{ color: primaryColor }}>{t.confirmDeletion?.split(' ').slice(1).join(' ') || 'Deletion'}</span></h3>
               <p className="text-gray-400">
                 {t.confirmDeleteMsg} <strong className="text-white">{selectedIds.size}</strong> {t.submissionWord}
               </p>

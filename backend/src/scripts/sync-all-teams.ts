@@ -16,7 +16,7 @@ const TEAMS_CONFIG = [
         slug: 'tkg-birelart',
         managerEmails: ['gavinbayliff@icloud.com', 'finnbayliff@icloud.com', 'data@tkgbirelartusa.com'],
         logoUrl: '/tkg-logo.png',
-        primaryColor: '#da291c',
+        primaryColor: '#22c55e',
         emailFromName: 'TKG BirelArt Setups'
     }
 ];

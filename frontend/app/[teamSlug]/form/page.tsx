@@ -86,9 +86,9 @@ const DEFAULT_TYRE_MODELS = [
 
 import { TRACK_LAYOUTS, TrackLayout } from '@/lib/trackLayouts';
 
-// Racing-themed styling classes
-const inputClass = "mt-1 block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 backdrop-blur-sm transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 hover:border-gray-600";
-const selectClass = "mt-1 block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white backdrop-blur-sm transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 hover:border-gray-600 cursor-pointer";
+// Racing-themed styling classes - using CSS variables for dynamic coloring
+const inputClass = "mt-1 block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 backdrop-blur-sm transition-all focus:border-[var(--team-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--team-primary)]/50 hover:border-gray-600";
+const selectClass = "mt-1 block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white backdrop-blur-sm transition-all focus:border-[var(--team-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--team-primary)]/50 hover:border-gray-600 cursor-pointer";
 const labelClass = "block text-sm font-bold text-gray-300 uppercase tracking-wider";
 
 export default function FormPage() {
@@ -263,15 +263,23 @@ export default function FormPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-red-500 border-t-transparent mb-4"></div>
+          <div
+            className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-t-transparent mb-4"
+            style={{ borderColor: teamConfig?.primaryColor || '#ef4444', borderTopColor: 'transparent' }}
+          ></div>
           <p className="text-xl font-bold text-white uppercase tracking-wider">Loading Team Configuration...</p>
         </div>
       </div>
     );
   }
 
+  const primaryColor = teamConfig?.primaryColor || '#ef4444';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden"
+      style={{ '--team-primary': primaryColor } as React.CSSProperties}
+    >
       {/* Help Modal */}
       {helpModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setHelpModal(null)}>
@@ -305,21 +313,28 @@ export default function FormPage() {
 
       {/* Racing stripes background */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-1/4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 left-1/4 ml-4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 right-1/4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 right-1/4 mr-4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
+        <div className="absolute top-0 left-1/4 w-1 h-full bg-[var(--team-primary)] transform -skew-x-12"></div>
+        <div className="absolute top-0 left-1/4 ml-4 w-1 h-full bg-[var(--team-primary)] transform -skew-x-12"></div>
+        <div className="absolute top-0 right-1/4 w-1 h-full bg-[var(--team-primary)] transform -skew-x-12"></div>
+        <div className="absolute top-0 right-1/4 mr-4 w-1 h-full bg-[var(--team-primary)] transform -skew-x-12"></div>
       </div>
 
       {/* Checkered flag top border */}
-      <div className="h-2 w-full bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
+      <div
+        className="h-2 w-full"
+        style={{ background: `linear-gradient(to right, ${primaryColor}, transparent, ${primaryColor})` }}
+      ></div>
 
       {/* Home Button */}
       <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50 flex gap-2 md:gap-4">
         <Link
           href={`/${teamSlug}`}
-          className="flex items-center gap-2 rounded-full border border-gray-700 bg-gray-900/80 px-4 py-2 text-sm font-bold text-gray-300 uppercase tracking-wider backdrop-blur-md transition-all hover:border-red-500 hover:text-white hover:shadow-lg hover:shadow-red-500/20 group"
+          className="flex items-center gap-2 rounded-full border border-gray-700 bg-gray-900/80 px-4 py-2 text-sm font-bold text-gray-300 uppercase tracking-wider backdrop-blur-md transition-all hover:text-white hover:shadow-lg group"
+          style={{ '--hover-border': primaryColor } as any}
         >
+          <style jsx>{`
+            a:hover { border-color: var(--hover-border) !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+          `}</style>
           <span className="text-lg group-hover:scale-110 transition-transform">🏠</span>
           <span className="hidden md:inline">{t.home}</span>
         </Link>
@@ -329,21 +344,24 @@ export default function FormPage() {
           <button
             type="button"
             onClick={() => handleLanguageChange('en')}
-            className={`px-3 py-2 text-sm font-bold transition-colors ${lang === 'en' ? 'bg-red-600/30 text-white' : 'text-gray-400 hover:text-white'}`}
+            className={`px-3 py-2 text-sm font-bold transition-colors ${lang === 'en' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+            style={lang === 'en' ? { backgroundColor: `${primaryColor}4D` } : {}}
           >
             EN
           </button>
           <button
             type="button"
             onClick={() => handleLanguageChange('es')}
-            className={`px-3 py-2 text-sm font-bold border-l border-r border-gray-700 transition-colors ${lang === 'es' ? 'bg-red-600/30 text-white' : 'text-gray-400 hover:text-white'}`}
+            className={`px-3 py-2 text-sm font-bold border-l border-r border-gray-700 transition-colors ${lang === 'es' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+            style={lang === 'es' ? { backgroundColor: `${primaryColor}4D` } : {}}
           >
             ES
           </button>
           <button
             type="button"
             onClick={() => handleLanguageChange('pt')}
-            className={`px-3 py-2 text-sm font-bold transition-colors ${lang === 'pt' ? 'bg-red-600/30 text-white' : 'text-gray-400 hover:text-white'}`}
+            className={`px-3 py-2 text-sm font-bold transition-colors ${lang === 'pt' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+            style={lang === 'pt' ? { backgroundColor: `${primaryColor}4D` } : {}}
           >
             PT
           </button>
@@ -359,12 +377,13 @@ export default function FormPage() {
               alt={teamConfig?.name || 'Team Logo'}
               width={300}
               height={120}
-              className="drop-shadow-[0_0_30px_rgba(227,24,55,0.5)]"
+              className="drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+              style={{ filter: `drop-shadow(0 0 15px ${primaryColor}4D)` }}
               priority
             />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-wider uppercase">
-            Setup <span style={{ color: teamConfig?.primaryColor || '#ef4444' }}>Manager</span>
+            Setup <span style={{ color: primaryColor }}>Manager</span>
           </h1>
         </div>
 
@@ -374,8 +393,9 @@ export default function FormPage() {
             {stepNames.map((name, index) => (
               <div
                 key={name}
-                className={`text-[9px] sm:text-xs text-center flex-1 w-0 leading-tight break-words font-bold uppercase tracking-tighter sm:tracking-wider transition-colors ${index + 1 <= currentStep ? 'text-red-500' : 'text-gray-600'
+                className={`text-[9px] sm:text-xs text-center flex-1 w-0 leading-tight break-words font-bold uppercase tracking-tighter sm:tracking-wider transition-colors ${index + 1 <= currentStep ? 'opacity-100' : 'text-gray-600'
                   }`}
+                style={index + 1 <= currentStep ? { color: primaryColor } : {}}
               >
                 {name}
               </div>
@@ -383,8 +403,8 @@ export default function FormPage() {
           </div>
           <div className="h-3 w-full rounded-full bg-gray-800 overflow-hidden border border-gray-700">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-500 ease-out relative"
-              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+              className="h-full rounded-full transition-all duration-500 ease-out relative"
+              style={{ width: `${(currentStep / totalSteps) * 100}%`, backgroundColor: primaryColor }}
             >
               <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20"></div>
             </div>
@@ -397,12 +417,18 @@ export default function FormPage() {
         {/* Form Card */}
         <form onSubmit={handleSubmit} className="rounded-2xl bg-gray-900/80 border border-gray-800 p-5 md:p-8 shadow-2xl backdrop-blur-xl">
           {/* Racing accent line */}
-          <div className="absolute top-0 left-8 right-8 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent rounded-full"></div>
+          <div
+            className="absolute top-0 left-8 right-8 h-1 rounded-full"
+            style={{ background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)` }}
+          ></div>
 
           {currentStep === 1 && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${primaryColor}33` }}
+                >
                   <span className="text-2xl">🏎️</span>
                 </div>
                 <h2 className="text-2xl font-bold text-white">{t.driverInfo}</h2>
@@ -421,8 +447,11 @@ export default function FormPage() {
                 />
                 {loading && (
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent"></div>
-                    <p className="text-sm text-red-400">{t.checkingSetup}</p>
+                    <div
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
+                      style={{ borderColor: primaryColor, borderTopColor: 'transparent' }}
+                    ></div>
+                    <p className="text-sm font-medium" style={{ color: primaryColor }}>{t.checkingSetup}</p>
                   </div>
                 )}
               </div>
@@ -551,7 +580,7 @@ export default function FormPage() {
                       <div className="relative z-10 flex justify-between items-center mb-6">
                         <h3 className="text-white font-bold uppercase tracking-wider text-sm flex items-center gap-2">
                           SELECT TRACK LAYOUT
-                          {selectedLayout === '' && <span className="text-red-500/80 text-xs ml-2">*Required</span>}
+                          {selectedLayout === '' && <span className="text-xs ml-2 opacity-80" style={{ color: primaryColor }}>*Required</span>}
                         </h3>
                         <span className="text-xs font-medium text-gray-400">Available: {TRACK_LAYOUTS[formData.track].length} Options</span>
                       </div>
@@ -563,9 +592,10 @@ export default function FormPage() {
                             type="button"
                             onClick={() => setSelectedLayout(layout.name)}
                             className={`relative min-w-[140px] md:min-w-[160px] h-[180px] flex-shrink-0 snap-start rounded-xl flex flex-col items-center justify-between p-4 transition-all duration-300 ${selectedLayout === layout.name
-                              ? 'border-[1.5px] border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-[#1a1c23]'
+                              ? 'border-[1.5px] shadow-lg bg-[#1a1c23]'
                               : 'border border-gray-700/50 bg-[#1a1c23] hover:border-gray-500'
                               }`}
+                            style={selectedLayout === layout.name ? { borderColor: primaryColor, boxShadow: `0 0 20px ${primaryColor}4D` } : {}}
                           >
                             <div className="w-full h-24 flex-grow flex items-center justify-center p-2">
                               {/* Optional visual placeholder icon */}
@@ -579,7 +609,7 @@ export default function FormPage() {
                                     }`}
                                   onError={(e) => {
                                     // Fallback for missing images
-                                    (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>';
+                                    (e.target as HTMLImageElement).src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="${encodeURIComponent(primaryColor)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>`;
                                   }}
                                 />
                               ) : (
@@ -635,7 +665,8 @@ export default function FormPage() {
                       }
                       setCurrentStep(2);
                     }}
-                    className="w-full rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-8 py-4 font-bold text-white uppercase tracking-wider transition-all hover:from-red-500 hover:to-red-400 hover:shadow-lg hover:shadow-red-500/30 flex items-center justify-center gap-2"
+                    className="w-full rounded-lg px-8 py-4 font-bold text-white uppercase tracking-wider transition-all hover:shadow-lg flex items-center justify-center gap-2"
+                    style={{ backgroundColor: primaryColor }}
                   >
                     {t.nextStep}
                     <span className="text-xl">→</span>

@@ -24,6 +24,7 @@ export default function ManagerLoginPage() {
   const [error, setError] = useState('');
   const [teamLogo, setTeamLogo] = useState('');
   const [teamName, setTeamName] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#ef4444');
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -33,6 +34,7 @@ export default function ManagerLoginPage() {
           const data = await response.json();
           setTeamLogo(data.logoUrl);
           setTeamName(data.name);
+          if (data.primaryColor) setPrimaryColor(data.primaryColor);
         }
       } catch (error) {
         console.error('Error fetching team:', error);
@@ -79,14 +81,17 @@ export default function ManagerLoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden p-8">
       {/* Racing stripes background */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-1/4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 left-1/4 ml-4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 right-1/4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
-        <div className="absolute top-0 right-1/4 mr-4 w-1 h-full bg-red-600 transform -skew-x-12"></div>
+        <div className="absolute top-0 left-1/4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
+        <div className="absolute top-0 left-1/4 ml-4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
+        <div className="absolute top-0 right-1/4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
+        <div className="absolute top-0 right-1/4 mr-4 w-1 h-full transform -skew-x-12" style={{ backgroundColor: primaryColor }}></div>
       </div>
 
       {/* Top racing stripe */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
+      <div
+        className="absolute top-0 left-0 right-0 h-2"
+        style={{ background: `linear-gradient(to right, ${primaryColor}, white, ${primaryColor})` }}
+      ></div>
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
@@ -98,7 +103,8 @@ export default function ManagerLoginPage() {
                 alt={teamName || "Team Logo"}
                 width={250}
                 height={100}
-                className="drop-shadow-[0_0_30px_rgba(227,24,55,0.4)] mb-4"
+                className="drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] mb-4"
+                style={{ filter: `drop-shadow(0 0 15px ${primaryColor}4D)` }}
                 priority
               />
             ) : (
@@ -111,12 +117,15 @@ export default function ManagerLoginPage() {
         {/* Login Card */}
         <div className="rounded-2xl bg-gray-900/80 border border-gray-800 p-8 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: `${primaryColor}33` }}
+            >
               <span className="text-2xl">🔐</span>
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white uppercase tracking-wider">
-                Manager <span className="text-red-500">Login</span>
+                Manager <span style={{ color: primaryColor }}>Login</span>
               </h1>
               <p className="text-gray-400 text-sm">Enter your credentials</p>
             </div>
@@ -124,7 +133,10 @@ export default function ManagerLoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-red-400">
+              <div
+                className="rounded-xl border p-4 text-red-400"
+                style={{ backgroundColor: `${primaryColor}1A`, borderColor: `${primaryColor}4D` }}
+              >
                 ⚠️ {error}
               </div>
             )}
@@ -139,9 +151,13 @@ export default function ManagerLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 backdrop-blur-sm transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 hover:border-gray-600"
+                className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 backdrop-blur-sm transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
+                style={{ '--focus-border': primaryColor } as any}
                 placeholder="manager@example.com"
               />
+              <style jsx>{`
+                input:focus { border-color: var(--focus-border) !important; box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); }
+              `}</style>
             </div>
 
             <div>
@@ -162,7 +178,8 @@ export default function ManagerLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:from-red-500 hover:to-red-400 hover:shadow-lg hover:shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full rounded-lg px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{ backgroundColor: primaryColor }}
             >
               {loading && (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

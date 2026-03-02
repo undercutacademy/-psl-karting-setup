@@ -145,12 +145,17 @@ export default function ManagerSettings() {
         return (
             <div className="flex min-h-[calc(100vh-64px)] items-center justify-center">
                 <div className="text-center">
-                    <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent"></div>
+                    <div
+                        className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-t-transparent"
+                        style={{ borderColor: config?.primaryColor || '#dc2626', borderRightColor: 'transparent' }}
+                    ></div>
                     <p className="text-lg text-gray-400">Loading settings...</p>
                 </div>
             </div>
         );
     }
+
+    const primaryColor = config?.primaryColor || '#dc2626';
 
     return (
         <div className="min-h-[calc(100vh-64px)] relative overflow-hidden">
@@ -158,7 +163,7 @@ export default function ManagerSettings() {
                 <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-white uppercase tracking-wider">
-                            Team <span className="text-red-500">Settings</span>
+                            Team <span style={{ color: primaryColor }}>Settings</span>
                         </h1>
                         <p className="text-gray-400">Customize your tracking fields (Form Builder).</p>
                     </div>
@@ -168,21 +173,24 @@ export default function ManagerSettings() {
                         <button
                             type="button"
                             onClick={() => handleLanguageChange('en')}
-                            className={`px-4 py-2 text-sm font-bold transition-colors ${lang === 'en' ? 'bg-red-600/30 text-white' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-4 py-2 text-sm font-bold transition-colors ${lang === 'en' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                            style={lang === 'en' ? { backgroundColor: `${primaryColor}4D` } : {}}
                         >
                             EN
                         </button>
                         <button
                             type="button"
                             onClick={() => handleLanguageChange('es')}
-                            className={`px-4 py-2 text-sm font-bold border-l border-r border-gray-700 transition-colors ${lang === 'es' ? 'bg-red-600/30 text-white' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-4 py-2 text-sm font-bold border-l border-r border-gray-700 transition-colors ${lang === 'es' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                            style={lang === 'es' ? { backgroundColor: `${primaryColor}4D` } : {}}
                         >
                             ES
                         </button>
                         <button
                             type="button"
                             onClick={() => handleLanguageChange('pt')}
-                            className={`px-4 py-2 text-sm font-bold transition-colors ${lang === 'pt' ? 'bg-red-600/30 text-white' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-4 py-2 text-sm font-bold transition-colors ${lang === 'pt' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                            style={lang === 'pt' ? { backgroundColor: `${primaryColor}4D` } : {}}
                         >
                             PT
                         </button>
@@ -212,7 +220,8 @@ export default function ManagerSettings() {
                                     key={key}
                                     type="button"
                                     onClick={() => setRegion(key)}
-                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${region === key ? 'bg-red-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-300'}`}
+                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${region === key ? 'text-white shadow-lg' : 'text-gray-400 hover:text-gray-300'}`}
+                                    style={region === key ? { backgroundColor: primaryColor } : {}}
                                 >
                                     {label}
                                 </button>
@@ -227,7 +236,8 @@ export default function ManagerSettings() {
                         <button
                             type="button"
                             onClick={() => setEnabledFields(ALL_FIELD_KEYS)}
-                            className="rounded-lg bg-red-600/20 text-red-400 border border-red-500/30 px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-red-600/40 hover:text-white transition-all shadow-lg shadow-red-500/5 flex items-center gap-2"
+                            className="rounded-lg px-4 py-2 text-sm font-bold uppercase tracking-wider hover:text-white transition-all shadow-lg flex items-center gap-2"
+                            style={{ backgroundColor: `${primaryColor}33`, color: primaryColor, border: `1px solid ${primaryColor}4D` }}
                         >
                             <span className="text-lg">✓</span> Check All Fields
                         </button>
@@ -254,7 +264,8 @@ export default function ManagerSettings() {
                                                 const groupKeys = group.fields.map(f => f.key);
                                                 setEnabledFields(prev => Array.from(new Set([...prev, ...groupKeys])));
                                             }}
-                                            className="text-xs font-bold text-red-400 hover:text-white uppercase tracking-wider transition-colors px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/20"
+                                            className="text-xs font-bold uppercase tracking-wider transition-colors px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 border border-gray-700"
+                                            style={{ color: primaryColor }}
                                         >
                                             Check All
                                         </button>
@@ -277,7 +288,8 @@ export default function ManagerSettings() {
                                                 type="checkbox"
                                                 checked={enabledFields.includes(key)}
                                                 onChange={() => toggleField(key)}
-                                                className="w-5 h-5 rounded border-gray-500 bg-gray-700 text-red-500 focus:ring-red-500 focus:ring-offset-gray-900 checked:bg-red-500 checked:border-transparent transition-colors cursor-pointer"
+                                                className="w-5 h-5 rounded border-gray-500 bg-gray-700 focus:ring-offset-gray-900 transition-colors cursor-pointer"
+                                                style={{ accentColor: primaryColor }}
                                             />
                                             <span className={`text-sm font-medium transition-colors ${enabledFields.includes(key) ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'}`}>
                                                 {label}
@@ -292,7 +304,8 @@ export default function ManagerSettings() {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="rounded-lg bg-red-600 px-8 py-3 font-bold text-white uppercase tracking-wider transition-all hover:bg-red-500 shadow-lg shadow-red-500/20 disabled:opacity-50 flex items-center gap-2"
+                                className="rounded-lg px-8 py-3 font-bold text-white uppercase tracking-wider transition-all hover:opacity-90 shadow-lg disabled:opacity-50 flex items-center gap-2"
+                                style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}4D` }}
                             >
                                 {saving && (
                                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

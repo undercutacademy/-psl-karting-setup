@@ -49,7 +49,10 @@ export default function ManagerLayout({
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="text-center">
-          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent"></div>
+          <div
+            className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-t-transparent"
+            style={{ borderColor: teamConfig?.primaryColor || '#ef4444', borderRightColor: 'transparent' }}
+          ></div>
           <p className="text-lg text-gray-400">Loading...</p>
         </div>
       </div>
@@ -105,7 +108,8 @@ export default function ManagerLayout({
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors"
+                style={{ color: teamConfig?.primaryColor || '#ef4444', backgroundColor: `${teamConfig?.primaryColor || '#ef4444'}1A` }}
               >
                 Logout →
               </button>

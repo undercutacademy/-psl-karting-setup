@@ -50,7 +50,7 @@ export default function LandingPage() {
 
                     <Link
                         href="/tkg-birelart"
-                        className="group relative flex items-center justify-between p-4 rounded-xl border border-gray-700/50 bg-gray-900/80 hover:bg-gray-800 hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                        className="group relative flex items-center justify-between p-4 rounded-xl border border-gray-700/50 bg-gray-900/80 hover:bg-gray-800 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                     >
                         <span className="font-bold text-lg text-gray-200 group-hover:text-white transition-colors">
                             TKG BirelArt
@@ -59,7 +59,7 @@ export default function LandingPage() {
                             <span className="text-xs text-gray-500 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
                                 ACCESS
                             </span>
-                            <span className="text-gray-500 group-hover:text-red-500 group-hover:translate-x-1 transition-all text-xl">
+                            <span className="text-gray-500 group-hover:text-green-500 group-hover:translate-x-1 transition-all text-xl">
                                 →
                             </span>
                         </div>
