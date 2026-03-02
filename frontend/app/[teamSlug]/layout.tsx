@@ -76,6 +76,7 @@ export async function generateMetadata({ params }: { params: Promise<{ teamSlug:
         title: `${teamName} Setup App`,
         icons: {
             icon: iconUrl,
+            apple: iconUrl,
         },
         openGraph: {
             title: `${teamName} Setup App`,
