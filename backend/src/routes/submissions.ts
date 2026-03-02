@@ -221,17 +221,29 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/pdf', async (req, res) => {
   try {
     const { id } = req.params;
+    const { teamSlug } = req.query;
     const submission = await prisma.submission.findUnique({
       where: { id },
-      include: { user: true },
+      include: { user: true, team: true },
     });
 
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
+    // Get team language
+    let language = 'en';
+    if (submission.team) {
+      language = (submission.team as any).defaultLanguage || 'en';
+    } else if (teamSlug && typeof teamSlug === 'string') {
+      const team = await prisma.team.findUnique({ where: { slug: teamSlug } });
+      if (team) {
+        language = (team as any).defaultLanguage || 'en';
+      }
+    }
+
     const userName = `${submission.user.firstName} ${submission.user.lastName}`;
-    const pdfBuffer = await generateSubmissionPDF(submission, userName);
+    const pdfBuffer = await generateSubmissionPDF(submission, userName, language);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=setup-${id}.pdf`);

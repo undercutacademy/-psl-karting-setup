@@ -22,6 +22,7 @@ export interface TeamConfig {
     dropdownOptions: DropdownOptions;
     customLabels?: Record<string, string>;
     region?: string;
+    defaultLanguage?: string;
 }
 
 export interface TeamInfo {

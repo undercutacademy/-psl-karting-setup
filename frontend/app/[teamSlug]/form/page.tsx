@@ -47,15 +47,15 @@ const REGION_DATA: Record<string, { tracks: string[], championships: string[], d
   },
   Brazil: {
     tracks: [
-      'Kartódromo Granja Viana (SP)', 'Kartódromo Internacional Nova Odessa (SP)',
-      'Kartódromo Ayrton Senna - Interlagos (SP)', 'Kartódromo Internacional Aldeia da Serra (SP)',
-      'Kartódromo San Marino (SP)', 'Kartódromo Internacional de Birigui - Speed Park (SP)',
-      'Kartódromo de Itu (SP)', 'Kartódromo Internacional Beto Carrero (SC)',
-      'Circuito Internacional Techspeed - Velopark (RS)', 'Kartódromo de Volta Redonda (RJ)',
-      'Kartódromo Raceland Internacional (PR)', 'Kartódromo Internacional da Serra (ES)',
-      'Kartódromo Internacional de Tarumã (RS)', 'Kartódromo de Guapimirim (RJ)',
-      'Kartódromo RBC Racing (MG)', 'Kartódromo Internacional Paladino (PB)',
-      'Kartódromo Luigi Borghesi - Londrina (PR)', 'Kartódromo Internacional de Imperatriz (MA)'
+      'Granja Viana (SP)', 'Nova Odessa (SP)',
+      'Interlagos', 'Aldeia da Serra (SP)',
+      'San Marino (SP)', 'Speed Park (SP)',
+      'Itu (SP)', 'Beto Carrero (SC)',
+      'Velopark (RS)', 'Volta Redonda (RJ)',
+      'Raceland (PR)', 'Serra (ES)',
+      'Tarumã (RS)', 'Guapimirim (RJ)',
+      'RBC Racing (MG)', 'Paladino (PB)',
+      'Luigi Borghesi - Londrina (PR)', 'Imperatriz (MA)'
     ],
     championships: [
       'Copa SP Light', 'Copa SP Granja Viana', 'Copa do Brasil', 'Copa SpeedPark',
@@ -79,37 +79,12 @@ const SHIFTER_DIVISIONS = [
 ];
 
 const DEFAULT_TYRE_MODELS = [
-  'Mg Red', 'Mg Yellow', 'MG Wet', 'Evinco Blue', 'Evinco Blue SKH2', 'Evinco Red SKM2',
+  'Mg Red', 'MG Cadet', 'Mg Yellow', 'MG Wet', 'Evinco Blue', 'Evinco Blue SKH2', 'Evinco Red SKM2',
   'Evinco WET', 'Levanto', 'Levanto WET', 'Bridgestone', 'Vega Red', 'Vega Blue',
   'Vega Yellow', 'Mojo D5', 'Mojo D2', 'Dunlop', 'Dunlop WET'
 ];
 
-export interface TrackLayout {
-  id: string;
-  name: string;
-  imageUrl: string;
-}
-
-export const TRACK_LAYOUTS: Record<string, TrackLayout[]> = {
-  'Kartódromo Ayrton Senna - Interlagos (SP)': [
-    { id: 'layout1', name: 'Original', imageUrl: '/layouts/interlagos/1.webp' },
-    { id: 'layout2', name: 'Layout 2', imageUrl: '/layouts/interlagos/2.webp' },
-    { id: 'layout3', name: 'Layout 3', imageUrl: '/layouts/interlagos/3.webp' },
-    { id: 'layout4', name: 'Layout 4', imageUrl: '/layouts/interlagos/4.webp' },
-    { id: 'layout5', name: 'Reverse', imageUrl: '/layouts/interlagos/5.webp' },
-    { id: 'layout6', name: 'Layout 6', imageUrl: '/layouts/interlagos/6.webp' },
-    { id: 'layout7', name: 'Layout 7', imageUrl: '/layouts/interlagos/7.webp' },
-    { id: 'layout8', name: 'Layout 8', imageUrl: '/layouts/interlagos/8.webp' },
-  ],
-  'Kartódromo Internacional de Birigui - Speed Park (SP)': [
-    { id: 'layout1', name: 'Layout 1', imageUrl: '/layouts/speedpark/layout1.svg' },
-    { id: 'layout2', name: 'Layout 2', imageUrl: '/layouts/speedpark/layout2.svg' },
-  ],
-  'Kartódromo RBC Racing (MG)': [
-    { id: 'layout1', name: 'Layout 1', imageUrl: '/layouts/rbc/layout1.svg' },
-    { id: 'layout2', name: 'Layout 2', imageUrl: '/layouts/rbc/layout2.svg' },
-  ]
-};
+import { TRACK_LAYOUTS, TrackLayout } from '@/lib/trackLayouts';
 
 // Racing-themed styling classes
 const inputClass = "mt-1 block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 backdrop-blur-sm transition-all focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 hover:border-gray-600";
@@ -467,7 +442,8 @@ export default function FormPage() {
                           ...lastSubmission,
                           sessionType: lastSubmission.sessionType,
                           observation: '',
-                          lapTime: ''
+                          lapTime: '',
+                          tyreAge: '',
                         });
                         setCurrentStep(5);
                       }}
@@ -1202,6 +1178,21 @@ export default function FormPage() {
                   />
                 </div>
               </div>
+
+              {hasSetupChanged === false && (
+                <div>
+                  <label className={labelClass}>{getLabel('tyreAge')} *</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={formData.tyreAge || ''}
+                    onChange={(e) => handleNumberChange('tyreAge', e.target.value)}
+                    required
+                    className={inputClass}
+                    placeholder="e.g., 2"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className={labelClass}>{getLabel('lapTime')}</label>

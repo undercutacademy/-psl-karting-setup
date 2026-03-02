@@ -12,14 +12,168 @@ const COLORS = {
   accent: '#f5f5f5',     // Light background
 };
 
-export function generateSubmissionPDF(submission: Submission, userName: string): Promise<Buffer> {
+// Track Layout definitions matching the frontend
+const TRACK_LAYOUTS: Record<string, { name: string; imageFile: string }[]> = {
+  'Interlagos': [
+    { name: 'Original', imageFile: '1.webp' },
+    { name: 'Layout 2', imageFile: '2.webp' },
+    { name: 'Layout 3', imageFile: '3.webp' },
+    { name: 'Layout 4', imageFile: '4.webp' },
+    { name: 'Reverse', imageFile: '5.webp' },
+    { name: 'Layout 6', imageFile: '6.webp' },
+    { name: 'Layout 7', imageFile: '7.webp' },
+    { name: 'Layout 8', imageFile: '8.webp' },
+  ],
+};
+
+// Translation maps for PDF section headers
+const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
+  en: {
+    setupSheet: 'SETUP SHEET',
+    generated: 'Generated',
+    generalInfo: 'General Information',
+    championship: 'Championship',
+    division: 'Division',
+    classCode: 'Class Code',
+    session: 'Session',
+    trackLayout: 'Track Layout',
+    engineSetup: 'Engine Setup',
+    engineNumber: 'Engine Number',
+    carburator: 'Carburator',
+    gearRatio: 'Gear Ratio',
+    driveSprocket: 'Drive Sprocket',
+    drivenSprocket: 'Driven Sprocket',
+    tyresData: 'Tyres Data',
+    tyreModel: 'Tyre Model',
+    tyreAge: 'Tyre Age',
+    coldPressure: 'Cold Pressure',
+    kartSetup: 'Kart Setup',
+    chassis: 'Chassis',
+    axle: 'Axle',
+    rearHubs: 'Rear Hubs',
+    frontHubs: 'Front Hubs',
+    frontHeight: 'Front Height',
+    backHeight: 'Back Height',
+    frontBar: 'Front Bar',
+    spindle: 'Spindle',
+    caster: 'Caster',
+    seatPosition: 'Seat Position',
+    sessionResults: 'Session Results',
+    lapTime: 'Lap Time',
+    notes: 'Notes',
+    poweredBy: 'Powered by Overcut Academy',
+  },
+  pt: {
+    setupSheet: 'FICHA DE CONFIGURAÇÃO',
+    generated: 'Gerado',
+    generalInfo: 'Informações Gerais',
+    championship: 'Campeonato',
+    division: 'Categoria',
+    classCode: 'Código da Classe',
+    session: 'Sessão',
+    trackLayout: 'Traçado da Pista',
+    engineSetup: 'Configuração do Motor',
+    engineNumber: 'Número do Motor',
+    carburator: 'Carburador',
+    gearRatio: 'Relação de Marcha',
+    driveSprocket: 'Pinhão (Motor)',
+    drivenSprocket: 'Coroa (Eixo)',
+    tyresData: 'Dados dos Pneus',
+    tyreModel: 'Modelo do Pneu',
+    tyreAge: 'Uso do Pneu',
+    coldPressure: 'Pressão a Frio',
+    kartSetup: 'Configuração do Kart',
+    chassis: 'Chassi',
+    axle: 'Eixo',
+    rearHubs: 'Cubos Traseiros',
+    frontHubs: 'Cubos Dianteiros',
+    frontHeight: 'Altura Dianteira',
+    backHeight: 'Altura Traseira',
+    frontBar: 'Barra Dianteira',
+    spindle: 'Manga de Eixo',
+    caster: 'Caster',
+    seatPosition: 'Posição do Banco',
+    sessionResults: 'Resultados da Sessão',
+    lapTime: 'Tempo de Volta',
+    notes: 'Notas',
+    poweredBy: 'Desenvolvido por Overcut Academy',
+  },
+  es: {
+    setupSheet: 'HOJA DE CONFIGURACIÓN',
+    generated: 'Generado',
+    generalInfo: 'Información General',
+    championship: 'Campeonato',
+    division: 'Categoría',
+    classCode: 'Código de Clase',
+    session: 'Sesión',
+    trackLayout: 'Trazado de Pista',
+    engineSetup: 'Configuración del Motor',
+    engineNumber: 'Número de Motor',
+    carburator: 'Carburador',
+    gearRatio: 'Relación de Transmisión',
+    driveSprocket: 'Piñón (Motor)',
+    drivenSprocket: 'Corona (Eje)',
+    tyresData: 'Datos de Neumáticos',
+    tyreModel: 'Modelo de Neumático',
+    tyreAge: 'Uso de Neumático',
+    coldPressure: 'Presión en Frío',
+    kartSetup: 'Configuración del Kart',
+    chassis: 'Chasis',
+    axle: 'Eje',
+    rearHubs: 'Masas Traseras',
+    frontHubs: 'Masas Delanteras',
+    frontHeight: 'Altura Delantera',
+    backHeight: 'Altura Trasera',
+    frontBar: 'Barra Delantera',
+    spindle: 'Manguetas',
+    caster: 'Caster',
+    seatPosition: 'Posición del Asiento',
+    sessionResults: 'Resultados de la Sesión',
+    lapTime: 'Tiempo de Vuelta',
+    notes: 'Notas',
+    poweredBy: 'Desarrollado por Overcut Academy',
+  },
+};
+
+// Find the layout image path for a given track string
+function findLayoutImagePath(track: string): string | null {
+  for (const [trackName, layouts] of Object.entries(TRACK_LAYOUTS)) {
+    if (track.startsWith(trackName)) {
+      const layoutName = track.substring(trackName.length).replace(/^ - /, '');
+      const layout = layouts.find(l => l.name === layoutName);
+      if (layout) {
+        // The layout images are stored in the frontend public folder
+        const imgPath = path.join(__dirname, '../../assets/layouts/interlagos', layout.imageFile.replace('.webp', '.png'));
+        if (fs.existsSync(imgPath)) return imgPath;
+
+        // Also check the frontend public directory
+        const frontendPath = path.join(__dirname, '../../../frontend/public/layouts/interlagos', layout.imageFile.replace('.webp', '.png'));
+        if (fs.existsSync(frontendPath)) return frontendPath;
+      }
+    }
+  }
+  return null;
+}
+
+function getLayoutName(track: string): string | null {
+  for (const [trackName] of Object.entries(TRACK_LAYOUTS)) {
+    if (track.startsWith(trackName)) {
+      return track.substring(trackName.length).replace(/^ - /, '');
+    }
+  }
+  return null;
+}
+
+export function generateSubmissionPDF(submission: Submission, userName: string, language: string = 'en'): Promise<Buffer> {
   return new Promise((resolve, reject) => {
+    const t = PDF_TRANSLATIONS[language] || PDF_TRANSLATIONS.en;
+
     const doc = new PDFDocument({
       margin: 40,
       size: 'A4',
       info: {
-        Title: `PSL Karting Setup - ${userName}`,
-        Author: 'PSL Karting',
+        Title: `${t.setupSheet} - ${userName}`,
+        Author: 'Overcut Academy',
         Subject: 'Kart Setup Sheet',
       }
     });
@@ -46,12 +200,12 @@ export function generateSubmissionPDF(submission: Submission, userName: string):
     doc.fontSize(24)
       .fillColor(COLORS.secondary)
       .font('Helvetica-Bold')
-      .text('SETUP SHEET', 180, 35, { align: 'left' });
+      .text(t.setupSheet, 180, 35, { align: 'left' });
 
     doc.fontSize(10)
       .fillColor(COLORS.lightGray)
       .font('Helvetica')
-      .text(`Generated: ${new Date().toLocaleString()}`, 180, 65);
+      .text(`${t.generated}: ${new Date().toLocaleString()}`, 180, 65);
 
     // Driver info bar
     doc.rect(40, 95, pageWidth, 35).fill(COLORS.secondary);
@@ -115,47 +269,61 @@ export function generateSubmissionPDF(submission: Submission, userName: string):
     };
 
     // General Information Section
-    yPos = drawSectionHeader('General Information', yPos);
-    yPos = drawDataRow('Championship', submission.championship, 'Division', submission.division, yPos);
-    yPos = drawDataRow('Class Code', submission.classCode, 'Session', submission.sessionType, yPos);
+    yPos = drawSectionHeader(t.generalInfo, yPos);
+    yPos = drawDataRow(t.championship, submission.championship, t.division, submission.division, yPos);
+    yPos = drawDataRow(t.classCode, submission.classCode, t.session, submission.sessionType, yPos);
     yPos += 5;
 
+    // Track Layout Image (if available)
+    const layoutImagePath = findLayoutImagePath(submission.track);
+    const layoutName = getLayoutName(submission.track);
+    if (layoutImagePath && layoutName) {
+      yPos = drawSectionHeader(`${t.trackLayout}: ${layoutName}`, yPos);
+      try {
+        doc.image(layoutImagePath, 40 + (pageWidth - 200) / 2, yPos, { width: 200 });
+        yPos += 130; // Image height + margin
+      } catch (e) {
+        console.error('Failed to embed track layout image in PDF:', e);
+      }
+      yPos += 5;
+    }
+
     // Engine Setup Section
-    yPos = drawSectionHeader('Engine Setup', yPos);
-    yPos = drawDataRow('Engine Number', submission.engineNumber || '-', 'Carburator', submission.carburatorNumber || '-', yPos);
+    yPos = drawSectionHeader(t.engineSetup, yPos);
+    yPos = drawDataRow(t.engineNumber, submission.engineNumber || '-', t.carburator, submission.carburatorNumber || '-', yPos);
     if (submission.gearRatio) {
-      yPos = drawDataRow('Gear Ratio', submission.gearRatio, '', '', yPos);
+      yPos = drawDataRow(t.gearRatio, submission.gearRatio, '', '', yPos);
     } else {
-      yPos = drawDataRow('Drive Sprocket', submission.driveSprocket || '-', 'Driven Sprocket', submission.drivenSprocket || '-', yPos);
+      yPos = drawDataRow(t.driveSprocket, submission.driveSprocket || '-', t.drivenSprocket, submission.drivenSprocket || '-', yPos);
     }
     yPos += 5;
 
     // Tyres Section
-    yPos = drawSectionHeader('Tyres Data', yPos);
-    yPos = drawDataRow('Tyre Model', submission.tyreModel || '-', 'Tyre Age', submission.tyreAge || '-', yPos);
-    yPos = drawDataRow('Cold Pressure', submission.tyreColdPressure || '-', '', '', yPos);
+    yPos = drawSectionHeader(t.tyresData, yPos);
+    yPos = drawDataRow(t.tyreModel, submission.tyreModel || '-', t.tyreAge, submission.tyreAge || '-', yPos);
+    yPos = drawDataRow(t.coldPressure, submission.tyreColdPressure || '-', '', '', yPos);
     yPos += 5;
 
     // Kart Setup Section
-    yPos = drawSectionHeader('Kart Setup', yPos);
-    yPos = drawDataRow('Chassis', submission.chassis || '-', 'Axle', submission.axle || '-', yPos);
-    yPos = drawDataRow('Rear Hubs', `${submission.rearHubsMaterial || '-'} - ${submission.rearHubsLength || '-'}`, 'Front Hubs', submission.frontHubsMaterial || '-', yPos);
-    yPos = drawDataRow('Front Height', submission.frontHeight || '-', 'Back Height', submission.backHeight || '-', yPos);
-    yPos = drawDataRow('Front Bar', submission.frontBar || '-', 'Spindle', submission.spindle || '-', yPos);
-    yPos = drawDataRow('Caster', submission.caster || '-', 'Seat Position', submission.seatPosition ? `${submission.seatPosition} cm` : '-', yPos);
+    yPos = drawSectionHeader(t.kartSetup, yPos);
+    yPos = drawDataRow(t.chassis, submission.chassis || '-', t.axle, submission.axle || '-', yPos);
+    yPos = drawDataRow(t.rearHubs, `${submission.rearHubsMaterial || '-'} - ${submission.rearHubsLength || '-'}`, t.frontHubs, submission.frontHubsMaterial || '-', yPos);
+    yPos = drawDataRow(t.frontHeight, submission.frontHeight || '-', t.backHeight, submission.backHeight || '-', yPos);
+    yPos = drawDataRow(t.frontBar, submission.frontBar || '-', t.spindle, submission.spindle || '-', yPos);
+    yPos = drawDataRow(t.caster, submission.caster || '-', t.seatPosition, submission.seatPosition ? `${submission.seatPosition} cm` : '-', yPos);
     yPos += 5;
 
     // Conclusion Section (if applicable)
     if (submission.lapTime || submission.observation) {
-      yPos = drawSectionHeader('Session Results', yPos);
+      yPos = drawSectionHeader(t.sessionResults, yPos);
       if (submission.lapTime) {
-        yPos = drawDataRow('Lap Time', submission.lapTime, '', '', yPos);
+        yPos = drawDataRow(t.lapTime, submission.lapTime, '', '', yPos);
       }
       if (submission.observation) {
         doc.fontSize(8)
           .fillColor(COLORS.text)
           .font('Helvetica-Bold')
-          .text('NOTES', 55, yPos);
+          .text(t.notes.toUpperCase(), 55, yPos);
         doc.fontSize(10)
           .fillColor(COLORS.lightGray)
           .font('Helvetica')
@@ -168,7 +336,7 @@ export function generateSubmissionPDF(submission: Submission, userName: string):
     doc.rect(0, footerY, doc.page.width, 8).fill(COLORS.primary);
     doc.fontSize(8)
       .fillColor(COLORS.lightGray)
-      .text('Powered by Overcut Academy', 40, footerY - 15, {
+      .text(t.poweredBy, 40, footerY - 15, {
         width: pageWidth,
         align: 'center'
       });

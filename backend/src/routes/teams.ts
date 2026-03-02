@@ -41,24 +41,24 @@ const REGION_DROPDOWN_OPTIONS: Record<string, { tracks: string[], championships:
     },
     Brazil: {
         tracks: [
-            'Kartódromo Granja Viana (SP)',
-            'Kartódromo Internacional Nova Odessa (SP)',
-            'Kartódromo Ayrton Senna - Interlagos (SP)',
-            'Kartódromo Internacional Aldeia da Serra (SP)',
-            'Kartódromo San Marino (SP)',
-            'Kartódromo Internacional de Birigui - Speed Park (SP)',
-            'Kartódromo de Itu (SP)',
-            'Kartódromo Internacional Beto Carrero (SC)',
-            'Circuito Internacional Techspeed - Velopark (RS)',
-            'Kartódromo de Volta Redonda (RJ)',
-            'Kartódromo Raceland Internacional (PR)',
-            'Kartódromo Internacional da Serra (ES)',
-            'Kartódromo Internacional de Tarumã (RS)',
-            'Kartódromo de Guapimirim (RJ)',
-            'Kartódromo RBC Racing (MG)',
-            'Kartódromo Internacional Paladino (PB)',
-            'Kartódromo Luigi Borghesi - Londrina (PR)',
-            'Kartódromo Internacional de Imperatriz (MA)'
+            'Granja Viana (SP)',
+            'Nova Odessa (SP)',
+            'Interlagos',
+            'Aldeia da Serra (SP)',
+            'San Marino (SP)',
+            'Speed Park (SP)',
+            'Itu (SP)',
+            'Beto Carrero (SC)',
+            'Velopark (RS)',
+            'Volta Redonda (RJ)',
+            'Raceland (PR)',
+            'Serra (ES)',
+            'Tarumã (RS)',
+            'Guapimirim (RJ)',
+            'RBC Racing (MG)',
+            'Paladino (PB)',
+            'Luigi Borghesi - Londrina (PR)',
+            'Imperatriz (MA)'
         ],
         championships: [
             'Copa SP Light', 'Copa SP Granja Viana', 'Copa do Brasil', 'Copa SpeedPark',
@@ -80,7 +80,7 @@ const COMMON_DROPDOWN_OPTIONS = {
         'DD2 Master', '206 Cadet', '206 Junior', '206 Senior', 'OKN', 'OKNJ', 'KZ2', 'KZ1', 'KZM', 'OK', 'OKJ'
     ],
     tyreModels: [
-        'Mg Red', 'Mg Yellow', 'MG Wet', 'Evinco Blue', 'Evinco Blue SKH2', 'Evinco Red SKM2',
+        'Mg Red', 'MG Cadet', 'Mg Yellow', 'MG Wet', 'Evinco Blue', 'Evinco Blue SKH2', 'Evinco Red SKM2',
         'Evinco WET', 'Levanto', 'Levanto WET', 'Bridgestone', 'Vega Red', 'Vega Blue',
         'Vega Yellow', 'Mojo D5', 'Mojo D2', 'Dunlop', 'Dunlop WET'
     ]
@@ -103,6 +103,7 @@ router.get('/:slug/config', async (req, res) => {
                 dropdownOptions: true,
                 customLabels: true,
                 region: true,
+                defaultLanguage: true,
             },
         });
 
@@ -133,6 +134,7 @@ router.get('/:slug/config', async (req, res) => {
             dropdownOptions,
             customLabels: team.customLabels || {},
             region: teamRegion,
+            defaultLanguage: team.defaultLanguage || 'en',
         });
     } catch (error) {
         console.error('Error fetching team config:', error);
@@ -220,6 +222,7 @@ router.put('/:slug/config', async (req, res) => {
                 dropdownOptions: true,
                 customLabels: true,
                 region: true,
+                defaultLanguage: true,
             }
         });
 
@@ -246,6 +249,7 @@ router.put('/:slug/config', async (req, res) => {
             dropdownOptions,
             customLabels: updatedTeam.customLabels || {},
             region: teamRegion,
+            defaultLanguage: updatedTeam.defaultLanguage || 'en',
         });
     } catch (error) {
         console.error('Error updating team config:', error);

@@ -72,7 +72,49 @@ export const TRANSLATIONS = {
         northAmerica: 'North America',
         centralAmerica: 'Central America',
         southAmerica: 'South America',
-        europe: 'Europe'
+        europe: 'Europe',
+
+        // Dashboard
+        setupSubmissions: 'Setup Submissions',
+        viewManageSetups: 'View and manage all driver setups',
+        searchFilter: 'Search & Filter',
+        search: 'Search',
+        searchPlaceholder: 'Driver, track, engine, tyre...',
+        filterByTrack: 'Filter by Track',
+        allTracks: 'All Tracks',
+        filterBySession: 'Filter by Session',
+        allSessions: 'All Sessions',
+        favorites: 'Favorites',
+        exportCSV: 'Export CSV',
+        deleteSelected: 'Delete Selected',
+        date: 'Date',
+        driver: 'Driver',
+        actions: 'Actions',
+        view: 'View',
+        edit: 'Edit',
+        noSubmissions: 'No submissions yet',
+        noMatch: 'No submissions match your filters',
+        confirmDeletion: 'Confirm Deletion',
+        confirmDeleteMsg: 'Are you sure you want to delete',
+        submissionWord: 'submission(s)? This action cannot be undone.',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        engine: 'Engine',
+        tyre: 'Tyre',
+
+        // View Page
+        submissionDetails: 'Submission Details',
+        generalInfo: 'General Information',
+        sessionResults: 'Session Results',
+        notes: 'Notes',
+        editSubmission: 'Edit Submission',
+        backToDashboard: 'Back to Dashboard',
+        trackLayout: 'Track Layout',
+
+        // PDF
+        setupSheet: 'SETUP SHEET',
+        generated: 'Generated',
+        poweredBy: 'Powered by Overcut Academy'
     },
     es: {
         // Form Sections
@@ -145,7 +187,49 @@ export const TRANSLATIONS = {
         northAmerica: 'Norteamérica',
         centralAmerica: 'Centroamérica',
         southAmerica: 'Sudamérica',
-        europe: 'Europa'
+        europe: 'Europa',
+
+        // Dashboard
+        setupSubmissions: 'Configuraciones Enviadas',
+        viewManageSetups: 'Ver y gestionar todas las configuraciones',
+        searchFilter: 'Buscar y Filtrar',
+        search: 'Buscar',
+        searchPlaceholder: 'Piloto, pista, motor, neumático...',
+        filterByTrack: 'Filtrar por Pista',
+        allTracks: 'Todas las Pistas',
+        filterBySession: 'Filtrar por Sesión',
+        allSessions: 'Todas las Sesiones',
+        favorites: 'Favoritos',
+        exportCSV: 'Exportar CSV',
+        deleteSelected: 'Eliminar Seleccionados',
+        date: 'Fecha',
+        driver: 'Piloto',
+        actions: 'Acciones',
+        view: 'Ver',
+        edit: 'Editar',
+        noSubmissions: 'No hay configuraciones aún',
+        noMatch: 'No hay configuraciones que coincidan con los filtros',
+        confirmDeletion: 'Confirmar Eliminación',
+        confirmDeleteMsg: '¿Estás seguro de que quieres eliminar',
+        submissionWord: 'configuración(es)? Esta acción no se puede deshacer.',
+        cancel: 'Cancelar',
+        delete: 'Eliminar',
+        engine: 'Motor',
+        tyre: 'Neumático',
+
+        // View Page
+        submissionDetails: 'Detalles de la Configuración',
+        generalInfo: 'Información General',
+        sessionResults: 'Resultados de la Sesión',
+        notes: 'Notas',
+        editSubmission: 'Editar Configuración',
+        backToDashboard: 'Volver al Panel',
+        trackLayout: 'Trazado de Pista',
+
+        // PDF
+        setupSheet: 'HOJA DE CONFIGURACIÓN',
+        generated: 'Generado',
+        poweredBy: 'Desarrollado por Overcut Academy'
     },
     pt: {
         // Form Sections
@@ -169,7 +253,7 @@ export const TRANSLATIONS = {
         drivenSprocket: 'Coroa (Eixo)',
         carburatorNumber: 'Número do Carburador',
         tyreModel: 'Modelo do Pneu',
-        tyreAge: 'Uso do Pneu',
+        tyreAge: 'Quantidade de voltas do pneu',
         tyreColdPressure: 'Pressão a Frio',
         chassis: 'Chassi',
         axle: 'Eixo',
@@ -218,6 +302,48 @@ export const TRANSLATIONS = {
         northAmerica: 'América do Norte',
         centralAmerica: 'América Central',
         southAmerica: 'América do Sul',
-        europe: 'Europa'
+        europe: 'Europa',
+
+        // Dashboard
+        setupSubmissions: 'Configurações Enviadas',
+        viewManageSetups: 'Visualizar e gerenciar todas as configurações',
+        searchFilter: 'Buscar e Filtrar',
+        search: 'Buscar',
+        searchPlaceholder: 'Piloto, pista, motor, pneu...',
+        filterByTrack: 'Filtrar por Pista',
+        allTracks: 'Todas as Pistas',
+        filterBySession: 'Filtrar por Sessão',
+        allSessions: 'Todas as Sessões',
+        favorites: 'Favoritos',
+        exportCSV: 'Exportar CSV',
+        deleteSelected: 'Excluir Selecionados',
+        date: 'Data',
+        driver: 'Piloto',
+        actions: 'Ações',
+        view: 'Ver',
+        edit: 'Editar',
+        noSubmissions: 'Nenhuma configuração ainda',
+        noMatch: 'Nenhuma configuração encontrada com os filtros',
+        confirmDeletion: 'Confirmar Exclusão',
+        confirmDeleteMsg: 'Tem certeza de que deseja excluir',
+        submissionWord: 'configuração(ões)? Esta ação não pode ser desfeita.',
+        cancel: 'Cancelar',
+        delete: 'Excluir',
+        engine: 'Motor',
+        tyre: 'Pneu',
+
+        // View Page
+        submissionDetails: 'Detalhes da Configuração',
+        generalInfo: 'Informações Gerais',
+        sessionResults: 'Resultados da Sessão',
+        notes: 'Notas',
+        editSubmission: 'Editar Configuração',
+        backToDashboard: 'Voltar ao Painel',
+        trackLayout: 'Traçado da Pista',
+
+        // PDF
+        setupSheet: 'FICHA DE CONFIGURAÇÃO',
+        generated: 'Gerado',
+        poweredBy: 'Desenvolvido por Overcut Academy'
     }
 };

@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllSubmissions, updateSubmission } from '@/lib/api';
+import { getAllSubmissions, updateSubmission, getTeamConfig } from '@/lib/api';
+import { TeamConfig } from '@/types/team';
+import { TRANSLATIONS, Language } from '@/lib/translations';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -57,14 +59,28 @@ export default function ManagerDashboard() {
   const [deleting, setDeleting] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
 
   useEffect(() => {
     loadSubmissions();
+    loadTeamConfig();
   }, []);
 
   useEffect(() => {
     filterSubmissions();
   }, [searchTerm, filterTrack, filterSession, submissions]);
+
+  const loadTeamConfig = async () => {
+    try {
+      const config = await getTeamConfig(teamSlug);
+      setTeamConfig(config);
+    } catch (error) {
+      console.error('Error loading team config:', error);
+    }
+  };
+
+  const lang = (teamConfig?.defaultLanguage as Language) || 'en';
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   const loadSubmissions = async () => {
     try {
@@ -122,13 +138,9 @@ export default function ManagerDashboard() {
         s.id === submission.id ? { ...s, isFavorite: updated } : s
       );
       setSubmissions(newSubmissions);
-      // We need to re-filter immediately to reflect optimistic changes if we are on the favorites tab
-      // But since filterSubmissions depends on 'submissions' state which is async, let's just trigger update
 
       // Wait for API
       await updateSubmission(submission.id, { isFavorite: updated }, teamSlug);
-
-      // If API fails, we could revert, but for now assuming success or user will refresh
     } catch (error) {
       console.error('Error toggling favorite:', error);
       alert('Failed to update favorite status');
@@ -232,34 +244,34 @@ export default function ManagerDashboard() {
 
     // Define CSV headers
     const headers = [
-      'Date',
-      'Driver First Name',
-      'Driver Last Name',
-      'Session Type',
-      'Track',
-      'Championship',
-      'Division',
-      'Engine Number',
-      'Gear Ratio',
-      'Drive Sprocket',
-      'Driven Sprocket',
-      'Carburator Number',
-      'Tyre Model',
-      'Tyre Age',
-      'Cold Pressure',
-      'Chassis',
-      'Axle',
-      'Rear Hubs Material',
-      'Rear Hubs Length',
-      'Front Height',
-      'Back Height',
-      'Front Hubs Material',
-      'Front Bar',
-      'Spindle',
-      'Caster',
-      'Seat Position',
-      'Lap Time',
-      'Observation'
+      t.date,
+      t.firstName,
+      t.lastName,
+      t.sessionType,
+      t.track,
+      t.championship,
+      t.division,
+      t.engineNumber,
+      t.gearRatio,
+      t.driveSprocket,
+      t.drivenSprocket,
+      t.carburatorNumber,
+      t.tyreModel,
+      t.tyreAge,
+      t.tyreColdPressure,
+      t.chassis,
+      t.axle,
+      t.rearHubsMaterial,
+      t.rearHubsLength,
+      t.frontHeight,
+      t.backHeight,
+      t.frontHubsMaterial,
+      t.frontBar,
+      t.spindle,
+      t.caster,
+      t.seatPosition,
+      t.lapTime,
+      t.observation
     ];
 
     // Build CSV rows
@@ -342,7 +354,7 @@ export default function ManagerDashboard() {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="text-center">
           <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-red-500 border-r-transparent"></div>
-          <p className="text-lg text-gray-400">Loading submissions...</p>
+          <p className="text-lg text-gray-400">{t.checkingSetup || 'Loading submissions...'}</p>
         </div>
       </div>
     );
@@ -363,9 +375,9 @@ export default function ManagerDashboard() {
         <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white uppercase tracking-wider">
-              Setup <span className="text-red-500">Submissions</span>
+              {t.setupSubmissions ? t.setupSubmissions.split(' ')[0] : 'Setup'} <span className="text-red-500">{t.setupSubmissions ? t.setupSubmissions.split(' ').slice(1).join(' ') : 'Submissions'}</span>
             </h1>
-            <p className="text-gray-400">View and manage all driver setups</p>
+            <p className="text-gray-400">{t.viewManageSetups}</p>
           </div>
           <div className="flex items-center gap-4">
             {selectedIds.size > 0 && (
@@ -375,7 +387,7 @@ export default function ManagerDashboard() {
                   className="px-4 py-2 rounded-lg bg-green-600 text-white font-bold uppercase tracking-wider hover:bg-green-700 transition-colors flex items-center gap-2"
                 >
                   <span>📊</span>
-                  Export CSV ({selectedIds.size})
+                  {t.exportCSV} ({selectedIds.size})
                 </button>
                 <button
                   onClick={promptBulkDelete}
@@ -387,7 +399,7 @@ export default function ManagerDashboard() {
                   ) : (
                     <span>🗑️</span>
                   )}
-                  Delete Selected ({selectedIds.size})
+                  {t.deleteSelected} ({selectedIds.size})
                 </button>
               </>
             )}
@@ -405,7 +417,7 @@ export default function ManagerDashboard() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
               <span className="text-2xl">🔍</span>
-              <h2 className="text-lg font-bold text-white uppercase tracking-wider">Search & Filter</h2>
+              <h2 className="text-lg font-bold text-white uppercase tracking-wider">{t.searchFilter}</h2>
             </div>
 
             {/* Favorites Tab / Filter */}
@@ -417,7 +429,7 @@ export default function ManagerDashboard() {
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
               >
-                All Sessions
+                {t.allSessions}
               </button>
               <button
                 onClick={() => setShowFavorites(true)}
@@ -427,43 +439,43 @@ export default function ManagerDashboard() {
                   }`}
               >
                 <span>⭐</span>
-                Favorites
+                {t.favorites}
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
-              <label className={labelClass}>Search</label>
+              <label className={labelClass}>{t.search}</label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Driver, track, engine, tyre..."
+                placeholder={t.searchPlaceholder}
                 className={inputClass}
               />
             </div>
             <div>
-              <label className={labelClass}>Filter by Track</label>
+              <label className={labelClass}>{t.filterByTrack}</label>
               <select
                 value={filterTrack}
                 onChange={(e) => setFilterTrack(e.target.value)}
                 className={selectClass}
               >
-                <option value="">All Tracks</option>
+                <option value="">{t.allTracks}</option>
                 {uniqueTracks.map((track) => (
                   <option key={track} value={track}>{track}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Filter by Session</label>
+              <label className={labelClass}>{t.filterBySession}</label>
               <select
                 value={filterSession}
                 onChange={(e) => setFilterSession(e.target.value)}
                 className={selectClass}
               >
-                <option value="">All Sessions</option>
+                <option value="">{t.allSessions}</option>
                 {uniqueSessions.map((session) => (
                   <option key={session} value={session}>{session}</option>
                 ))}
@@ -490,31 +502,31 @@ export default function ManagerDashboard() {
                     />
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Date
+                    {t.date}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Driver
+                    {t.driver}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Championship
+                    {t.championship}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Session
+                    {t.sessionType}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Track
+                    {t.track}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Division
+                    {t.division}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Engine
+                    {t.engine}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Tyre
+                    {t.tyre}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
-                    Actions
+                    {t.actions}
                   </th>
                 </tr>
               </thead>
@@ -524,7 +536,7 @@ export default function ManagerDashboard() {
                     <td colSpan={10} className="px-6 py-12 text-center">
                       <div className="text-6xl mb-4">📭</div>
                       <p className="text-gray-500">
-                        {submissions.length === 0 ? 'No submissions yet' : 'No submissions match your filters'}
+                        {submissions.length === 0 ? t.noSubmissions : t.noMatch}
                       </p>
                     </td>
                   </tr>
@@ -595,7 +607,7 @@ export default function ManagerDashboard() {
                               onClick={() => handleView(submission.id)}
                               className="px-3 py-1 rounded-lg bg-white/10 text-white font-semibold text-sm hover:bg-white/20 transition-colors"
                             >
-                              View
+                              {t.view}
                             </button>
                             <button
                               onClick={() => handleExportPDF(submission.id)}
@@ -607,7 +619,7 @@ export default function ManagerDashboard() {
                               onClick={() => handleEdit(submission.id)}
                               className="px-3 py-1 rounded-lg bg-gray-700 text-gray-300 font-semibold text-sm hover:bg-gray-600 transition-colors"
                             >
-                              Edit
+                              {t.edit}
                             </button>
                           </div>
                         </td>
@@ -634,9 +646,9 @@ export default function ManagerDashboard() {
               <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                 <span className="text-3xl">⚠️</span>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wider">Confirm <span className="text-red-500">Deletion</span></h3>
+              <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wider">{t.confirmDeletion?.split(' ')[0] || 'Confirm'} <span className="text-red-500">{t.confirmDeletion?.split(' ').slice(1).join(' ') || 'Deletion'}</span></h3>
               <p className="text-gray-400">
-                Are you sure you want to delete <strong className="text-white">{selectedIds.size}</strong> submission(s)? This action cannot be undone.
+                {t.confirmDeleteMsg} <strong className="text-white">{selectedIds.size}</strong> {t.submissionWord}
               </p>
             </div>
 
@@ -646,7 +658,7 @@ export default function ManagerDashboard() {
                 disabled={deleting}
                 className="flex-1 px-4 py-3 rounded-lg font-bold text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-600 transition-colors disabled:opacity-50 uppercase tracking-wider"
               >
-                Cancel
+                {t.cancel}
               </button>
               <button
                 onClick={executeBulkDelete}
@@ -656,7 +668,7 @@ export default function ManagerDashboard() {
                 {deleting ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                 ) : (
-                  'Delete'
+                  t.delete
                 )}
               </button>
             </div>
