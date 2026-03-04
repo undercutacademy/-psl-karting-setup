@@ -26,7 +26,7 @@ export default function ManagerSettings() {
 
     useEffect(() => {
         const savedLang = localStorage.getItem('preferred_language') as Language;
-        if (savedLang && ['en', 'es', 'pt'].includes(savedLang)) {
+        if (savedLang && ['en', 'es', 'pt', 'it'].includes(savedLang)) {
             setLang(savedLang);
         }
     }, []);
@@ -189,10 +189,18 @@ export default function ManagerSettings() {
                         <button
                             type="button"
                             onClick={() => handleLanguageChange('pt')}
-                            className={`px-4 py-2 text-sm font-bold transition-colors ${lang === 'pt' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-4 py-2 text-sm font-bold border-r border-gray-700 transition-colors ${lang === 'pt' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
                             style={lang === 'pt' ? { backgroundColor: `${primaryColor}4D` } : {}}
                         >
                             PT
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleLanguageChange('it')}
+                            className={`px-4 py-2 text-sm font-bold transition-colors ${lang === 'it' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                            style={lang === 'it' ? { backgroundColor: `${primaryColor}4D` } : {}}
+                        >
+                            IT
                         </button>
                     </div>
                 </div>

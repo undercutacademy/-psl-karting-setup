@@ -108,7 +108,7 @@ model Team {
   logoUrl         String?
   primaryColor    String       @default("#dc2626")
   region          String       @default("NorthAmerica")
-  defaultLanguage String       @default("en")  // en, es, pt
+  defaultLanguage String       @default("en")  // en, es, pt, it
   
   // Email Configuration
   managerEmails   String[]     // All emails that receive notifications

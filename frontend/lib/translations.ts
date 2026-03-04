@@ -1,4 +1,4 @@
-export type Language = 'en' | 'es' | 'pt';
+export type Language = 'en' | 'es' | 'pt' | 'it';
 
 export const TRANSLATIONS = {
     en: {
@@ -345,5 +345,120 @@ export const TRANSLATIONS = {
         setupSheet: 'FICHA DE CONFIGURAÇÃO',
         generated: 'Gerado',
         poweredBy: 'Desenvolvido por Overcut Academy'
+    },
+    it: {
+        // Form Sections
+        driverInfo: 'Informazioni Pilota',
+        engineSetup: 'Assetto Motore',
+        tyresData: 'Dati Pneumatici',
+        kartSetup: 'Assetto Kart',
+        finalDetails: 'Dettagli Finali',
+
+        // Labels
+        email: 'Email',
+        firstName: 'Nome',
+        lastName: 'Cognome',
+        sessionType: 'Tipo di Sessione',
+        track: 'Pista',
+        championship: 'Campionato',
+        division: 'Categoria',
+        engineNumber: 'Numero Motore',
+        gearRatio: 'Rapporto di Trasmissione',
+        driveSprocket: 'Pignone (Motore)',
+        drivenSprocket: 'Corona (Assale)',
+        carburatorNumber: 'Numero Carburatore',
+        tyreModel: 'Modello Pneumatico',
+        tyreAge: 'Usura Pneumatico',
+        tyreColdPressure: 'Pressione a Freddo',
+        chassis: 'Telaio',
+        axle: 'Assale',
+        rearHubsMaterial: 'Materiale Mozzi Posteriori',
+        rearHubsLength: 'Lunghezza Mozzi Posteriori',
+        frontHeight: 'Altezza Anteriore',
+        backHeight: 'Altezza Posteriore',
+        frontHubsMaterial: 'Materiale Mozzi Anteriori',
+        frontBar: 'Barra Anteriore',
+        spindle: 'Fuselli',
+        caster: 'Incidenza',
+        seatPosition: 'Posizione Sedile [cm]',
+        seatInclination: 'Inclinazione Sedile',
+        lapTime: 'Tempo sul Giro',
+        observation: 'Osservazioni',
+        axleSize: 'Dimensione Assale',
+        frontHubsLength: 'Lunghezza Mozzi Anteriori',
+        camber: 'Campanatura',
+        rearTrackWidth: 'Carreggiata Posteriore',
+        sessionLaps: 'Giri della Sessione',
+
+        // Buttons & UI
+        nextStep: 'Prossimo Passo',
+        back: 'Indietro',
+        submit: 'Invia Assetto',
+        submitting: 'Invio in corso...',
+        home: 'Home',
+        step: 'Passo',
+        of: 'di',
+
+        // Alerts & Messages
+        foundPrevious: 'Trovato assetto precedente di',
+        hasSetupChanged: 'Il tuo assetto è cambiato da allora?',
+        noSameSetup: 'No, Stesso Assetto',
+        yesChanged: 'Sì, Cambiato',
+        modifyNotice: 'Modifica il nome del pilota o i dettagli dell\'assetto di seguito. Puoi cambiare campionato, pista o categoria se necessario.',
+        usingPrevious: 'Usando il tuo assetto precedente. Aggiorna i dettagli della sessione di seguito e invia!',
+        checkingSetup: 'Controllo assetto precedente...',
+
+        // Placeholders
+        selectTrack: 'Seleziona Pista',
+        selectChampionship: 'Seleziona Campionato',
+        selectDivision: 'Seleziona Categoria',
+        selectTyreModel: 'Seleziona Modello Pneumatico',
+        region: 'Regione',
+        northAmerica: 'Nord America',
+        centralAmerica: 'Centro America',
+        southAmerica: 'Sud America',
+        europe: 'Europa',
+
+        // Dashboard
+        setupSubmissions: 'Assetti Inviati',
+        viewManageSetups: 'Visualizza e gestisci tutti gli assetti dei piloti',
+        searchFilter: 'Cerca e Filtra',
+        search: 'Cerca',
+        searchPlaceholder: 'Pilota, pista, motore, pneumatico...',
+        filterByTrack: 'Filtra per Pista',
+        allTracks: 'Tutte le Piste',
+        filterBySession: 'Filtra per Sessione',
+        allSessions: 'Tutte le Sessioni',
+        favorites: 'Preferiti',
+        exportCSV: 'Esporta CSV',
+        deleteSelected: 'Elimina Selezionati',
+        date: 'Data',
+        driver: 'Pilota',
+        actions: 'Azioni',
+        view: 'Visualizza',
+        edit: 'Modifica',
+        noSubmissions: 'Nessun assetto ancora inviato',
+        noMatch: 'Nessun assetto corrisponde ai tuoi filtri',
+        confirmDeletion: 'Conferma Eliminazione',
+        confirmDeleteMsg: 'Sei sicuro di voler eliminare',
+        submissionWord: 'assetto/i? Questa azione non può essere annullata.',
+        cancel: 'Annulla',
+        delete: 'Elimina',
+        engine: 'Motore',
+        tyre: 'Pneumatico',
+
+        // View Page
+        submissionDetails: 'Dettagli Assetto',
+        generalInfo: 'Informazioni Generali',
+        sessionResults: 'Risultati della Sessione',
+        notes: 'Note',
+        editSubmission: 'Modifica Assetto',
+        backToDashboard: 'Torna alla Dashboard',
+        trackLayout: 'Tracciato Pista',
+
+        // PDF
+        setupSheet: 'SCHEDA ASSETTO',
+        generated: 'Generato',
+        poweredBy: 'Basato su Overcut Academy'
     }
 };
