@@ -68,6 +68,19 @@ const REGION_DROPDOWN_OPTIONS: Record<string, { tracks: string[], championships:
             'Mirim', 'Cadete', 'Mini 2T', 'F4 Junior', 'OKNJ', 'OKN', 'F4 Graduados', 'F4 Senior',
             'Shifter', 'Shifter Master', 'Sprinter', 'Senior Am', 'Senior Pro', 'Super Senior', 'S60'
         ]
+    },
+    CentralAmerica: {
+        tracks: [
+            'Autodromo Panama - Original',
+            'Autodromo Panama - Reverse'
+        ],
+        championships: [
+            'SKAPA', 'Centroamericano', 'International', 'Copa Amistad'
+        ],
+        divisions: [
+            'Micro', 'Mini', 'Promo', 'VLR Junior', 'VLR Senior', 'VLR Master',
+            'X30 Junior', 'X30 Senior', 'X30 Master', 'Tillotson'
+        ]
     }
 };
 
