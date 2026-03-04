@@ -21,13 +21,18 @@ export async function generateMetadata({ params }: { params: Promise<{ teamSlug:
     let iconUrl = '/icon.png'; // Default global icon
 
     try {
+        console.log(`[Metadata] Checking icon path for ${teamSlug}:`, iconPath);
         if (fs.existsSync(iconPath)) {
-            iconUrl = `/${iconFileName}`;
+            iconUrl = `/${iconFileName}?v=${Date.now()}`;
+            console.log(`[Metadata] Found icon for ${teamSlug}! Setting to: ${iconUrl}`);
         } else {
             // Fallback: check for jpg
             const jpgPath = path.join(process.cwd(), 'public', `${teamSlug}-icon.jpg`);
             if (fs.existsSync(jpgPath)) {
-                iconUrl = `/${teamSlug}-icon.jpg`;
+                iconUrl = `/${teamSlug}-icon.jpg?v=${Date.now()}`;
+                console.log(`[Metadata] Found JPG icon for ${teamSlug}! Setting to: ${iconUrl}`);
+            } else {
+                console.log(`[Metadata] No icon found for ${teamSlug}, falling back to default.`);
             }
         }
     } catch (e) {
