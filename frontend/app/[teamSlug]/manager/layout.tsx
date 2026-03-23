@@ -21,12 +21,13 @@ export default function ManagerLayout({
 
   // Determine the expected login path for this team
   const loginPath = `/${teamSlug}/manager/login`;
+  const changePasswordPath = `/${teamSlug}/manager/change-password`;
 
   useEffect(() => {
     const managerEmail = localStorage.getItem('managerEmail');
-    const managerUser = localStorage.getItem('managerUser');
+    const managerUserStr = localStorage.getItem('managerUser');
 
-    if (!managerEmail || !managerUser) {
+    if (!managerEmail || !managerUserStr) {
       if (pathname !== loginPath) {
         router.push(loginPath);
       } else {
@@ -34,10 +35,18 @@ export default function ManagerLayout({
         setLoading(false);
       }
     } else {
+      // Check if user must change password
+      try {
+        const managerUser = JSON.parse(managerUserStr);
+        if (managerUser.mustChangePassword && pathname !== changePasswordPath) {
+          router.push(changePasswordPath);
+          return;
+        }
+      } catch {}
       setIsAuthenticated(true);
       setLoading(false);
     }
-  }, [router, pathname, loginPath]);
+  }, [router, pathname, loginPath, changePasswordPath]);
 
   const handleLogout = () => {
     localStorage.removeItem('managerEmail');
@@ -60,7 +69,7 @@ export default function ManagerLayout({
   }
 
   // If we are on the login page, just render children without the nav bar
-  if (pathname === loginPath) {
+  if (pathname === loginPath || pathname === changePasswordPath) {
     return <>{children}</>;
   }
 
