@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arrowOrangeR" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto-start-reverse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="#0f172a"/>
+  <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+    <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+  </pattern>
+  <rect width="800" height="500" fill="url(#grid)"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="800" height="48" fill="rgba(0,0,0,0.6)"/>
+  <text x="24" y="32" fill="#f97316" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="bold">SEAT POSITION</text>
+  <text x="228" y="32" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="14">Measurement Guide</text>
+
+  <!-- Kart chassis - side view -->
+  <path d="M 80 340 L 720 340" stroke="#64748b" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M 80 340 L 60 320 L 60 360 L 80 340" fill="#475569" stroke="#64748b" stroke-width="2"/>
+  <path d="M 720 340 L 740 325 L 740 355 L 720 340" fill="#475569" stroke="#64748b" stroke-width="2"/>
+
+  <!-- Rear axle assembly -->
+  <circle cx="140" cy="380" r="40" fill="none" stroke="#475569" stroke-width="3"/>
+  <circle cx="140" cy="380" r="18" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+  <circle cx="140" cy="380" r="5" fill="#475569"/>
+  <rect x="115" y="335" width="50" height="12" rx="3" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+
+  <!-- Front wheel -->
+  <circle cx="660" cy="380" r="32" fill="none" stroke="#475569" stroke-width="3"/>
+  <circle cx="660" cy="380" r="14" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+  <circle cx="660" cy="380" r="4" fill="#475569"/>
+
+  <!-- Steering column -->
+  <line x1="580" y1="340" x2="560" y2="210" stroke="#64748b" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="555" cy="200" rx="35" ry="8" fill="none" stroke="#94a3b8" stroke-width="4" transform="rotate(-10, 555, 200)"/>
+  <circle cx="555" cy="200" r="5" fill="#64748b"/>
+
+  <!-- Floor pan -->
+  <rect x="200" y="340" width="350" height="6" rx="2" fill="#334155" stroke="#475569" stroke-width="1"/>
+
+  <!-- Seat (highlighted) -->
+  <path d="M 320 340 L 320 200 Q 320 170 340 165 L 370 160 Q 400 155 410 170 L 420 340"
+        fill="#1e293b" stroke="#e2e8f0" stroke-width="2.5"/>
+  <path d="M 325 280 L 325 210 Q 328 185 345 175" stroke="#475569" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+  <path d="M 325 340 L 415 340" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="310" y="328" width="14" height="16" rx="2" fill="#475569" stroke="#64748b" stroke-width="1.5"/>
+  <rect x="405" y="328" width="14" height="16" rx="2" fill="#475569" stroke="#64748b" stroke-width="1.5"/>
+
+  <!-- MEASUREMENT: Seat Position distance -->
+  <line x1="140" y1="290" x2="140" y2="310" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="317" y1="290" x2="317" y2="310" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="145" y1="300" x2="312" y2="300" stroke="#f97316" stroke-width="2.5" marker-start="url(#arrowOrangeR)" marker-end="url(#arrowOrange)"/>
+
+  <!-- Measurement label -->
+  <rect x="175" y="260" width="130" height="32" rx="6" fill="#f97316" opacity="0.15" stroke="#f97316" stroke-width="1.5"/>
+  <text x="240" y="282" fill="#f97316" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">Position [cm]</text>
+
+  <!-- Callout box -->
+  <rect x="460" y="100" width="290" height="100" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="480" y="128" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold">HOW TO MEASURE</text>
+  <line x1="480" y1="138" x2="720" y2="138" stroke="#334155" stroke-width="1"/>
+  <text x="480" y="158" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">Measure from rear axle bearing</text>
+  <text x="480" y="176" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">housing to front edge of seat</text>
+  <text x="480" y="194" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">mount bracket. Record in cm.</text>
+  <line x1="460" y1="160" x2="240" y2="270" stroke="#334155" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="460" width="800" height="40" fill="rgba(0,0,0,0.5)"/>
+  <text x="24" y="485" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="11">Seat Position</text>
+  <text x="700" y="485" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="end">Setup Guide</text>
+</svg>

@@ -48,6 +48,7 @@ export enum BackHeight {
   Low = 'Low',
   Medium = 'Medium',
   High = 'High',
+  Standard = 'Standard',
 }
 
 export enum FrontHubsMaterial {

@@ -112,7 +112,38 @@ export default function FormPage() {
   const [configLoading, setConfigLoading] = useState(true);
   const [lang, setLang] = useState<Language>('en');
   const [selectedLayout, setSelectedLayout] = useState<string>('');
-  const [helpModal, setHelpModal] = useState<'seatPosition' | 'seatInclination' | null>(null);
+  const [helpModal, setHelpModal] = useState<string | null>(null);
+
+  // Mapping of field names to their measurement guide SVG images
+  const MEASUREMENT_GUIDE_IMAGES: Record<string, string> = {
+    axle: '/Album/Axle.svg',
+    axleSize: '/Album/Axle_Size.svg',
+    rearTrackWidth: '/Album/Rear_Track_Width.svg',
+    rearHubsMaterial: '/Album/Rear_Hubs_Material.svg',
+    rearHubsLength: '/Album/Rear_Hubs_Length.svg',
+    frontHeight: '/Album/Front_Height.svg',
+    backHeight: '/Album/Back_Height.svg',
+    frontHubsMaterial: '/Album/Front_Hubs_Material.svg',
+    frontHubsLength: '/Album/Front_Hubs_Length.svg',
+    frontBar: '/Album/Front_Bar.svg',
+    spindle: '/Album/Spindle.svg',
+    frontWheelType: '/Album/Front_Wheel_Type.svg',
+    caster: '/Album/Caster.svg',
+    camber: '/Album/Camber.svg',
+    seatPosition: '/Album/Seat_Position.svg',
+    seatInclination: '/Album/Seat_Inclination.svg',
+  };
+
+  const HelpButton = ({ field }: { field: string }) => (
+    <button
+      type="button"
+      onClick={() => setHelpModal(field)}
+      className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors border border-gray-600"
+      title="How to measure"
+    >
+      ?
+    </button>
+  );
 
   // Load saved language preference on mount
   useEffect(() => {
@@ -294,12 +325,12 @@ export default function FormPage() {
             </button>
             <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
               <span className="text-2xl">📏</span>
-              {helpModal === 'seatPosition' ? getLabel('seatPosition') : getLabel('seatInclination')} - Guide
+              {getLabel(helpModal as keyof typeof t)} - Guide
             </h3>
             <div className="relative w-full rounded-xl overflow-hidden flex items-center justify-center bg-gray-800/50 border border-gray-700/50 p-2">
               <img
-                src={helpModal === 'seatPosition' ? '/Ajuste de banco/Seat_Position.png' : '/Ajuste de banco/Seat_Inclination.png'}
-                alt={helpModal}
+                src={MEASUREMENT_GUIDE_IMAGES[helpModal!]}
+                alt={helpModal || ''}
                 className="max-w-full max-h-[70vh] object-contain rounded-lg"
               />
             </div>
@@ -812,7 +843,7 @@ export default function FormPage() {
                     inputMode="decimal"
                     step="0.01"
                     value={formData.sparkplugGap || ''}
-                    onChange={(e) => setFormData({ ...formData, sparkplugGap: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, sparkplugGap: e.target.value ? parseFloat(e.target.value) : undefined })}
                     className={inputClass}
                     placeholder="e.g., 0.55"
                   />
@@ -933,7 +964,10 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('axle') && (
                   <div>
-                    <label className={labelClass}>{getLabel('axle')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('axle')} *</label>
+                      <HelpButton field="axle" />
+                    </div>
                     <input
                       type="text"
                       value={formData.axle}
@@ -949,7 +983,10 @@ export default function FormPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('axleSize') && (
                   <div>
-                    <label className={labelClass}>{getLabel('axleSize')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('axleSize')} *</label>
+                      <HelpButton field="axleSize" />
+                    </div>
                     <input
                       type="text"
                       value={formData.axleSize || ''}
@@ -962,7 +999,10 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('rearTrackWidth') && (
                   <div>
-                    <label className={labelClass}>{getLabel('rearTrackWidth')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('rearTrackWidth')} *</label>
+                      <HelpButton field="rearTrackWidth" />
+                    </div>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -979,7 +1019,10 @@ export default function FormPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('rearHubsMaterial') && (
                   <div>
-                    <label className={labelClass}>{getLabel('rearHubsMaterial')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('rearHubsMaterial')} *</label>
+                      <HelpButton field="rearHubsMaterial" />
+                    </div>
                     <select
                       value={formData.rearHubsMaterial}
                       onChange={(e) => setFormData({ ...formData, rearHubsMaterial: e.target.value as RearHubsMaterial })}
@@ -994,7 +1037,10 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('rearHubsLength') && (
                   <div>
-                    <label className={labelClass}>{getLabel('rearHubsLength')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('rearHubsLength')} *</label>
+                      <HelpButton field="rearHubsLength" />
+                    </div>
                     <input
                       type="text"
                       value={formData.rearHubsLength}
@@ -1010,7 +1056,10 @@ export default function FormPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('frontHeight') && (
                   <div>
-                    <label className={labelClass}>{getLabel('frontHeight')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('frontHeight')} *</label>
+                      <HelpButton field="frontHeight" />
+                    </div>
                     <select
                       value={formData.frontHeight}
                       onChange={(e) => setFormData({ ...formData, frontHeight: e.target.value as FrontHeight })}
@@ -1025,7 +1074,10 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('backHeight') && (
                   <div>
-                    <label className={labelClass}>{getLabel('backHeight')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('backHeight')} *</label>
+                      <HelpButton field="backHeight" />
+                    </div>
                     <select
                       value={formData.backHeight}
                       onChange={(e) => setFormData({ ...formData, backHeight: e.target.value as BackHeight })}
@@ -1043,7 +1095,10 @@ export default function FormPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('frontHubsMaterial') && (
                   <div>
-                    <label className={labelClass}>{getLabel('frontHubsMaterial')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('frontHubsMaterial')} *</label>
+                      <HelpButton field="frontHubsMaterial" />
+                    </div>
                     <select
                       value={formData.frontHubsMaterial}
                       onChange={(e) => setFormData({ ...formData, frontHubsMaterial: e.target.value as FrontHubsMaterial })}
@@ -1058,7 +1113,10 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('frontHubsLength') && (
                   <div>
-                    <label className={labelClass}>{getLabel('frontHubsLength')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('frontHubsLength')} *</label>
+                      <HelpButton field="frontHubsLength" />
+                    </div>
                     <input
                       type="text"
                       value={formData.frontHubsLength || ''}
@@ -1074,7 +1132,10 @@ export default function FormPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('frontBar') && !MINI_MICRO_DIVISIONS.includes(formData.division || '') && (
                   <div>
-                    <label className={labelClass}>{getLabel('frontBar')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('frontBar')} *</label>
+                      <HelpButton field="frontBar" />
+                    </div>
                     <select
                       value={formData.frontBar}
                       onChange={(e) => setFormData({ ...formData, frontBar: e.target.value as FrontBar })}
@@ -1089,7 +1150,10 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('spindle') && (
                   <div>
-                    <label className={labelClass}>{getLabel('spindle')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('spindle')} *</label>
+                      <HelpButton field="spindle" />
+                    </div>
                     <select
                       value={formData.spindle}
                       onChange={(e) => setFormData({ ...formData, spindle: e.target.value as Spindle })}
@@ -1106,7 +1170,10 @@ export default function FormPage() {
 
               {MINI_MICRO_DIVISIONS.includes(formData.division || '') && isFieldEnabled('frontWheelType') && (
                 <div>
-                  <label className={labelClass}>{getLabel('frontWheelType')} *</label>
+                  <div className="flex items-center gap-2 mb-1">
+                    <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('frontWheelType')} *</label>
+                    <HelpButton field="frontWheelType" />
+                  </div>
                   <select
                     value={formData.frontWheelType || ''}
                     onChange={(e) => setFormData({ ...formData, frontWheelType: e.target.value as FrontWheelType })}
@@ -1124,7 +1191,10 @@ export default function FormPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('caster') && (
                   <div>
-                    <label className={labelClass}>{getLabel('caster')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('caster')} *</label>
+                      <HelpButton field="caster" />
+                    </div>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -1138,7 +1208,10 @@ export default function FormPage() {
                 )}
                 {isFieldEnabled('camber') && (
                   <div>
-                    <label className={labelClass}>{getLabel('camber')} *</label>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('camber')} *</label>
+                      <HelpButton field="camber" />
+                    </div>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -1157,16 +1230,7 @@ export default function FormPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('seatPosition')} *</label>
-                      {teamConfig?.name?.toLowerCase().includes('bravar') && (
-                        <button
-                          type="button"
-                          onClick={() => setHelpModal('seatPosition')}
-                          className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors border border-gray-600"
-                          title="How to measure"
-                        >
-                          ?
-                        </button>
-                      )}
+                      <HelpButton field="seatPosition" />
                     </div>
                     <input
                       type="text"
@@ -1183,16 +1247,7 @@ export default function FormPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('seatInclination')} *</label>
-                      {teamConfig?.name?.toLowerCase().includes('bravar') && (
-                        <button
-                          type="button"
-                          onClick={() => setHelpModal('seatInclination')}
-                          className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors border border-gray-600"
-                          title="How to measure"
-                        >
-                          ?
-                        </button>
-                      )}
+                      <HelpButton field="seatInclination" />
                     </div>
                     <input
                       type="text"

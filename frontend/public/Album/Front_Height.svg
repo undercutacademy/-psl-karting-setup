@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <marker id="aO" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="aOR" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto-start-reverse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="#0f172a"/>
+  <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+    <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+  </pattern>
+  <rect width="800" height="500" fill="url(#grid)"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="800" height="48" fill="rgba(0,0,0,0.6)"/>
+  <text x="24" y="32" fill="#f97316" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="bold">FRONT HEIGHT</text>
+  <text x="215" y="32" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="14">Ride Height Guide</text>
+
+  <!-- Ground line -->
+  <line x1="50" y1="400" x2="750" y2="400" stroke="#334155" stroke-width="2"/>
+  <text x="680" y="418" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="10">GROUND</text>
+
+  <!-- Front section - side view -->
+  <!-- Main chassis rail -->
+  <rect x="100" y="260" width="400" height="8" rx="3" fill="#64748b" stroke="#94a3b8" stroke-width="1.5"/>
+
+  <!-- Front C-joint / yoke -->
+  <path d="M 420 225 L 420 305 L 455 305 L 455 225 Z" fill="#334155" stroke="#475569" stroke-width="2"/>
+  <text x="437" y="218" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="9" text-anchor="middle">C-JOINT</text>
+
+  <!-- Stub axle in C-joint -->
+  <rect x="425" y="252" width="24" height="20" rx="3" fill="#475569" stroke="#64748b" stroke-width="1.5"/>
+
+  <!-- Spindle extending down -->
+  <line x1="437" y1="272" x2="437" y2="340" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Front wheel -->
+  <circle cx="437" cy="350" r="50" fill="none" stroke="#475569" stroke-width="3"/>
+  <circle cx="437" cy="350" r="30" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+  <circle cx="437" cy="350" r="8" fill="#475569"/>
+
+  <!-- Steering column hint -->
+  <line x1="380" y1="260" x2="350" y2="140" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="345" cy="130" rx="30" ry="7" fill="none" stroke="#94a3b8" stroke-width="3" transform="rotate(-10, 345, 130)"/>
+
+  <!-- Washer positions -->
+  <rect x="426" y="240" width="22" height="6" rx="1" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
+  <text x="465" y="248" fill="#22c55e" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="bold">Above = HIGH</text>
+
+  <rect x="426" y="278" width="22" height="6" rx="1" fill="#ef4444" stroke="#dc2626" stroke-width="1"/>
+  <text x="465" y="286" fill="#ef4444" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="bold">Below = LOW</text>
+
+  <!-- MEASUREMENT: Front ride height -->
+  <line x1="300" y1="268" x2="300" y2="400" stroke="#f97316" stroke-width="2.5" marker-start="url(#aOR)" marker-end="url(#aO)"/>
+  <line x1="290" y1="268" x2="310" y2="268" stroke="#f97316" stroke-width="1.5"/>
+  <line x1="290" y1="400" x2="310" y2="400" stroke="#f97316" stroke-width="1.5"/>
+
+  <rect x="310" y="320" width="90" height="28" rx="6" fill="#f97316" opacity="0.15" stroke="#f97316" stroke-width="1.5"/>
+  <text x="355" y="340" fill="#f97316" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" text-anchor="middle">Height</text>
+
+  <!-- Options box -->
+  <rect x="30" y="80" width="260" height="190" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="50" y="108" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold">FRONT HEIGHT OPTIONS</text>
+  <line x1="50" y1="118" x2="260" y2="118" stroke="#334155" stroke-width="1"/>
+
+  <rect x="50" y="130" width="12" height="12" rx="2" fill="#ef4444"/>
+  <text x="72" y="142" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">Low</text>
+
+  <rect x="50" y="158" width="12" height="12" rx="2" fill="#3b82f6"/>
+  <text x="72" y="170" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">Standard</text>
+
+  <rect x="50" y="186" width="12" height="12" rx="2" fill="#eab308"/>
+  <text x="72" y="198" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">Medium</text>
+
+  <rect x="50" y="214" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="72" y="226" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">High</text>
+
+  <text x="50" y="258" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="11">Adjusted by moving washers</text>
+
+  <!-- Callout -->
+  <rect x="30" y="310" width="260" height="80" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="50" y="338" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold">HOW TO ADJUST</text>
+  <line x1="50" y1="348" x2="260" y2="348" stroke="#334155" stroke-width="1"/>
+  <text x="50" y="368" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">Move washer from below to above</text>
+  <text x="50" y="386" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">stub axle in the C-joint to raise.</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="460" width="800" height="40" fill="rgba(0,0,0,0.5)"/>
+  <text x="24" y="485" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="11">Front Height (Ride Height)</text>
+  <text x="700" y="485" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="end">Setup Guide</text>
+</svg>
