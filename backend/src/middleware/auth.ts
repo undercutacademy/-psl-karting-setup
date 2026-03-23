@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     isManager: boolean;
+    isSuperAdmin: boolean;
   };
 }
 
@@ -37,6 +38,7 @@ export async function requireManager(
       id: user.id,
       email: user.email,
       isManager: user.isManager,
+      isSuperAdmin: user.isSuperAdmin,
     };
 
     next();
