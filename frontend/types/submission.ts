@@ -48,7 +48,6 @@ export enum BackHeight {
   Low = 'Low',
   Medium = 'Medium',
   High = 'High',
-  Standard = 'Standard',
 }
 
 export enum FrontHubsMaterial {
@@ -69,6 +68,12 @@ export enum Spindle {
   Red = 'Red',
   Green = 'Green',
   Gold = 'Gold',
+  SinglePiece = 'Single Piece',
+}
+
+export enum FrontWheelType {
+  Hub = 'Hub',
+  NoHub = 'No Hub',
 }
 
 export interface Submission {
@@ -96,6 +101,9 @@ export interface Submission {
   frontHubsMaterial?: FrontHubsMaterial;
   frontBar?: FrontBar;
   spindle?: Spindle;
+  sparkplugType?: string;
+  sparkplugGap?: number;
+  frontWheelType?: FrontWheelType;
   caster?: string;
   seatPosition?: string;
   seatInclination?: string;
@@ -118,5 +126,7 @@ export interface User {
   firstName: string;
   lastName: string;
   isManager: boolean;
+  isSuperAdmin?: boolean;
+  mustChangePassword?: boolean;
 }
 

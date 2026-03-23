@@ -165,3 +165,46 @@ export async function getAllTeams(): Promise<TeamInfo[]> {
     return [];
   }
 }
+
+export async function addTeamManager(
+  teamSlug: string,
+  managerData: { email: string; firstName: string; lastName: string }
+): Promise<{ success: boolean; message: string; manager?: { id: string; email: string; firstName: string; lastName: string } }> {
+  const managerEmail = localStorage.getItem('managerEmail');
+  const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/managers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-manager-email': managerEmail || '',
+    },
+    body: JSON.stringify(managerData),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to add manager');
+  }
+  return data;
+}
+
+export async function changePassword(
+  email: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; message: string }> {
+  const managerEmail = localStorage.getItem('managerEmail');
+  const response = await fetch(`${API_URL}/auth/manager/change-password`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-manager-email': managerEmail || '',
+    },
+    body: JSON.stringify({ email, currentPassword, newPassword }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to change password');
+  }
+  return data;
+}
