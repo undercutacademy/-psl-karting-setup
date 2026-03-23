@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { requireManager, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -66,6 +67,7 @@ router.post('/manager/login', async (req, res) => {
         lastName: user.lastName,
         isSuperAdmin: user.isSuperAdmin,
         teamId: user.teamId,
+        mustChangePassword: user.mustChangePassword,
       },
     });
   } catch (error) {
@@ -86,6 +88,55 @@ router.get('/manager/check/:email', async (req, res) => {
   } catch (error) {
     console.error('Error checking manager status:', error);
     res.status(500).json({ error: 'Failed to check manager status' });
+  }
+});
+
+// Change password (for first-login password change and general use)
+router.put('/manager/change-password', requireManager, async (req: AuthRequest, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+
+    if (!email || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Email, current password, and new password are required' });
+    }
+
+    // Verify the requesting user matches the email
+    if (req.user?.email !== email) {
+      return res.status(403).json({ error: 'You can only change your own password' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify current password
+    if (!user.password || !verifyPassword(currentPassword, user.password)) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Check new password differs from current
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: 'New password must be different from current password' });
+    }
+
+    // Update password and clear mustChangePassword flag
+    await prisma.user.update({
+      where: { email },
+      data: {
+        password: hashPassword(newPassword),
+        mustChangePassword: false,
+      },
+    });
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ error: 'Failed to change password' });
   }
 });
 
