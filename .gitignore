@@ -42,6 +42,16 @@ prisma/migrations/
 *.swo
 *~
 
+# Playwright MCP
+.playwright-mcp/
+
+# Superpowers
+.superpowers/
+
+# Screenshots
+*.png
+!frontend/public/**/*.png
+
 # Local Tools and Temp Files
 .temp_pdf/
 Old database/
