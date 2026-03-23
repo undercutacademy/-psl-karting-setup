@@ -69,7 +69,11 @@ export default function ManagerLoginPage() {
       localStorage.setItem('managerEmail', email);
       localStorage.setItem('managerUser', JSON.stringify(data.user));
 
-      router.push(`/${teamSlug}/manager/dashboard`);
+      if (data.user.mustChangePassword) {
+        router.push(`/${teamSlug}/manager/change-password`);
+      } else {
+        router.push(`/${teamSlug}/manager/dashboard`);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to login');
     } finally {
