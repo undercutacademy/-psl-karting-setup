@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getTeamConfig, updateTeamConfig } from '@/lib/api';
+import { getTeamConfig, updateTeamConfig, addTeamManager } from '@/lib/api';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
 
 const ALL_FIELD_KEYS = [
-    'engineNumber', 'gearRatio', 'driveSprocket', 'drivenSprocket', 'carburatorNumber', 'sessionLaps',
+    'engineNumber', 'gearRatio', 'driveSprocket', 'drivenSprocket', 'carburatorNumber', 'sessionLaps', 'sparkplugType', 'sparkplugGap',
     'tyreModel', 'tyreAge',
     'chassis', 'axle', 'axleSize', 'rearHubsMaterial', 'rearHubsLength', 'rearTrackWidth', 'frontHeight', 'backHeight',
-    'frontHubsMaterial', 'frontHubsLength', 'frontBar', 'spindle', 'caster', 'camber', 'seatPosition', 'seatInclination'
+    'frontHubsMaterial', 'frontHubsLength', 'frontBar', 'spindle', 'caster', 'camber', 'seatPosition', 'seatInclination', 'frontWheelType'
 ];
 
 export default function ManagerSettings() {
@@ -23,6 +23,44 @@ export default function ManagerSettings() {
     const [enabledFields, setEnabledFields] = useState<string[]>([]);
     const [region, setRegion] = useState<string>('NorthAmerica');
     const [lang, setLang] = useState<Language>('en');
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+    const [newManagerEmail, setNewManagerEmail] = useState('');
+    const [newManagerFirstName, setNewManagerFirstName] = useState('');
+    const [newManagerLastName, setNewManagerLastName] = useState('');
+    const [addingManager, setAddingManager] = useState(false);
+    const [addManagerMessage, setAddManagerMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    useEffect(() => {
+        const userStr = localStorage.getItem('managerUser');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                setIsSuperAdmin(user.isSuperAdmin === true);
+            } catch {}
+        }
+    }, []);
+
+    const handleAddManager = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setAddingManager(true);
+        setAddManagerMessage(null);
+
+        try {
+            const result = await addTeamManager(teamSlug, {
+                email: newManagerEmail,
+                firstName: newManagerFirstName,
+                lastName: newManagerLastName,
+            });
+            setAddManagerMessage({ type: 'success', text: result.message });
+            setNewManagerEmail('');
+            setNewManagerFirstName('');
+            setNewManagerLastName('');
+        } catch (err: any) {
+            setAddManagerMessage({ type: 'error', text: err.message || 'Failed to add manager' });
+        } finally {
+            setAddingManager(false);
+        }
+    };
 
     useEffect(() => {
         const savedLang = localStorage.getItem('preferred_language') as Language;
@@ -108,7 +146,9 @@ export default function ManagerSettings() {
                 { key: 'driveSprocket', label: t.driveSprocket },
                 { key: 'drivenSprocket', label: t.drivenSprocket },
                 { key: 'carburatorNumber', label: t.carburatorNumber },
-                { key: 'sessionLaps', label: t.sessionLaps }
+                { key: 'sessionLaps', label: t.sessionLaps },
+                { key: 'sparkplugType', label: t.sparkplugType },
+                { key: 'sparkplugGap', label: t.sparkplugGap }
             ]
         },
         {
@@ -136,7 +176,8 @@ export default function ManagerSettings() {
                 { key: 'caster', label: t.caster },
                 { key: 'camber', label: t.camber },
                 { key: 'seatPosition', label: t.seatPosition },
-                { key: 'seatInclination', label: t.seatInclination }
+                { key: 'seatInclination', label: t.seatInclination },
+                { key: 'frontWheelType', label: t.frontWheelType }
             ]
         }
     ];
@@ -323,6 +364,83 @@ export default function ManagerSettings() {
                         </div>
                     </form>
                 </div>
+
+                {/* Add Manager Section - SuperAdmin Only */}
+                {isSuperAdmin && (
+                    <div className="mt-8 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-xl p-6 sm:p-8">
+                        <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
+                            <span>👤</span> Add Manager
+                        </h2>
+                        <p className="text-gray-400 mb-6 text-sm">
+                            Add a new manager to this team. They will receive an email with auto-generated credentials and must change their password on first login.
+                        </p>
+
+                        {addManagerMessage && (
+                            <div
+                                className={`rounded-xl border p-4 mb-6 ${addManagerMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
+                            >
+                                {addManagerMessage.text}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleAddManager} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                        First Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newManagerFirstName}
+                                        onChange={(e) => setNewManagerFirstName(e.target.value)}
+                                        required
+                                        className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
+                                        placeholder="John"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                        Last Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newManagerLastName}
+                                        onChange={(e) => setNewManagerLastName(e.target.value)}
+                                        required
+                                        className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
+                                        placeholder="Doe"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    value={newManagerEmail}
+                                    onChange={(e) => setNewManagerEmail(e.target.value)}
+                                    required
+                                    className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
+                                    placeholder="manager@example.com"
+                                />
+                            </div>
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={addingManager}
+                                    className="rounded-lg px-8 py-3 font-bold text-white uppercase tracking-wider transition-all hover:opacity-90 shadow-lg disabled:opacity-50 flex items-center gap-2"
+                                    style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}4D` }}
+                                >
+                                    {addingManager && (
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                    )}
+                                    {addingManager ? 'Adding...' : 'Add Manager'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
             </div>
         </div>
     );
