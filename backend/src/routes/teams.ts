@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
+import { requireManager, AuthRequest } from '../middleware/auth';
+import { sendManagerWelcomeEmail } from '../services/emailService';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -267,6 +270,86 @@ router.put('/:slug/config', async (req, res) => {
     } catch (error) {
         console.error('Error updating team config:', error);
         res.status(500).json({ error: 'Failed to update team configuration' });
+    }
+});
+
+// Add a new manager to a team (superadmin only)
+router.post('/:slug/managers', requireManager, async (req: AuthRequest, res) => {
+    try {
+        // Verify superadmin access
+        if (!req.user?.isSuperAdmin) {
+            return res.status(403).json({ error: 'Only super admins can add managers' });
+        }
+
+        const { slug } = req.params;
+        const { email, firstName, lastName } = req.body;
+
+        if (!email || !firstName || !lastName) {
+            return res.status(400).json({ error: 'Email, first name, and last name are required' });
+        }
+
+        // Check if team exists
+        const team = await prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+
+        // Check if email is already registered
+        const existingUser = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        if (existingUser) {
+            return res.status(409).json({ error: 'This email is already registered. The manager may exist on another team.' });
+        }
+
+        // Generate random 8-character password
+        const plainPassword = crypto.randomBytes(6).toString('base64url').slice(0, 8);
+        const hashedPassword = crypto.createHash('sha256').update(plainPassword).digest('hex');
+
+        // Create user and update team managerEmails atomically
+        const [newUser] = await prisma.$transaction([
+            prisma.user.create({
+                data: {
+                    email: email.trim().toLowerCase(),
+                    firstName: firstName.trim(),
+                    lastName: lastName.trim(),
+                    password: hashedPassword,
+                    isManager: true,
+                    isSuperAdmin: false,
+                    mustChangePassword: true,
+                    teamId: team.id,
+                },
+            }),
+            prisma.team.update({
+                where: { slug },
+                data: {
+                    managerEmails: {
+                        push: email.trim().toLowerCase(),
+                    },
+                },
+            }),
+        ]);
+
+        // Send welcome email (fire-and-forget, don't fail the request)
+        let emailWarning = '';
+        try {
+            await sendManagerWelcomeEmail(email.trim().toLowerCase(), plainPassword, slug, team.name);
+        } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+            emailWarning = ' (welcome email failed to send)';
+        }
+
+        res.status(201).json({
+            success: true,
+            message: `Manager added successfully${emailWarning}`,
+            manager: {
+                id: newUser.id,
+                email: newUser.email,
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+            },
+        });
+    } catch (error) {
+        console.error('Error adding manager:', error);
+        res.status(500).json({ error: 'Failed to add manager' });
     }
 });
 
