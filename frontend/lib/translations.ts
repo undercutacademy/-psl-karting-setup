@@ -44,6 +44,9 @@ export const TRANSLATIONS = {
         camber: 'Camber',
         rearTrackWidth: 'Rear Track Width',
         sessionLaps: 'Session Laps',
+        sparkplugType: 'Sparkplug Type',
+        sparkplugGap: 'Sparkplug Gap',
+        frontWheelType: 'Front Wheel Type',
 
         // Buttons & UI
         nextStep: 'Next Step',
@@ -159,6 +162,9 @@ export const TRANSLATIONS = {
         camber: 'Camber',
         rearTrackWidth: 'Ancho de Vía Trasero',
         sessionLaps: 'Vueltas de la Sesión',
+        sparkplugType: 'Tipo de Bujía',
+        sparkplugGap: 'Separación de Bujía',
+        frontWheelType: 'Tipo de Rueda Delantera',
 
         // Buttons & UI
         nextStep: 'Siguiente',
@@ -274,6 +280,9 @@ export const TRANSLATIONS = {
         camber: 'Camber',
         rearTrackWidth: 'Bitola Traseira',
         sessionLaps: 'Número de Voltas da Sessão',
+        sparkplugType: 'Tipo de Vela',
+        sparkplugGap: 'Abertura da Vela',
+        frontWheelType: 'Tipo de Roda Dianteira',
 
         // Buttons & UI
         nextStep: 'Próxima Etapa',
@@ -389,6 +398,9 @@ export const TRANSLATIONS = {
         camber: 'Campanatura',
         rearTrackWidth: 'Carreggiata Posteriore',
         sessionLaps: 'Giri della Sessione',
+        sparkplugType: 'Tipo di Candela',
+        sparkplugGap: 'Distanza Candela',
+        frontWheelType: 'Tipo di Ruota Anteriore',
 
         // Buttons & UI
         nextStep: 'Prossimo Passo',

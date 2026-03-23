@@ -171,6 +171,18 @@ export default function ViewSubmissionPage() {
                   <p className={valueClass}>{submission.carburatorNumber}</p>
                 </div>
               )}
+              {submission.sparkplugType && (
+                <div>
+                  <p className={labelClass}>{t.sparkplugType}</p>
+                  <p className={valueClass}>{submission.sparkplugType}</p>
+                </div>
+              )}
+              {submission.sparkplugGap != null && (
+                <div>
+                  <p className={labelClass}>{t.sparkplugGap}</p>
+                  <p className={valueClass}>{submission.sparkplugGap}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -233,6 +245,12 @@ export default function ViewSubmissionPage() {
                 <p className={labelClass}>{t.spindle}</p>
                 <p className={valueClass}>{submission.spindle}</p>
               </div>
+              {submission.frontWheelType && (
+                <div>
+                  <p className={labelClass}>{t.frontWheelType}</p>
+                  <p className={valueClass}>{submission.frontWheelType}</p>
+                </div>
+              )}
               <div>
                 <p className={labelClass}>{t.caster}</p>
                 <p className={valueClass}>{submission.caster}</p>

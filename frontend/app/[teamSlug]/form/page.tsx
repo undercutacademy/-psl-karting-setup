@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getLastSubmissionByEmail, createSubmission, getTeamConfig } from '@/lib/api';
-import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@/types/submission';
+import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
 
@@ -76,6 +76,11 @@ const REGION_DATA: Record<string, { tracks: string[], championships: string[], d
 // Shifter divisions that use Gear Ratio instead of Sprockets
 const SHIFTER_DIVISIONS = [
   'KZ1', 'KZ2', 'KZM', 'Pro Shifter', 'Shifter', 'Shifter Master', 'ROK Shifter', 'DD2', 'DD2 Master'
+];
+
+// Mini/Micro divisions - these don't have front bar and can have front wheel type
+const MINI_MICRO_DIVISIONS = [
+  'Micro', 'Mini', 'ROK Micro', 'ROK Mini', 'Micro Max', 'Mini Max', '206 Cadet', 'Mirim', 'Cadete'
 ];
 
 const DEFAULT_TYRE_MODELS = [
@@ -785,6 +790,35 @@ export default function FormPage() {
                   />
                 </div>
               )}
+
+              {isFieldEnabled('sparkplugType') && (
+                <div>
+                  <label className={labelClass}>{getLabel('sparkplugType')}</label>
+                  <input
+                    type="text"
+                    value={formData.sparkplugType || ''}
+                    onChange={(e) => setFormData({ ...formData, sparkplugType: e.target.value })}
+                    className={inputClass}
+                    placeholder="e.g., NGK R7282"
+                  />
+                </div>
+              )}
+
+              {isFieldEnabled('sparkplugGap') && (
+                <div>
+                  <label className={labelClass}>{getLabel('sparkplugGap')}</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    value={formData.sparkplugGap || ''}
+                    onChange={(e) => setFormData({ ...formData, sparkplugGap: e.target.value })}
+                    className={inputClass}
+                    placeholder="e.g., 0.55"
+                  />
+                </div>
+              )}
+
               <div className="flex gap-4">
                 <button
                   type="button"
@@ -1038,7 +1072,7 @@ export default function FormPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {isFieldEnabled('frontBar') && (
+                {isFieldEnabled('frontBar') && !MINI_MICRO_DIVISIONS.includes(formData.division || '') && (
                   <div>
                     <label className={labelClass}>{getLabel('frontBar')} *</label>
                     <select
@@ -1069,6 +1103,23 @@ export default function FormPage() {
                   </div>
                 )}
               </div>
+
+              {MINI_MICRO_DIVISIONS.includes(formData.division || '') && isFieldEnabled('frontWheelType') && (
+                <div>
+                  <label className={labelClass}>{getLabel('frontWheelType')} *</label>
+                  <select
+                    value={formData.frontWheelType || ''}
+                    onChange={(e) => setFormData({ ...formData, frontWheelType: e.target.value as FrontWheelType })}
+                    required
+                    className={selectClass}
+                  >
+                    <option value="">Select</option>
+                    {Object.values(FrontWheelType).map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isFieldEnabled('caster') && (

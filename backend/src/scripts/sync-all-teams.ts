@@ -6,7 +6,7 @@ const TEAMS_CONFIG = [
     {
         name: 'PSL Karting',
         slug: 'psl-karting',
-        managerEmails: ['kevin@pslkarting.com', 'pslkartingdata@gmail.com', 'franzparmentier@gmail.com'],
+        managerEmails: ['kevin@pslkarting.com', 'pslkartingdata@gmail.com', 'franzparmentier@gmail.com', 'lucas@pslkarting.com'],
         logoUrl: '/psl-logo.png',
         primaryColor: '#dc2626',
         emailFromName: 'PSL Karting Setups',

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@prisma/client';
+import { PrismaClient, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@prisma/client';
 import { sendUserConfirmationEmail, sendManagerNotificationEmail, sendManagerNotificationEmailBatch } from '../services/emailService';
 import { generateSubmissionPDF } from '../services/pdfService';
 
@@ -89,6 +89,14 @@ const spindleMap: Record<string, Spindle> = {
   'Red': Spindle.Red,
   'Green': Spindle.Green,
   'Gold': Spindle.Gold,
+  'Single Piece': Spindle.SinglePiece,
+  'SinglePiece': Spindle.SinglePiece,
+};
+
+const frontWheelTypeMap: Record<string, FrontWheelType> = {
+  'Hub': FrontWheelType.Hub,
+  'No Hub': FrontWheelType.NoHub,
+  'NoHub': FrontWheelType.NoHub,
 };
 
 // Function to transform submission data with proper enum values
@@ -115,6 +123,16 @@ function transformSubmissionData(data: any): any {
   }
   if (data.spindle && typeof data.spindle === 'string') {
     transformed.spindle = spindleMap[data.spindle] || data.spindle;
+  }
+  if (data.frontWheelType && typeof data.frontWheelType === 'string') {
+    transformed.frontWheelType = frontWheelTypeMap[data.frontWheelType] || data.frontWheelType;
+  }
+  // sparkplugGap should be stored as Float
+  if (data.sparkplugGap !== undefined && data.sparkplugGap !== null && data.sparkplugGap !== '') {
+    transformed.sparkplugGap = parseFloat(data.sparkplugGap);
+    if (isNaN(transformed.sparkplugGap)) {
+      transformed.sparkplugGap = null;
+    }
   }
 
   return transformed;

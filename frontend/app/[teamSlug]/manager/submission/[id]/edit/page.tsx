@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getSubmissionById, updateSubmission, getTeamConfig } from '@/lib/api';
-import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle } from '@/types/submission';
+import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
 
 // Default options as fallback (matching form/page.tsx)
@@ -276,6 +276,25 @@ export default function EditSubmissionPage() {
                   className={inputClass}
                 />
               </div>
+              <div>
+                <label className={labelClass}>Sparkplug Type</label>
+                <input
+                  type="text"
+                  value={formData.sparkplugType || ''}
+                  onChange={(e) => setFormData({ ...formData, sparkplugType: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Sparkplug Gap</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.sparkplugGap || ''}
+                  onChange={(e) => setFormData({ ...formData, sparkplugGap: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
             </div>
           </div>
 
@@ -429,6 +448,19 @@ export default function EditSubmissionPage() {
                 >
                   {Object.values(Spindle).map((spindle) => (
                     <option key={spindle} value={spindle}>{spindle}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Front Wheel Type</label>
+                <select
+                  value={formData.frontWheelType || ''}
+                  onChange={(e) => setFormData({ ...formData, frontWheelType: e.target.value as FrontWheelType })}
+                  className={selectClass}
+                >
+                  <option value="">N/A</option>
+                  {Object.values(FrontWheelType).map((type) => (
+                    <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
               </div>

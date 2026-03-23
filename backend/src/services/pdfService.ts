@@ -56,6 +56,9 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     backHeight: 'Back Height',
     frontBar: 'Front Bar',
     spindle: 'Spindle',
+    sparkplugType: 'Sparkplug Type',
+    sparkplugGap: 'Sparkplug Gap',
+    frontWheelType: 'Front Wheel Type',
     caster: 'Caster',
     seatPosition: 'Seat Position',
     sessionResults: 'Session Results',
@@ -91,6 +94,9 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     backHeight: 'Altura Traseira',
     frontBar: 'Barra Dianteira',
     spindle: 'Manga de Eixo',
+    sparkplugType: 'Tipo de Vela',
+    sparkplugGap: 'Abertura da Vela',
+    frontWheelType: 'Tipo de Roda Dianteira',
     caster: 'Caster',
     seatPosition: 'Posição do Banco',
     sessionResults: 'Resultados da Sessão',
@@ -126,6 +132,9 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     backHeight: 'Altura Trasera',
     frontBar: 'Barra Delantera',
     spindle: 'Manguetas',
+    sparkplugType: 'Tipo de Bujía',
+    sparkplugGap: 'Separación de Bujía',
+    frontWheelType: 'Tipo de Rueda Delantera',
     caster: 'Caster',
     seatPosition: 'Posición del Asiento',
     sessionResults: 'Resultados de la Sesión',
@@ -296,6 +305,9 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
     } else {
       yPos = drawDataRow(t.driveSprocket, submission.driveSprocket || '-', t.drivenSprocket, submission.drivenSprocket || '-', yPos);
     }
+    if (submission.sparkplugType || submission.sparkplugGap != null) {
+      yPos = drawDataRow(t.sparkplugType, submission.sparkplugType || '-', t.sparkplugGap, submission.sparkplugGap != null ? String(submission.sparkplugGap) : '-', yPos);
+    }
     yPos += 5;
 
     // Tyres Section
@@ -310,6 +322,9 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
     yPos = drawDataRow(t.rearHubs, `${submission.rearHubsMaterial || '-'} - ${submission.rearHubsLength || '-'}`, t.frontHubs, submission.frontHubsMaterial || '-', yPos);
     yPos = drawDataRow(t.frontHeight, submission.frontHeight || '-', t.backHeight, submission.backHeight || '-', yPos);
     yPos = drawDataRow(t.frontBar, submission.frontBar || '-', t.spindle, submission.spindle || '-', yPos);
+    if (submission.frontWheelType) {
+      yPos = drawDataRow(t.frontWheelType, submission.frontWheelType || '-', '', '', yPos);
+    }
     yPos = drawDataRow(t.caster, submission.caster || '-', t.seatPosition, submission.seatPosition ? `${submission.seatPosition} cm` : '-', yPos);
     yPos += 5;
 

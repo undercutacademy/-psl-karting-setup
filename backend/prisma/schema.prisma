@@ -61,6 +61,7 @@ enum BackHeight {
   Low
   Medium
   High
+  Standard
 }
 
 enum FrontHubsMaterial {

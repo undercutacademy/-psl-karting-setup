@@ -43,6 +43,20 @@ async function main() {
             lastName: 'Parmentier',
             teamId: pslTeam.id
         },
+        {
+            email: 'dominic@pslkarting.com',
+            password: 'pslkarting@4140',
+            firstName: 'Dominic',
+            lastName: 'PSL',
+            teamId: pslTeam.id
+        },
+        {
+            email: 'lucas@pslkarting.com',
+            password: 'pslkarting@4140',
+            firstName: 'Lucas',
+            lastName: 'PSL',
+            teamId: pslTeam.id
+        },
         // TKG Birelart
         {
             email: 'gavinbayliff@icloud.com',
