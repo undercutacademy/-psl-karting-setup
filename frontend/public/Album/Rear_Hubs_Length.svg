@@ -6,10 +6,14 @@
     <marker id="aOR" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto-start-reverse">
       <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
     </marker>
-    <linearGradient id="hubGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#94a3b8"/>
+    <linearGradient id="hubBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0"/>
       <stop offset="50%" stop-color="#cbd5e1"/>
-      <stop offset="100%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+    <linearGradient id="hubFlange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
     </linearGradient>
   </defs>
 
@@ -25,61 +29,102 @@
   <text x="24" y="32" fill="#f97316" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="bold">REAR HUBS LENGTH</text>
   <text x="300" y="32" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="14">Measurement Guide</text>
 
-  <!-- Rear axle shaft -->
-  <rect x="80" y="220" width="640" height="20" rx="10" fill="#475569" stroke="#64748b" stroke-width="2"/>
-  <line x1="100" y1="224" x2="700" y2="224" stroke="#94a3b8" stroke-width="0.8" opacity="0.3"/>
-  <text x="400" y="215" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle">REAR AXLE</text>
+  <!-- ===== Full rear axle assembly ===== -->
+
+  <!-- Rear axle shaft (full width) -->
+  <rect x="70" y="195" width="660" height="16" rx="8" fill="#475569" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="90" y1="200" x2="710" y2="200" stroke="#94a3b8" stroke-width="0.6" opacity="0.3"/>
+  <text x="400" y="185" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle">REAR AXLE</text>
 
   <!-- Left bearing housing -->
-  <rect x="220" y="200" width="40" height="60" rx="5" fill="#334155" stroke="#475569" stroke-width="2"/>
-  <text x="240" y="195" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="9" text-anchor="middle">BEARING</text>
+  <rect x="230" y="183" width="30" height="40" rx="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+  <text x="245" y="178" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="9" text-anchor="middle">BEARING</text>
 
   <!-- Right bearing housing -->
-  <rect x="540" y="200" width="40" height="60" rx="5" fill="#334155" stroke="#475569" stroke-width="2"/>
-  <text x="560" y="195" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="9" text-anchor="middle">BEARING</text>
+  <rect x="540" y="183" width="30" height="40" rx="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+  <text x="555" y="178" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="9" text-anchor="middle">BEARING</text>
 
-  <!-- LEFT rear hub (highlighted) -->
-  <rect x="100" y="175" width="110" height="110" rx="10" fill="url(#hubGrad)" stroke="#e2e8f0" stroke-width="2.5"/>
-  <circle cx="155" cy="230" r="28" fill="#475569" stroke="#64748b" stroke-width="2"/>
-  <circle cx="155" cy="230" r="12" fill="#334155" stroke="#475569" stroke-width="1.5"/>
-  <!-- Bolt pattern -->
-  <circle cx="125" cy="200" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
-  <circle cx="185" cy="200" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
-  <circle cx="125" cy="260" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
-  <circle cx="185" cy="260" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
-  <text x="155" y="165" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">REAR HUB</text>
+  <!-- ===== LEFT rear hub (highlighted, measured) ===== -->
+  <g transform="translate(150,203)">
+    <!-- Barrel body -->
+    <rect x="-28" y="-28" width="56" height="56" rx="4" fill="url(#hubBody)" stroke="#e2e8f0" stroke-width="2"/>
+    <!-- Inner flange (right, toward bearing) -->
+    <ellipse cx="28" cy="0" rx="6" ry="36" fill="url(#hubFlange)" stroke="#94a3b8" stroke-width="1.3"/>
+    <!-- Outer face (left, wheel side) -->
+    <ellipse cx="-28" cy="0" rx="6" ry="28" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.3"/>
+    <!-- Bore -->
+    <ellipse cx="-28" cy="0" rx="4" ry="12" fill="#334155" stroke="#475569" stroke-width="0.8"/>
+    <!-- Keyway -->
+    <rect x="-30" y="-12" width="2" height="4" fill="#1e293b"/>
 
-  <!-- RIGHT rear hub -->
-  <rect x="590" y="175" width="110" height="110" rx="10" fill="url(#hubGrad)" stroke="#94a3b8" stroke-width="2"/>
-  <circle cx="645" cy="230" r="28" fill="#475569" stroke="#64748b" stroke-width="2"/>
-  <circle cx="645" cy="230" r="12" fill="#334155" stroke="#475569" stroke-width="1.5"/>
-  <circle cx="615" cy="200" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
-  <circle cx="675" cy="200" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
-  <circle cx="615" cy="260" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
-  <circle cx="675" cy="260" r="4" fill="#334155" stroke="#475569" stroke-width="1"/>
+    <!-- Studs from flange -->
+    <line x1="28" y1="-33" x2="28" y2="-42" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="25.5" y="-46" width="5" height="4" rx="1" fill="#64748b"/>
+    <line x1="28" y1="33" x2="28" y2="42" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="25.5" y="42" width="5" height="4" rx="1" fill="#64748b"/>
+
+    <!-- Grub screws -->
+    <circle cx="-7" cy="-28" r="2.5" fill="#94a3b8" stroke="#7a8a9a" stroke-width="0.7"/>
+    <line x1="-9" y1="-28" x2="-5" y2="-28" stroke="#64748b" stroke-width="0.7"/>
+    <circle cx="14" cy="-28" r="2.5" fill="#94a3b8" stroke="#7a8a9a" stroke-width="0.7"/>
+    <line x1="12" y1="-28" x2="16" y2="-28" stroke="#64748b" stroke-width="0.7"/>
+
+    <!-- Highlights -->
+    <line x1="-22" y1="-24" x2="22" y2="-24" stroke="white" stroke-width="0.8" opacity="0.3"/>
+    <!-- Machining rings -->
+    <line x1="-14" y1="-27" x2="-14" y2="27" stroke="#b0bec5" stroke-width="0.3" opacity="0.25"/>
+    <line x1="4" y1="-28" x2="4" y2="28" stroke="#b0bec5" stroke-width="0.3" opacity="0.2"/>
+    <line x1="20" y1="-27" x2="20" y2="27" stroke="#b0bec5" stroke-width="0.3" opacity="0.2"/>
+  </g>
+
+  <text x="150" y="145" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" text-anchor="middle">REAR HUB</text>
 
   <!-- Left wheel rim -->
-  <rect x="60" y="160" width="30" height="140" rx="5" fill="none" stroke="#475569" stroke-width="2.5"/>
-  <text x="75" y="155" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="9" text-anchor="middle">RIM</text>
+  <rect x="82" y="170" width="15" height="66" rx="3" fill="none" stroke="#475569" stroke-width="2"/>
+  <text x="90" y="165" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="9" text-anchor="middle">RIM</text>
+
+  <!-- ===== RIGHT rear hub (secondary) ===== -->
+  <g transform="translate(650,203)">
+    <rect x="-28" y="-28" width="56" height="56" rx="4" fill="url(#hubBody)" stroke="#94a3b8" stroke-width="1.8"/>
+    <ellipse cx="-28" cy="0" rx="6" ry="36" fill="url(#hubFlange)" stroke="#94a3b8" stroke-width="1.3"/>
+    <ellipse cx="28" cy="0" rx="6" ry="28" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.3"/>
+    <ellipse cx="28" cy="0" rx="4" ry="12" fill="#334155" stroke="#475569" stroke-width="0.8"/>
+    <rect x="26" y="-12" width="2" height="4" fill="#1e293b"/>
+    <!-- Studs -->
+    <line x1="-28" y1="-33" x2="-28" y2="-42" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="-30.5" y="-46" width="5" height="4" rx="1" fill="#64748b"/>
+    <line x1="-28" y1="33" x2="-28" y2="42" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="-30.5" y="42" width="5" height="4" rx="1" fill="#64748b"/>
+    <!-- Grub screws -->
+    <circle cx="-7" cy="-28" r="2.5" fill="#94a3b8" stroke="#7a8a9a" stroke-width="0.7"/>
+    <line x1="-9" y1="-28" x2="-5" y2="-28" stroke="#64748b" stroke-width="0.7"/>
+    <circle cx="14" cy="-28" r="2.5" fill="#94a3b8" stroke="#7a8a9a" stroke-width="0.7"/>
+    <line x1="12" y1="-28" x2="16" y2="-28" stroke="#64748b" stroke-width="0.7"/>
+    <!-- Highlights -->
+    <line x1="-22" y1="-24" x2="22" y2="-24" stroke="white" stroke-width="0.8" opacity="0.25"/>
+    <!-- Machining rings -->
+    <line x1="-14" y1="-27" x2="-14" y2="27" stroke="#b0bec5" stroke-width="0.3" opacity="0.2"/>
+    <line x1="8" y1="-28" x2="8" y2="28" stroke="#b0bec5" stroke-width="0.3" opacity="0.15"/>
+  </g>
 
   <!-- Right wheel rim -->
-  <rect x="710" y="160" width="30" height="140" rx="5" fill="none" stroke="#475569" stroke-width="2.5"/>
+  <rect x="703" y="170" width="15" height="66" rx="3" fill="none" stroke="#475569" stroke-width="2"/>
 
-  <!-- MEASUREMENT: Hub Length dimension (left hub) -->
-  <line x1="100" y1="310" x2="100" y2="340" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <line x1="210" y1="310" x2="210" y2="340" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <line x1="105" y1="325" x2="205" y2="325" stroke="#f97316" stroke-width="2.5" marker-start="url(#aOR)" marker-end="url(#aO)"/>
+  <!-- ===== MEASUREMENT: Hub Length dimension (left hub) ===== -->
+  <line x1="122" y1="248" x2="122" y2="278" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="178" y1="248" x2="178" y2="278" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="127" y1="268" x2="173" y2="268" stroke="#f97316" stroke-width="2.5" marker-start="url(#aOR)" marker-end="url(#aO)"/>
 
   <!-- Length label -->
-  <rect x="115" y="345" width="80" height="28" rx="6" fill="#f97316" opacity="0.15" stroke="#f97316" stroke-width="1.5"/>
-  <text x="155" y="365" fill="#f97316" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="bold" text-anchor="middle">L [mm]</text>
+  <rect x="115" y="285" width="60" height="24" rx="6" fill="#f97316" opacity="0.15" stroke="#f97316" stroke-width="1.5"/>
+  <text x="145" y="302" fill="#f97316" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">L [mm]</text>
 
   <!-- Callout box -->
-  <rect x="280" y="340" width="280" height="100" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
-  <text x="300" y="368" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold">HOW TO MEASURE</text>
-  <line x1="300" y1="378" x2="530" y2="378" stroke="#334155" stroke-width="1"/>
-  <text x="300" y="398" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">Measure the length of the rear hub body</text>
-  <text x="300" y="416" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">from inner face to outer face.</text>
+  <rect x="260" y="340" width="280" height="100" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="280" y="368" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold">HOW TO MEASURE</text>
+  <line x1="280" y1="378" x2="510" y2="378" stroke="#334155" stroke-width="1"/>
+  <text x="280" y="398" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">Measure the length of the rear hub</text>
+  <text x="280" y="416" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="12">barrel from inner face to outer face.</text>
 
   <!-- Bottom bar -->
   <rect x="0" y="460" width="800" height="40" fill="rgba(0,0,0,0.5)"/>
