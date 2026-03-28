@@ -15,7 +15,8 @@ const DEFAULT_TRACKS = [
   'St Pete', 'New Castle', 'New Castle Sharkfin', 'New Castle CCW', 'ROK Rio 2024',
   'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
   'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
-  'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex'
+  'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex',
+  'Tucson', 'Lorraine'
 ];
 
 const DEFAULT_CHAMPIONSHIPS = [
