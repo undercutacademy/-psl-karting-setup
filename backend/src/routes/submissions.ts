@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import path from 'path';
+import fs from 'fs';
 import { PrismaClient, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@prisma/client';
 import { sendUserConfirmationEmail, sendManagerNotificationEmail, sendManagerNotificationEmailBatch } from '../services/emailService';
 import { generateSubmissionPDF } from '../services/pdfService';
@@ -249,19 +251,33 @@ router.get('/:id/pdf', async (req, res) => {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    // Get team language
+    // Get team language and branding
     let language = 'en';
-    if (submission.team) {
-      language = (submission.team as any).defaultLanguage || 'en';
-    } else if (teamSlug && typeof teamSlug === 'string') {
-      const team = await prisma.team.findUnique({ where: { slug: teamSlug } });
-      if (team) {
-        language = (team as any).defaultLanguage || 'en';
+    let team = submission.team as any;
+    if (!team && teamSlug && typeof teamSlug === 'string') {
+      team = await prisma.team.findUnique({ where: { slug: teamSlug } });
+    }
+    if (team) {
+      language = team.defaultLanguage || 'en';
+    }
+
+    // Resolve team logo path from frontend/public
+    let logoPath: string | null = null;
+    if (team?.logoUrl) {
+      const frontendPublicLogo = path.join(__dirname, '../../../frontend/public', team.logoUrl);
+      if (fs.existsSync(frontendPublicLogo)) {
+        logoPath = frontendPublicLogo;
       }
     }
 
+    const teamBranding = team ? {
+      primaryColor: team.primaryColor || '#E31837',
+      logoPath,
+      teamName: team.name || 'Overcut Academy',
+    } : undefined;
+
     const userName = `${submission.user.firstName} ${submission.user.lastName}`;
-    const pdfBuffer = await generateSubmissionPDF(submission, userName, language);
+    const pdfBuffer = await generateSubmissionPDF(submission, userName, language, teamBranding);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=setup-${id}.pdf`);

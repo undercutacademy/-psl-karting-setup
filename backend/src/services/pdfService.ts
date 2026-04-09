@@ -3,9 +3,15 @@ import { Submission } from '@prisma/client';
 import path from 'path';
 import fs from 'fs';
 
-// Racing theme colors
+// Team branding info passed to PDF generation
+interface TeamBranding {
+  primaryColor: string;
+  logoPath: string | null;
+  teamName: string;
+}
+
+// Static theme colors (non-team-specific)
 const COLORS = {
-  primary: '#E31837',    // PSL Red
   secondary: '#1a1a1a',  // Dark gray/black
   text: '#333333',       // Dark text
   lightGray: '#666666',  // Light gray for values
@@ -173,16 +179,17 @@ function getLayoutName(track: string): string | null {
   return null;
 }
 
-export function generateSubmissionPDF(submission: Submission, userName: string, language: string = 'en'): Promise<Buffer> {
+export function generateSubmissionPDF(submission: Submission, userName: string, language: string = 'en', teamBranding?: TeamBranding): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const t = PDF_TRANSLATIONS[language] || PDF_TRANSLATIONS.en;
+    const primaryColor = teamBranding?.primaryColor || '#E31837';
 
     const doc = new PDFDocument({
       margin: 40,
       size: 'A4',
       info: {
         Title: `${t.setupSheet} - ${userName}`,
-        Author: 'Overcut Academy',
+        Author: teamBranding?.teamName || 'Overcut Academy',
         Subject: 'Kart Setup Sheet',
       }
     });
@@ -197,12 +204,12 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
     const pageWidth = doc.page.width - 80; // Account for margins
 
     // Racing stripe at top
-    doc.rect(0, 0, doc.page.width, 8).fill(COLORS.primary);
+    doc.rect(0, 0, doc.page.width, 8).fill(primaryColor);
 
-    // Logo and Header
-    const logoPath = path.join(__dirname, '../../assets/psl-logo.png');
-    if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, 40, 20, { width: 120 });
+    // Logo and Header - use team logo if available, fall back to PSL logo
+    const logoFile = teamBranding?.logoPath || path.join(__dirname, '../../assets/psl-logo.png');
+    if (logoFile && fs.existsSync(logoFile)) {
+      doc.image(logoFile, 40, 20, { width: 120 });
     }
 
     // Title section
@@ -239,7 +246,7 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
 
     // Helper function for section headers
     const drawSectionHeader = (title: string, y: number): number => {
-      doc.rect(40, y, pageWidth, 25).fill(COLORS.primary);
+      doc.rect(40, y, pageWidth, 25).fill(primaryColor);
       doc.fontSize(12)
         .fillColor('#ffffff')
         .font('Helvetica-Bold')
@@ -348,7 +355,7 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
 
     // Footer with racing stripe
     const footerY = doc.page.height - 40;
-    doc.rect(0, footerY, doc.page.width, 8).fill(COLORS.primary);
+    doc.rect(0, footerY, doc.page.width, 8).fill(primaryColor);
     doc.fontSize(8)
       .fillColor(COLORS.lightGray)
       .text(t.poweredBy, 40, footerY - 15, {
