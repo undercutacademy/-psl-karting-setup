@@ -40,7 +40,7 @@ const REGION_DROPDOWN_OPTIONS: Record<string, { tracks: string[], championships:
             'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
             'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
             'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
-            'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025'
+            'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'USPKS'
         ]
     },
     Brazil: {
