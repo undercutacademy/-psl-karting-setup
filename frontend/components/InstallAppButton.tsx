@@ -103,7 +103,7 @@ function InstallModal({
     );
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
-    first?.focus();
+    root.querySelector<HTMLButtonElement>('button')?.focus();
 
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== 'Tab' || focusables.length === 0) return;
@@ -120,6 +120,8 @@ function InstallModal({
   }, []);
 
   useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -128,6 +130,7 @@ function InstallModal({
     return () => {
       window.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
+      previouslyFocused?.focus();
     };
   }, [onClose]);
 
@@ -224,6 +227,7 @@ function IOSBody({
         {[t.installStep1, t.installStep2, t.installStep3].map((step, i) => (
           <li key={i} className="flex items-start gap-3">
             <span
+              aria-hidden="true"
               className="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center"
               style={{ backgroundColor: primaryColor }}
             >
