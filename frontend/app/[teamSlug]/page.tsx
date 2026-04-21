@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { getTeamInfo } from '@/lib/api';
+import InstallAppButton from '@/components/InstallAppButton';
 
 export default async function Home({
   params,
@@ -10,10 +12,13 @@ export default async function Home({
   const { teamSlug } = await params;
   const teamInfo = await getTeamInfo(teamSlug);
 
-  // Defaults (fallback to PSL style if fetch fails or no config)
-  const logoUrl = teamInfo?.logoUrl || '/psl-logo.png';
-  const primaryColor = teamInfo?.primaryColor || '#dc2626'; // Default red
-  const teamName = teamInfo?.name || 'PSL Karting';
+  if (!teamInfo) {
+    notFound();
+  }
+
+  const logoUrl = teamInfo.logoUrl || '/psl-logo.png';
+  const primaryColor = teamInfo.primaryColor || '#dc2626';
+  const teamName = teamInfo.name;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden p-8">
@@ -101,6 +106,11 @@ export default async function Home({
               </div>
             </Link>
           </div>
+          <InstallAppButton
+            teamName={teamName}
+            logoUrl={logoUrl}
+            primaryColor={primaryColor}
+          />
         </div>
 
         {/* Footer */}
