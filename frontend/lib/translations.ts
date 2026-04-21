@@ -42,7 +42,7 @@ export const TRANSLATIONS = {
         axleSize: 'Axle Size',
         frontHubsLength: 'Front Hubs Length',
         camber: 'Camber',
-        rearTrackWidth: 'Rear Track Width',
+        kartRearWidth: 'Kart Rear Width',
         sessionLaps: 'Session Laps',
         sparkplugType: 'Sparkplug Type',
         sparkplugGap: 'Sparkplug Gap',
@@ -117,7 +117,19 @@ export const TRANSLATIONS = {
         // PDF
         setupSheet: 'SETUP SHEET',
         generated: 'Generated',
-        poweredBy: 'Powered by Overcut Academy'
+        poweredBy: 'Powered by Overcut Academy',
+
+        // Install App Guide
+        installAppButton: 'How to install the app',
+        installModalTitle: 'Install this app',
+        installModalSubtitle: 'Follow the steps to add this app to your home screen',
+        installStep1: 'Tap the Share button in Safari',
+        installStep2: 'Scroll and tap "Add to Home Screen"',
+        installStep3: 'Tap "Add" in the top-right corner',
+        installFooterNote: 'Once installed, open the app from your home screen for the best experience',
+        installDesktopTitle: 'Open this page on your phone',
+        installDesktopSubtitle: 'Scan with your phone camera to continue',
+        installClose: 'Close',
     },
     es: {
         // Form Sections
@@ -160,7 +172,7 @@ export const TRANSLATIONS = {
         axleSize: 'Tamaño del Eje',
         frontHubsLength: 'Largo Masas Delanteras',
         camber: 'Camber',
-        rearTrackWidth: 'Ancho de Vía Trasero',
+        kartRearWidth: 'Ancho Trasero del Kart',
         sessionLaps: 'Vueltas de la Sesión',
         sparkplugType: 'Tipo de Bujía',
         sparkplugGap: 'Separación de Bujía',
@@ -235,7 +247,19 @@ export const TRANSLATIONS = {
         // PDF
         setupSheet: 'HOJA DE CONFIGURACIÓN',
         generated: 'Generado',
-        poweredBy: 'Desarrollado por Overcut Academy'
+        poweredBy: 'Desarrollado por Overcut Academy',
+
+        // Install App Guide
+        installAppButton: 'Cómo instalar la app',
+        installModalTitle: 'Instalar esta app',
+        installModalSubtitle: 'Sigue los pasos para agregar la app a tu pantalla de inicio',
+        installStep1: 'Toca el botón Share en Safari',
+        installStep2: 'Desplázate y toca "Add to Home Screen"',
+        installStep3: 'Toca "Add" en la esquina superior derecha',
+        installFooterNote: 'Una vez instalada, abre la app desde la pantalla de inicio para una mejor experiencia',
+        installDesktopTitle: 'Abre esta página en tu teléfono',
+        installDesktopSubtitle: 'Escanea con la cámara de tu teléfono para continuar',
+        installClose: 'Cerrar',
     },
     pt: {
         // Form Sections
@@ -278,7 +302,7 @@ export const TRANSLATIONS = {
         axleSize: 'Tamanho do Eixo',
         frontHubsLength: 'Tamanho Cubos Dianteiros',
         camber: 'Camber',
-        rearTrackWidth: 'Bitola Traseira',
+        kartRearWidth: 'Largura Traseira do Kart',
         sessionLaps: 'Número de Voltas da Sessão',
         sparkplugType: 'Tipo de Vela',
         sparkplugGap: 'Abertura da Vela',
@@ -353,7 +377,19 @@ export const TRANSLATIONS = {
         // PDF
         setupSheet: 'FICHA DE CONFIGURAÇÃO',
         generated: 'Gerado',
-        poweredBy: 'Desenvolvido por Overcut Academy'
+        poweredBy: 'Desenvolvido por Overcut Academy',
+
+        // Install App Guide
+        installAppButton: 'Como instalar o app',
+        installModalTitle: 'Instalar este app',
+        installModalSubtitle: 'Siga os passos para adicionar o app à sua tela inicial',
+        installStep1: 'Toque no botão Share no Safari',
+        installStep2: 'Role e toque em "Add to Home Screen"',
+        installStep3: 'Toque em "Add" no canto superior direito',
+        installFooterNote: 'Depois de instalado, abra o app pela tela inicial para a melhor experiência',
+        installDesktopTitle: 'Abra esta página no seu celular',
+        installDesktopSubtitle: 'Escaneie com a câmera do seu celular para continuar',
+        installClose: 'Fechar',
     },
     it: {
         // Form Sections
@@ -396,7 +432,7 @@ export const TRANSLATIONS = {
         axleSize: 'Dimensione Assale',
         frontHubsLength: 'Lunghezza Mozzi Anteriori',
         camber: 'Campanatura',
-        rearTrackWidth: 'Carreggiata Posteriore',
+        kartRearWidth: 'Larghezza Posteriore Kart',
         sessionLaps: 'Giri della Sessione',
         sparkplugType: 'Tipo di Candela',
         sparkplugGap: 'Distanza Candela',
@@ -471,6 +507,18 @@ export const TRANSLATIONS = {
         // PDF
         setupSheet: 'SCHEDA ASSETTO',
         generated: 'Generato',
-        poweredBy: 'Basato su Overcut Academy'
+        poweredBy: 'Basato su Overcut Academy',
+
+        // Install App Guide
+        installAppButton: 'Come installare l\'app',
+        installModalTitle: 'Installa questa app',
+        installModalSubtitle: 'Segui i passaggi per aggiungere l\'app alla tua schermata Home',
+        installStep1: 'Tocca il pulsante Share in Safari',
+        installStep2: 'Scorri e tocca "Add to Home Screen"',
+        installStep3: 'Tocca "Add" in alto a destra',
+        installFooterNote: 'Una volta installata, apri l\'app dalla schermata Home per la migliore esperienza',
+        installDesktopTitle: 'Apri questa pagina sul tuo telefono',
+        installDesktopSubtitle: 'Scansiona con la fotocamera del tuo telefono per continuare',
+        installClose: 'Chiudi',
     }
 };
