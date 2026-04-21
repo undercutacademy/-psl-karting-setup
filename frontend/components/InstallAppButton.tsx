@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import QRCode from 'qrcode';
 import { TRANSLATIONS, Language } from '@/lib/translations';
 
 type Mode = 'ios' | 'desktop' | null;
@@ -214,7 +215,30 @@ function IOSBody({
 }
 
 function DesktopBody({ t }: { t: (typeof TRANSLATIONS)[Language] }) {
-  // Implemented in Task 7
-  void t;
-  return null;
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    QRCode.toCanvas(canvasRef.current, window.location.href, {
+      width: 220,
+      margin: 1,
+      color: { dark: '#111111', light: '#ffffff' },
+    }).catch((err) => {
+      console.error('Failed to render QR code', err);
+    });
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-4 py-4">
+      <h3 className="text-white font-bold text-lg text-center">
+        {t.installDesktopTitle}
+      </h3>
+      <div className="bg-white p-3 rounded-xl">
+        <canvas ref={canvasRef} />
+      </div>
+      <p className="text-gray-400 text-sm text-center max-w-xs">
+        {t.installDesktopSubtitle}
+      </p>
+    </div>
+  );
 }
