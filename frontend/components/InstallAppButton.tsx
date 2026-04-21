@@ -144,7 +144,9 @@ function InstallModal({
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden my-8"
+        className={`relative w-full ${
+          mode === 'desktop' ? 'max-w-2xl' : 'max-w-md'
+        } bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden my-8`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top racing stripe */}
@@ -251,7 +253,7 @@ function DesktopBody({ t }: { t: (typeof TRANSLATIONS)[Language] }) {
   useEffect(() => {
     if (!canvasRef.current) return;
     QRCode.toCanvas(canvasRef.current, window.location.href, {
-      width: 220,
+      width: 200,
       margin: 1,
       color: { dark: '#111111', light: '#ffffff' },
     }).catch((err) => {
@@ -260,16 +262,18 @@ function DesktopBody({ t }: { t: (typeof TRANSLATIONS)[Language] }) {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-4 py-4">
-      <h3 className="text-white font-bold text-lg text-center">
-        {t.installDesktopTitle}
-      </h3>
-      <div className="bg-white p-3 rounded-xl">
+    <div className="flex items-center gap-6 py-2">
+      <div className="bg-white p-3 rounded-xl flex-shrink-0">
         <canvas ref={canvasRef} />
       </div>
-      <p className="text-gray-400 text-sm text-center max-w-xs">
-        {t.installDesktopSubtitle}
-      </p>
+      <div className="flex flex-col gap-2 min-w-0">
+        <h3 className="text-white font-bold text-xl">
+          {t.installDesktopTitle}
+        </h3>
+        <p className="text-gray-400 text-sm">
+          {t.installDesktopSubtitle}
+        </p>
+      </div>
     </div>
   );
 }
