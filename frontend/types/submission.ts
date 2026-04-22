@@ -113,7 +113,7 @@ export interface Submission {
   axleSize?: string;
   frontHubsLength?: string;
   camber?: string;
-  rearTrackWidth?: string;
+  kartRearWidth?: string;
   sessionLaps?: string;
   isFavorite?: boolean;
   createdAt?: string;

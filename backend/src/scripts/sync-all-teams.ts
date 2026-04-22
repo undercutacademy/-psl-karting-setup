@@ -40,6 +40,15 @@ const TEAMS_CONFIG = [
         region: 'NorthAmerica'
     },
     {
+        name: 'HOTZ Driver Development',
+        slug: 'hotz',
+        managerEmails: [],
+        logoUrl: '/HDD_Logo_2025.png',
+        primaryColor: '#C9A227',
+        emailFromName: 'HOTZ Driver Development Setups',
+        region: 'NorthAmerica'
+    },
+    {
         name: 'Bravar Sports',
         slug: 'bravar-sports',
         managerEmails: ['onsmotorsport@gmail.com'],

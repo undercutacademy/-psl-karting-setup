@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
-import { getTeamInfo } from '@/lib/api';
+import { notFound } from 'next/navigation';
+import { getTeamConfig, getTeamInfo } from '@/lib/api';
+import { TeamConfigProvider } from '@/components/TeamConfigProvider';
 import fs from 'fs';
 import path from 'path';
 
@@ -91,6 +93,10 @@ export async function generateMetadata({ params }: { params: Promise<{ teamSlug:
 }
 
 export default async function TeamLayout({ children, params }: Props) {
-    await params; // Ensure params is resolved if needed, though we don't use teamSlug directly here yet
-    return <>{children}</>;
+    const { teamSlug } = await params;
+    const teamConfig = await getTeamConfig(teamSlug);
+    if (!teamConfig) {
+        notFound();
+    }
+    return <TeamConfigProvider config={teamConfig}>{children}</TeamConfigProvider>;
 }

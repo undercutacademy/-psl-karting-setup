@@ -185,26 +185,11 @@ router.get('/last/:email', async (req, res) => {
       return res.status(400).json({ error: 'Team slug is required' });
     }
 
-    const team = await prisma.team.findUnique({
-      where: { slug: teamSlug },
-    });
-
-    if (!team) {
-      return res.json(null); // Return null if team doesn't exist to avoid breaking flow
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (!user) {
-      return res.json(null);
-    }
-
+    // Single round-trip: Postgres joins through user+team relations server-side
     const submission = await prisma.submission.findFirst({
       where: {
-        userId: user.id,
-        teamId: team.id
+        user: { email },
+        team: { slug: teamSlug },
       },
       include: { user: true },
       orderBy: { createdAt: 'desc' },
@@ -298,41 +283,31 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Team slug is required' });
     }
 
-    const team = await prisma.team.findUnique({
-      where: { slug: teamSlug },
-    });
+    // Fetch team + upsert user in parallel (they don't depend on each other's result).
+    // Upsert collapses find-or-create into one round-trip.
+    const [team, upsertedUser] = await Promise.all([
+      prisma.team.findUnique({ where: { slug: teamSlug } }),
+      prisma.user.upsert({
+        where: { email: userEmail },
+        create: { email: userEmail, firstName, lastName },
+        update: {
+          ...(firstName ? { firstName } : {}),
+          ...(lastName ? { lastName } : {}),
+        },
+      }),
+    ]);
 
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    // Find or create user
-    let user = await prisma.user.findUnique({
-      where: { email: userEmail },
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: userEmail,
-          firstName,
-          lastName,
-          teamId: team.id, // Assign to team
-        },
+    // Link user to team on first submission for that team (teamId only set once)
+    let user = upsertedUser;
+    if (!user.teamId) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { teamId: team.id },
       });
-    } else {
-      // Update user name if provided and link to team if not linked
-      const updateData: any = {};
-      if (firstName) updateData.firstName = firstName;
-      if (lastName) updateData.lastName = lastName;
-      if (!user.teamId) updateData.teamId = team.id;
-
-      if (Object.keys(updateData).length > 0) {
-        user = await prisma.user.update({
-          where: { id: user.id },
-          data: updateData,
-        });
-      }
     }
 
     // Create submission - exclude fields that shouldn't be copied

@@ -60,7 +60,12 @@ export default function ManagerLayout({
         <div className="text-center">
           <div
             className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-t-transparent"
-            style={{ borderColor: teamConfig?.primaryColor || '#ef4444', borderRightColor: 'transparent' }}
+            style={{
+              borderTopColor: teamConfig?.primaryColor || '#ef4444',
+              borderRightColor: 'transparent',
+              borderBottomColor: teamConfig?.primaryColor || '#ef4444',
+              borderLeftColor: teamConfig?.primaryColor || '#ef4444',
+            }}
           ></div>
           <p className="text-lg text-gray-400">Loading...</p>
         </div>

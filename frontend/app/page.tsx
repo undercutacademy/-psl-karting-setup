@@ -41,9 +41,18 @@ export default function LandingPage() {
                     <h1 className="text-3xl font-bold text-white uppercase tracking-wider mb-2">
                         Select Team
                     </h1>
-                    <p className="text-gray-400">
+                    <p className="text-gray-400 mb-5">
                         Choose a team to access their workspace
                     </p>
+                    <a
+                        href="/setups-marketing.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-600 bg-gray-800/60 hover:bg-gray-700 hover:border-white text-gray-200 hover:text-white text-sm font-semibold uppercase tracking-wider transition-all"
+                    >
+                        <span>About</span>
+                        <span className="text-xs opacity-70">PDF</span>
+                    </a>
                 </div>
 
                 <div className="grid gap-4">
@@ -162,6 +171,26 @@ export default function LandingPage() {
                                 PRIVATE ACCESS
                             </span>
                             <span className="text-gray-500 group-hover:text-blue-500 group-hover:translate-x-1 transition-all text-xl">
+                                →
+                            </span>
+                        </div>
+                    </button>
+
+                    {/* HOTZ Driver Development - private */}
+                    <button
+                        onClick={() => setPrivateModal('HOTZ Driver Development')}
+                        onMouseEnter={() => setHoveredLogo('/HDD_Logo_2025.png')}
+                        onMouseLeave={() => setHoveredLogo(null)}
+                        className="group relative flex items-center justify-between p-4 rounded-xl border border-gray-700/50 bg-gray-900/80 hover:bg-gray-800 hover:border-yellow-500 hover:shadow-[0_0_20px_rgba(201,162,39,0.35)] transition-all duration-300 hover:scale-[1.02] cursor-pointer text-left"
+                    >
+                        <span className="font-bold text-lg text-gray-200 group-hover:text-white transition-colors">
+                            HOTZ Driver Development
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                                PRIVATE ACCESS
+                            </span>
+                            <span className="text-gray-500 group-hover:text-yellow-500 group-hover:translate-x-1 transition-all text-xl">
                                 →
                             </span>
                         </div>

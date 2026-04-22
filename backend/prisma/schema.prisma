@@ -171,7 +171,7 @@ model Submission {
   axleSize          String?
   frontHubsLength   String?
   camber            String?
-  rearTrackWidth    String?
+  kartRearWidth     String?
   sessionLaps       String?
   customData        Json?             // Team-specific field values
   isFavorite        Boolean           @default(false)
@@ -181,4 +181,5 @@ model Submission {
   @@index([userId])
   @@index([teamId])
   @@index([createdAt])
+  @@index([userId, teamId, createdAt(sort: Desc)])
 }

@@ -34,13 +34,14 @@ const REGION_DROPDOWN_OPTIONS: Record<string, { tracks: string[], championships:
             'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
             'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
             'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex', 'Portimao',
-            'Tucson', 'Lorraine'
+            'Tucson', 'Lorraine', 'K1 Circuit'
         ],
         championships: [
             'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
             'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
             'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
-            'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'USPKS'
+            'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'USPKS',
+            'Champions of the Future Americas', 'Route 66 Sprint Series'
         ]
     },
     Brazil: {
@@ -106,7 +107,7 @@ const COMMON_DROPDOWN_OPTIONS = {
 // Get team configuration by slug
 router.get('/:slug/config', async (req, res) => {
     try {
-        const { slug } = req.params;
+        const slug = req.params.slug as string;
 
         const team = await prisma.team.findUnique({
             where: { slug },
@@ -162,7 +163,7 @@ router.get('/:slug/config', async (req, res) => {
 // Get basic team info by slug (public)
 router.get('/:slug', async (req, res) => {
     try {
-        const { slug } = req.params;
+        const slug = req.params.slug as string;
 
         const team = await prisma.team.findUnique({
             where: { slug },
@@ -212,7 +213,7 @@ router.get('/', async (req, res) => {
 // Update team configuration
 router.put('/:slug/config', async (req, res) => {
     try {
-        const { slug } = req.params;
+        const slug = req.params.slug as string;
         const { customLabels, formConfig: newFormConfig } = req.body;
 
         const team = await prisma.team.findUnique({
@@ -282,7 +283,7 @@ router.post('/:slug/managers', requireManager, async (req: AuthRequest, res) => 
             return res.status(403).json({ error: 'Only super admins can add managers' });
         }
 
-        const { slug } = req.params;
+        const slug = req.params.slug as string;
         const { email, firstName, lastName } = req.body;
 
         if (!email || !firstName || !lastName) {

@@ -9,7 +9,7 @@ import { TRANSLATIONS, Language } from '@/lib/translations';
 const ALL_FIELD_KEYS = [
     'engineNumber', 'gearRatio', 'driveSprocket', 'drivenSprocket', 'carburatorNumber', 'sessionLaps', 'sparkplugType', 'sparkplugGap',
     'tyreModel', 'tyreAge',
-    'chassis', 'axle', 'axleSize', 'rearHubsMaterial', 'rearHubsLength', 'rearTrackWidth', 'frontHeight', 'backHeight',
+    'chassis', 'axle', 'axleSize', 'rearHubsMaterial', 'rearHubsLength', 'kartRearWidth', 'frontHeight', 'backHeight',
     'frontHubsMaterial', 'frontHubsLength', 'frontBar', 'spindle', 'caster', 'camber', 'seatPosition', 'seatInclination', 'frontWheelType'
 ];
 
@@ -166,7 +166,7 @@ export default function ManagerSettings() {
                 { key: 'axleSize', label: t.axleSize },
                 { key: 'rearHubsMaterial', label: t.rearHubsMaterial },
                 { key: 'rearHubsLength', label: t.rearHubsLength },
-                { key: 'rearTrackWidth', label: t.rearTrackWidth },
+                { key: 'kartRearWidth', label: t.kartRearWidth },
                 { key: 'frontHeight', label: t.frontHeight },
                 { key: 'backHeight', label: t.backHeight },
                 { key: 'frontHubsMaterial', label: t.frontHubsMaterial },
@@ -188,7 +188,12 @@ export default function ManagerSettings() {
                 <div className="text-center">
                     <div
                         className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-t-transparent"
-                        style={{ borderColor: config?.primaryColor || '#dc2626', borderRightColor: 'transparent' }}
+                        style={{
+                            borderTopColor: config?.primaryColor || '#dc2626',
+                            borderRightColor: 'transparent',
+                            borderBottomColor: config?.primaryColor || '#dc2626',
+                            borderLeftColor: config?.primaryColor || '#dc2626',
+                        }}
                     ></div>
                     <p className="text-lg text-gray-400">Loading settings...</p>
                 </div>

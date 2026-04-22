@@ -119,7 +119,7 @@ export default function FormPage() {
   const MEASUREMENT_GUIDE_IMAGES: Record<string, string> = {
     axle: '/Album/Axle.svg',
     axleSize: '/Album/Axle_Size.svg',
-    rearTrackWidth: '/Album/Rear_Track_Width.svg',
+    kartRearWidth: '/Album/Rear_Track_Width.svg',
     rearHubsMaterial: '/Album/Rear_Hubs_Material.svg',
     rearHubsLength: '/Album/Rear_Hubs_Length.svg',
     frontHeight: '/Album/Front_Height.svg',
@@ -557,7 +557,7 @@ export default function FormPage() {
                         onChange={(e) => setFirstName(e.target.value)}
                         required
                         className={inputClass}
-                        placeholder="John"
+                        placeholder={teamSlug === 'hotz' ? 'Josh' : 'John'}
                       />
                     </div>
                     <div>
@@ -568,7 +568,7 @@ export default function FormPage() {
                         onChange={(e) => setLastName(e.target.value)}
                         required
                         className={inputClass}
-                        placeholder="Speed"
+                        placeholder={teamSlug === 'hotz' ? 'Hotz' : 'Speed'}
                       />
                     </div>
                   </div>
@@ -862,7 +862,8 @@ export default function FormPage() {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:from-red-500 hover:to-red-400 hover:shadow-lg hover:shadow-red-500/30"
+                  className="flex-1 rounded-lg px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:shadow-lg hover:opacity-90"
+                  style={{ backgroundColor: primaryColor, boxShadow: `0 0 0 0 ${primaryColor}` }}
                 >
                   {t.nextStep} →
                 </button>
@@ -932,7 +933,8 @@ export default function FormPage() {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(4)}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:from-red-500 hover:to-red-400 hover:shadow-lg hover:shadow-red-500/30"
+                  className="flex-1 rounded-lg px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:shadow-lg hover:opacity-90"
+                  style={{ backgroundColor: primaryColor, boxShadow: `0 0 0 0 ${primaryColor}` }}
                 >
                   {t.nextStep} →
                 </button>
@@ -998,17 +1000,17 @@ export default function FormPage() {
                     />
                   </div>
                 )}
-                {isFieldEnabled('rearTrackWidth') && (
+                {isFieldEnabled('kartRearWidth') && (
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('rearTrackWidth')} *</label>
-                      <HelpButton field="rearTrackWidth" />
+                      <label className="text-sm font-bold text-gray-300 uppercase tracking-wider">{getLabel('kartRearWidth')} *</label>
+                      <HelpButton field="kartRearWidth" />
                     </div>
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={formData.rearTrackWidth || ''}
-                      onChange={(e) => handleNumberChange('rearTrackWidth', e.target.value)}
+                      value={formData.kartRearWidth || ''}
+                      onChange={(e) => handleNumberChange('kartRearWidth', e.target.value)}
                       required
                       className={inputClass}
                       placeholder="e.g., 139"
@@ -1274,7 +1276,8 @@ export default function FormPage() {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(5)}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:from-red-500 hover:to-red-400 hover:shadow-lg hover:shadow-red-500/30"
+                  className="flex-1 rounded-lg px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:shadow-lg hover:opacity-90"
+                  style={{ backgroundColor: primaryColor, boxShadow: `0 0 0 0 ${primaryColor}` }}
                 >
                   {t.nextStep} →
                 </button>

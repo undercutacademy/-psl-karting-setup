@@ -355,7 +355,12 @@ export default function ManagerDashboard() {
         <div className="text-center">
           <div
             className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-t-transparent"
-            style={{ borderColor: teamConfig?.primaryColor || '#dc2626', borderRightColor: 'transparent' }}
+            style={{
+              borderTopColor: teamConfig?.primaryColor || '#dc2626',
+              borderRightColor: 'transparent',
+              borderBottomColor: teamConfig?.primaryColor || '#dc2626',
+              borderLeftColor: teamConfig?.primaryColor || '#dc2626',
+            }}
           ></div>
           <p className="text-lg text-gray-400">{t.checkingSetup || 'Loading submissions...'}</p>
         </div>
