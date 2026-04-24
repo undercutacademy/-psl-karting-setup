@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 import { getLastSubmissionByEmail, createSubmission, getTeamConfig } from '@/lib/api';
 import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
@@ -114,6 +115,10 @@ export default function FormPage() {
   const [lang, setLang] = useState<Language>('en');
   const [selectedLayout, setSelectedLayout] = useState<string>('');
   const [helpModal, setHelpModal] = useState<string | null>(null);
+  const dashPhotoInputRef = useRef<HTMLInputElement | null>(null);
+  const [dashPhotoCompressing, setDashPhotoCompressing] = useState(false);
+  const [dashPhotoError, setDashPhotoError] = useState<string | null>(null);
+  const [dashPhotoSizeLabel, setDashPhotoSizeLabel] = useState<string | null>(null);
 
   // Mapping of field names to their measurement guide SVG images
   const MEASUREMENT_GUIDE_IMAGES: Record<string, string> = {
@@ -222,6 +227,7 @@ export default function FormPage() {
     seatInclination: '',
     lapTime: '',
     observation: '',
+    dashSummaryPhoto: null,
   });
 
   const handleEmailCheck = async () => {
@@ -243,7 +249,11 @@ export default function FormPage() {
       }
 
       setSelectedLayout(parsedLayout);
-      setFormData({ ...rest, track: parsedTrack, observation: '', lapTime: '' });
+      // Always start with a blank photo — the server already strips it on
+      // /last/:email, but being explicit makes the reset obvious.
+      setFormData({ ...rest, track: parsedTrack, observation: '', lapTime: '', dashSummaryPhoto: null });
+      setDashPhotoSizeLabel(null);
+      setDashPhotoError(null);
 
       if (submission.user) {
         setFirstName(submission.user.firstName || '');
@@ -258,6 +268,63 @@ export default function FormPage() {
     const parts = cleanValue.split('.');
     const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : cleanValue;
     setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
+  };
+
+  // Matches the server cap (500 KB string ≈ 375 KB binary). Aggressive client
+  // compression keeps the typical result ~150–250 KB.
+  const DASH_PHOTO_MAX_LENGTH = 500 * 1024;
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleDashPhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Always clear the input value so re-picking the same file fires onChange
+    // again (important for the Retake flow).
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setDashPhotoError(t.photoError);
+      return;
+    }
+
+    setDashPhotoError(null);
+    setDashPhotoCompressing(true);
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 1600,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.8,
+      });
+      const dataUrl = await imageCompression.getDataUrlFromFile(compressed);
+      if (dataUrl.length > DASH_PHOTO_MAX_LENGTH) {
+        setDashPhotoError(t.photoTooLarge);
+        return;
+      }
+      setFormData(prev => ({ ...prev, dashSummaryPhoto: dataUrl }));
+      setDashPhotoSizeLabel(formatBytes(compressed.size));
+    } catch (err) {
+      console.error('Dash summary photo compression failed:', err);
+      setDashPhotoError(t.photoError);
+    } finally {
+      setDashPhotoCompressing(false);
+    }
+  };
+
+  const handleDashPhotoRemove = () => {
+    setFormData(prev => ({ ...prev, dashSummaryPhoto: null }));
+    setDashPhotoSizeLabel(null);
+    setDashPhotoError(null);
+  };
+
+  const handleDashPhotoRetake = () => {
+    dashPhotoInputRef.current?.click();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1364,6 +1431,78 @@ export default function FormPage() {
                   placeholder="Any additional notes about the session..."
                 />
               </div>
+
+              {isFieldEnabled('dashSummaryPhoto') && (
+                <div>
+                  <label className={labelClass}>{t.dashSummaryPhoto}</label>
+                  <p className="mt-1 text-sm text-gray-400">{t.dashSummaryPhotoHelp}</p>
+                  <input
+                    ref={dashPhotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleDashPhotoSelected}
+                    className="hidden"
+                  />
+
+                  {!formData.dashSummaryPhoto && !dashPhotoCompressing && (
+                    <button
+                      type="button"
+                      onClick={() => dashPhotoInputRef.current?.click()}
+                      className="mt-3 w-full rounded-lg border-2 border-dashed border-gray-600 bg-gray-800/50 px-4 py-6 text-center text-white font-bold uppercase tracking-wider transition-all hover:border-[var(--team-primary)] hover:bg-gray-800/80 flex flex-col items-center gap-2"
+                    >
+                      <span className="text-3xl">📷</span>
+                      <span>{t.takePhoto}</span>
+                    </button>
+                  )}
+
+                  {dashPhotoCompressing && (
+                    <div className="mt-3 w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-6 text-center flex items-center justify-center gap-3">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <span className="text-white font-bold uppercase tracking-wider">{t.compressingPhoto}</span>
+                    </div>
+                  )}
+
+                  {formData.dashSummaryPhoto && !dashPhotoCompressing && (
+                    <div className="mt-3 rounded-lg border-2 border-gray-700 bg-gray-800/50 p-4">
+                      <img
+                        src={formData.dashSummaryPhoto}
+                        alt={t.photoAttached}
+                        className="max-h-64 w-auto mx-auto rounded-md"
+                      />
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm text-gray-400">
+                          {t.photoAttached}
+                          {dashPhotoSizeLabel ? ` · ${dashPhotoSizeLabel}` : ''}
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleDashPhotoRetake}
+                            aria-label={t.retakePhoto}
+                            className="rounded-md bg-gray-700 px-4 py-2 text-sm font-bold text-white uppercase tracking-wider hover:bg-gray-600"
+                          >
+                            {t.retakePhoto}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleDashPhotoRemove}
+                            aria-label={t.removePhoto}
+                            className="rounded-md bg-red-600/80 px-4 py-2 text-sm font-bold text-white uppercase tracking-wider hover:bg-red-600"
+                          >
+                            {t.removePhoto}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {dashPhotoError && (
+                    <p className="mt-2 text-sm text-red-400">{dashPhotoError}</p>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-4">
                 <button
                   type="button"
@@ -1374,7 +1513,7 @@ export default function FormPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || dashPhotoCompressing}
                   className="flex-1 rounded-lg bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:from-green-500 hover:to-green-400 hover:shadow-lg hover:shadow-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {submitting && (

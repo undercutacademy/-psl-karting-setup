@@ -115,6 +115,7 @@ export interface Submission {
   camber?: string;
   kartRearWidth?: string;
   sessionLaps?: string;
+  dashSummaryPhoto?: string | null;
   isFavorite?: boolean;
   createdAt?: string;
   updatedAt?: string;

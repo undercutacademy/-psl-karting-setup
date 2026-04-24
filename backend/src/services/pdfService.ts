@@ -70,6 +70,7 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     sessionResults: 'Session Results',
     lapTime: 'Lap Time',
     notes: 'Notes',
+    dashSummary: 'Dash Summary',
     poweredBy: 'Powered by Overcut Academy',
   },
   pt: {
@@ -108,6 +109,7 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     sessionResults: 'Resultados da Sessão',
     lapTime: 'Tempo de Volta',
     notes: 'Notas',
+    dashSummary: 'Resumo do Dash',
     poweredBy: 'Desenvolvido por Overcut Academy',
   },
   es: {
@@ -146,6 +148,7 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     sessionResults: 'Resultados de la Sesión',
     lapTime: 'Tiempo de Vuelta',
     notes: 'Notas',
+    dashSummary: 'Resumen del Dash',
     poweredBy: 'Desarrollado por Overcut Academy',
   },
 };
@@ -350,6 +353,40 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
           .fillColor(COLORS.lightGray)
           .font('Helvetica')
           .text(submission.observation, 55, yPos + 12, { width: pageWidth - 30 });
+        // Move yPos past the wrapped observation text so the next section
+        // doesn't overlap.
+        const observationHeight = doc.heightOfString(submission.observation, { width: pageWidth - 30 });
+        yPos += 12 + observationHeight + 10;
+      } else {
+        yPos += 5;
+      }
+    }
+
+    // Dash Summary Photo (if provided)
+    const dashPhoto = (submission as any).dashSummaryPhoto as string | null | undefined;
+    if (dashPhoto) {
+      const photoWidth = 450;
+      // Conservative vertical budget for heading + image (aspect-preserved,
+      // so actual height varies). Trigger a page break if unlikely to fit.
+      const estimatedNeeded = 30 + photoWidth * 0.75;
+      const footerMargin = 60;
+      if (yPos + estimatedNeeded > doc.page.height - footerMargin) {
+        doc.addPage();
+        yPos = 40;
+      }
+      yPos = drawSectionHeader(t.dashSummary, yPos);
+      try {
+        // pdfkit's image() accepts a Buffer of raw bytes. Strip the
+        // data-URL prefix before decoding.
+        const commaIdx = dashPhoto.indexOf(',');
+        if (commaIdx !== -1) {
+          const b64 = dashPhoto.slice(commaIdx + 1);
+          const imgBuffer = Buffer.from(b64, 'base64');
+          const imgX = 40 + (pageWidth - photoWidth) / 2;
+          doc.image(imgBuffer, imgX, yPos, { width: photoWidth });
+        }
+      } catch (e) {
+        console.error('Failed to embed dash summary photo in PDF:', e);
       }
     }
 

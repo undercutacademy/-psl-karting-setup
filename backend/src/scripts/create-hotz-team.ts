@@ -16,7 +16,8 @@ const HOTZ_CONFIG = {
             'tyreModel', 'tyreAge', 'tyreColdPressure',
             'chassis', 'axle', 'rearHubsMaterial', 'rearHubsLength',
             'frontHeight', 'backHeight', 'frontHubsMaterial', 'frontBar',
-            'spindle', 'caster', 'seatPosition', 'lapTime', 'observation'
+            'spindle', 'caster', 'seatPosition', 'lapTime', 'observation',
+            'dashSummaryPhoto'
         ],
         requiredFields: [
             'sessionType', 'track', 'championship', 'division',

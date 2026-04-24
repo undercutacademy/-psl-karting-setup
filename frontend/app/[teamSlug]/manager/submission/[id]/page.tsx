@@ -19,6 +19,16 @@ export default function ViewSubmissionPage() {
   const [submission, setSubmission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
+  const [photoLightboxOpen, setPhotoLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!photoLightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPhotoLightboxOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [photoLightboxOpen]);
 
   useEffect(() => {
     loadSubmission();
@@ -73,6 +83,30 @@ export default function ViewSubmissionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
+      {photoLightboxOpen && submission.dashSummaryPhoto && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setPhotoLightboxOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.dashSummary}
+        >
+          <button
+            type="button"
+            onClick={() => setPhotoLightboxOpen(false)}
+            className="absolute top-4 right-4 text-white text-4xl leading-none hover:text-gray-300"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+          <img
+            src={submission.dashSummaryPhoto}
+            alt={t.dashSummary}
+            className="max-h-[95vh] max-w-[95vw] object-contain rounded-md"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-black">{t.submissionDetails}</h1>
@@ -278,6 +312,25 @@ export default function ViewSubmissionPage() {
                   <p className={`${valueClass} whitespace-pre-wrap`}>{submission.observation}</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Dash Summary Photo */}
+          {submission.dashSummaryPhoto && (
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h2 className={sectionTitleClass}>{t.dashSummary}</h2>
+              <button
+                type="button"
+                onClick={() => setPhotoLightboxOpen(true)}
+                className="block w-full"
+                aria-label={t.dashSummary}
+              >
+                <img
+                  src={submission.dashSummaryPhoto}
+                  alt={t.dashSummary}
+                  className="block max-w-[600px] w-full h-auto mx-auto rounded-md border border-gray-200 cursor-zoom-in"
+                />
+              </button>
             </div>
           )}
 

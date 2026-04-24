@@ -101,6 +101,31 @@ const frontWheelTypeMap: Record<string, FrontWheelType> = {
   'NoHub': FrontWheelType.NoHub,
 };
 
+// Accept only JPEG/PNG/WebP data URLs. 500 KB string cap ≈ 375 KB binary,
+// comfortably above the 300 KB client compression target.
+const DASH_SUMMARY_PHOTO_MAX_LENGTH = 500 * 1024;
+const DATA_URL_PATTERN = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+
+// Returns { ok: true, value } or { ok: false, status, error } — caller decides
+// whether to short-circuit the request.
+function normalizeDashSummaryPhoto(
+  input: unknown
+): { ok: true; value: string | null } | { ok: false; status: number; error: string } {
+  if (input === undefined || input === null || input === '') {
+    return { ok: true, value: null };
+  }
+  if (typeof input !== 'string') {
+    return { ok: false, status: 400, error: 'Invalid photo format' };
+  }
+  if (input.length > DASH_SUMMARY_PHOTO_MAX_LENGTH) {
+    return { ok: false, status: 413, error: 'Photo too large' };
+  }
+  if (!DATA_URL_PATTERN.test(input)) {
+    return { ok: false, status: 400, error: 'Invalid photo format' };
+  }
+  return { ok: true, value: input };
+}
+
 // Function to transform submission data with proper enum values
 function transformSubmissionData(data: any): any {
   const transformed = { ...data };
@@ -161,6 +186,9 @@ router.get('/', async (req, res) => {
       where: {
         teamId: team.id,
       },
+      // Exclude dashSummaryPhoto from list responses — it can be hundreds
+      // of KB per row and is only needed on the detail view / PDF.
+      omit: { dashSummaryPhoto: true },
       include: {
         user: true,
       },
@@ -185,12 +213,15 @@ router.get('/last/:email', async (req, res) => {
       return res.status(400).json({ error: 'Team slug is required' });
     }
 
-    // Single round-trip: Postgres joins through user+team relations server-side
+    // Single round-trip: Postgres joins through user+team relations server-side.
+    // The form pre-fills from this response, so strip the photo — users always
+    // take a fresh shot for the current session.
     const submission = await prisma.submission.findFirst({
       where: {
         user: { email },
         team: { slug: teamSlug },
       },
+      omit: { dashSummaryPhoto: true },
       include: { user: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -313,12 +344,22 @@ router.post('/', async (req, res) => {
     // Create submission - exclude fields that shouldn't be copied
     const { id, createdAt, updatedAt, userId, user: _user, ...cleanSubmissionData } = submissionData;
 
+    // Validate the optional dash summary photo separately — strip it from
+    // the payload so transformSubmissionData doesn't see it, then re-attach
+    // the normalized value.
+    const photoResult = normalizeDashSummaryPhoto(cleanSubmissionData.dashSummaryPhoto);
+    if (!photoResult.ok) {
+      return res.status(photoResult.status).json({ error: photoResult.error });
+    }
+    delete cleanSubmissionData.dashSummaryPhoto;
+
     // Transform enum values from frontend format to Prisma format
     const transformedData = transformSubmissionData(cleanSubmissionData);
 
     const submission = await prisma.submission.create({
       data: {
         ...transformedData,
+        dashSummaryPhoto: photoResult.value,
         userId: user.id,
         teamId: team.id,
       },
@@ -462,6 +503,19 @@ router.put('/:id', async (req, res) => {
       ...cleanData
     } = submissionData;
 
+    // Only touch the photo column if the caller explicitly included the key.
+    // An omitted key = "leave it alone"; explicit null/empty = clear it.
+    const photoProvided = Object.prototype.hasOwnProperty.call(cleanData, 'dashSummaryPhoto');
+    let normalizedPhoto: string | null = null;
+    if (photoProvided) {
+      const photoResult = normalizeDashSummaryPhoto(cleanData.dashSummaryPhoto);
+      if (!photoResult.ok) {
+        return res.status(photoResult.status).json({ error: photoResult.error });
+      }
+      normalizedPhoto = photoResult.value;
+      delete cleanData.dashSummaryPhoto;
+    }
+
     // Transform enum values
     const transformedData = transformSubmissionData(cleanData);
 
@@ -469,6 +523,7 @@ router.put('/:id', async (req, res) => {
       where: { id },
       data: {
         ...transformedData,
+        ...(photoProvided ? { dashSummaryPhoto: normalizedPhoto } : {}),
         userId: updatedUserId,
       },
       include: { user: true },

@@ -14,6 +14,22 @@ if (!resendApiKey) {
   console.warn('WARNING: RESEND_API_KEY not set. Emails will not be sent.');
 }
 
+// Parse a base64 image data URL into its mime type and raw base64 payload.
+// Returns null if the input is missing or not a recognizable data URL.
+function parsePhotoDataUrl(
+  dataUrl: string | null | undefined
+): { mime: string; base64: string; extension: string } | null {
+  if (!dataUrl) return null;
+  const match = /^data:(image\/(jpeg|png|webp));base64,(.+)$/i.exec(dataUrl);
+  if (!match) return null;
+  const mime = match[1].toLowerCase();
+  const extension = match[2].toLowerCase() === 'jpeg' ? 'jpg' : match[2].toLowerCase();
+  return { mime, base64: match[3], extension };
+}
+
+// Identifier used to reference the inline photo from the HTML via cid:<id>.
+const DASH_PHOTO_CONTENT_ID = 'dash-summary-photo';
+
 // Pick white or dark text for best contrast against a hex background.
 function getContrastText(hex: string): string {
   const h = hex.replace('#', '');
@@ -28,13 +44,24 @@ function getContrastText(hex: string): string {
 // Build the submission notification HTML, styled with the team's primary color.
 function buildSubmissionNotificationHtml(
   userName: string,
-  submission: Submission & { team?: Team | null }
+  submission: Submission & { team?: Team | null; dashSummaryPhoto?: string | null },
+  hasPhotoAttachment: boolean
 ): string {
   const val = (v: any) => v || '-';
   const primary = submission.team?.primaryColor || '#dc2626';
   const textOnPrimary = getContrastText(primary);
   const border = '#e5e7eb';
   const teamSlug = submission.team?.slug || 'psl-karting';
+  const dashPhotoSection = hasPhotoAttachment
+    ? `
+        <!-- Dash Summary Photo -->
+        <h3 style="color: ${primary}; border-bottom: 2px solid ${border}; padding-bottom: 5px;">Dash Summary</h3>
+        <div style="margin-bottom: 20px; text-align: center;">
+          <img src="cid:${DASH_PHOTO_CONTENT_ID}" alt="Dash summary photo" style="max-width: 100%; height: auto; border: 1px solid ${border}; border-radius: 4px;" />
+          <p style="font-size: 12px; color: #6b7280; margin-top: 6px;">(Also attached to this email as a file.)</p>
+        </div>
+    `
+    : '';
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #1f2937;">
@@ -95,7 +122,7 @@ function buildSubmissionNotificationHtml(
             <div style="background: #fff; padding: 10px; border: 1px solid ${border}; border-radius: 4px; margin-top: 5px; white-space: pre-wrap;">${val(submission.observation)}</div>
           </div>
         </div>
-
+${dashPhotoSection}
         <div style="text-align: center; margin-top: 30px;">
           <a href="https://setups.overcutacademy.com/${teamSlug}/manager/dashboard" style="background-color: ${primary}; color: ${textOnPrimary}; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View in Dashboard</a>
         </div>
@@ -113,6 +140,27 @@ export async function sendUserConfirmationEmail(
   return;
 }
 
+// Build the Resend attachments array for the dash summary photo, if present.
+// Embedded inline via contentId so Gmail/Apple Mail/Outlook render it in the
+// body, AND surfaced as a downloadable file.
+function buildDashPhotoAttachments(
+  submission: Submission & { dashSummaryPhoto?: string | null }
+) {
+  const parsed = parsePhotoDataUrl(submission.dashSummaryPhoto);
+  if (!parsed) return { attachments: undefined, hasPhoto: false };
+  return {
+    attachments: [
+      {
+        filename: `dash-summary.${parsed.extension}`,
+        content: parsed.base64,
+        contentType: parsed.mime,
+        contentId: DASH_PHOTO_CONTENT_ID,
+      },
+    ],
+    hasPhoto: true,
+  };
+}
+
 // Send notification to a single manager
 export async function sendManagerNotificationEmail(
   managerEmail: string,
@@ -126,7 +174,8 @@ export async function sendManagerNotificationEmail(
     throw new Error('Email service not configured');
   }
 
-  const htmlContent = buildSubmissionNotificationHtml(userName, submission);
+  const { attachments, hasPhoto } = buildDashPhotoAttachments(submission);
+  const htmlContent = buildSubmissionNotificationHtml(userName, submission, hasPhoto);
 
   try {
     const fromName = submission.team?.emailFromName || 'Setups - Overcut Academy';
@@ -137,6 +186,7 @@ export async function sendManagerNotificationEmail(
       to: cleanEmail,
       subject: `New Setup Submission from ${userName} - ${submission.track}`,
       html: htmlContent,
+      ...(attachments ? { attachments } : {}),
     });
 
     if (error) {
@@ -144,7 +194,7 @@ export async function sendManagerNotificationEmail(
       throw new Error(`Failed to send email: ${error.message}`);
     }
 
-    console.log(`Email sent successfully to ${cleanEmail}! ID: ${data?.id}`);
+    console.log(`Email sent successfully to ${cleanEmail}! ID: ${data?.id}${hasPhoto ? ' (with dash photo)' : ''}`);
   } catch (error) {
     console.error(`Error in sendManagerNotificationEmail for ${managerEmail}:`, error);
     throw error;
@@ -169,7 +219,8 @@ export async function sendManagerNotificationEmailBatch(
     return;
   }
 
-  const htmlContent = buildSubmissionNotificationHtml(userName, submission);
+  const { attachments, hasPhoto } = buildDashPhotoAttachments(submission);
+  const htmlContent = buildSubmissionNotificationHtml(userName, submission, hasPhoto);
 
   try {
     const fromName = submission.team?.emailFromName || 'Setups - Overcut Academy';
@@ -183,6 +234,7 @@ export async function sendManagerNotificationEmailBatch(
       to: cleanEmails, // Resend supports arrays for multiple recipients
       subject: `New Setup Submission from ${userName} - ${submission.track}`,
       html: htmlContent,
+      ...(attachments ? { attachments } : {}),
     });
 
     if (error) {
@@ -190,7 +242,7 @@ export async function sendManagerNotificationEmailBatch(
       throw new Error(`Failed to send batch email: ${error.message}`);
     }
 
-    console.log(`Batch email sent successfully to ${cleanEmails.length} managers! ID: ${data?.id}`);
+    console.log(`Batch email sent successfully to ${cleanEmails.length} managers! ID: ${data?.id}${hasPhoto ? ' (with dash photo)' : ''}`);
   } catch (error) {
     console.error(`Error in sendManagerNotificationEmailBatch:`, error);
     throw error;

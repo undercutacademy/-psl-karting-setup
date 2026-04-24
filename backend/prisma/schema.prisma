@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
@@ -174,6 +175,7 @@ model Submission {
   kartRearWidth     String?
   sessionLaps       String?
   customData        Json?             // Team-specific field values
+  dashSummaryPhoto  String?           // Optional dash summary photo (base64 data URL, JPEG)
   isFavorite        Boolean           @default(false)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
