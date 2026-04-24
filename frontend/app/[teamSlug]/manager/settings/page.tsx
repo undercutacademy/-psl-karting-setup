@@ -179,6 +179,12 @@ export default function ManagerSettings() {
                 { key: 'seatInclination', label: t.seatInclination },
                 { key: 'frontWheelType', label: t.frontWheelType }
             ]
+        },
+        {
+            title: t.finalDetails,
+            fields: [
+                { key: 'dashSummaryPhoto', label: t.dashSummary }
+            ]
         }
     ];
 
