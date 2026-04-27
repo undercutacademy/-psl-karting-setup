@@ -99,6 +99,7 @@ model User {
   password           String?      // Only for managers
   isManager          Boolean      @default(false)
   isSuperAdmin       Boolean      @default(false)  // Can access all team dashboards
+  isOwner            Boolean      @default(false)  // Team owner: controls manager list + superuser-access toggle
   mustChangePassword Boolean      @default(false)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
@@ -126,6 +127,9 @@ model Team {
   formConfig      Json?        // Which fields are enabled/required
   dropdownOptions Json?        // Custom tracks, championships, divisions
   customLabels    Json?        // Custom mapped form labels per team
+
+  // Customer-controlled superuser access. Null or past = OFF; future = ON.
+  superuserAccessExpiresAt DateTime?
   
   users           User[]
   submissions     Submission[]

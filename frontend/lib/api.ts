@@ -1,7 +1,15 @@
 import { Submission, User } from '@/types/submission';
-import { TeamConfig, TeamInfo } from '@/types/team';
+import { TeamConfig, TeamInfo, TeamManager, SuperuserAccessDuration } from '@/types/team';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+export type SubmissionAccessLevel = 'full' | 'list';
+
+function managerAuthHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  const email = localStorage.getItem('managerEmail') || '';
+  return email ? { 'x-manager-email': email } : {};
+}
 
 export async function getUserByEmail(email: string, teamSlug: string): Promise<User | null> {
   try {
@@ -55,9 +63,13 @@ export async function createSubmission(submission: Submission, userEmail: string
   }
 }
 
-export async function getAllSubmissions(teamSlug: string): Promise<Submission[]> {
+export async function getAllSubmissions(
+  teamSlug: string
+): Promise<{ submissions: Submission[]; accessLevel: SubmissionAccessLevel }> {
   try {
-    const response = await fetch(`${API_URL}/submissions?teamSlug=${encodeURIComponent(teamSlug)}`);
+    const response = await fetch(`${API_URL}/submissions?teamSlug=${encodeURIComponent(teamSlug)}`, {
+      headers: managerAuthHeaders(),
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch submissions');
     }
@@ -70,11 +82,23 @@ export async function getAllSubmissions(teamSlug: string): Promise<Submission[]>
   }
 }
 
+export class SuperuserAccessDisabledError extends Error {
+  constructor() {
+    super('superuser_access_disabled');
+    this.name = 'SuperuserAccessDisabledError';
+  }
+}
+
 export async function getSubmissionById(id: string, teamSlug: string): Promise<Submission> {
   try {
-    const response = await fetch(`${API_URL}/submissions/${id}?teamSlug=${encodeURIComponent(teamSlug)}`);
+    const response = await fetch(`${API_URL}/submissions/${id}?teamSlug=${encodeURIComponent(teamSlug)}`, {
+      headers: managerAuthHeaders(),
+    });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Failed to fetch submission' }));
+      if (response.status === 403 && error.error === 'superuser_access_disabled') {
+        throw new SuperuserAccessDisabledError();
+      }
       throw new Error(error.error || 'Failed to fetch submission');
     }
     return await response.json();
@@ -92,6 +116,7 @@ export async function updateSubmission(id: string, submission: Partial<Submissio
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...managerAuthHeaders(),
       },
       body: JSON.stringify({ ...submission, teamSlug }),
     });
@@ -169,13 +194,12 @@ export async function getAllTeams(): Promise<TeamInfo[]> {
 export async function addTeamManager(
   teamSlug: string,
   managerData: { email: string; firstName: string; lastName: string }
-): Promise<{ success: boolean; message: string; manager?: { id: string; email: string; firstName: string; lastName: string } }> {
-  const managerEmail = localStorage.getItem('managerEmail');
+): Promise<{ success: boolean; message: string; manager?: { id: string; email: string; firstName: string; lastName: string; isOwner?: boolean } }> {
   const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/managers`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-manager-email': managerEmail || '',
+      ...managerAuthHeaders(),
     },
     body: JSON.stringify(managerData),
   });
@@ -183,6 +207,62 @@ export async function addTeamManager(
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || 'Failed to add manager');
+  }
+  return data;
+}
+
+export async function listTeamManagers(teamSlug: string): Promise<TeamManager[]> {
+  const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/managers`, {
+    headers: managerAuthHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to load managers');
+  }
+  return data.managers as TeamManager[];
+}
+
+export async function deleteTeamManager(teamSlug: string, userId: string): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/teams/${encodeURIComponent(teamSlug)}/managers/${encodeURIComponent(userId)}`,
+    { method: 'DELETE', headers: managerAuthHeaders() }
+  );
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to remove manager');
+  }
+}
+
+export async function resendManagerAccess(
+  teamSlug: string,
+  userId: string
+): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(
+    `${API_URL}/teams/${encodeURIComponent(teamSlug)}/managers/${encodeURIComponent(userId)}/resend-access`,
+    { method: 'POST', headers: managerAuthHeaders() }
+  );
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to resend access');
+  }
+  return data;
+}
+
+export async function setSuperuserAccess(
+  teamSlug: string,
+  duration: SuperuserAccessDuration | null
+): Promise<{ success: boolean; superuserAccessExpiresAt: string | null }> {
+  const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/superuser-access`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...managerAuthHeaders(),
+    },
+    body: JSON.stringify({ duration }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to update superuser access');
   }
   return data;
 }

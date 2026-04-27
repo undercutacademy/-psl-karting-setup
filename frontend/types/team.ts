@@ -23,6 +23,19 @@ export interface TeamConfig {
     customLabels?: Record<string, string>;
     region?: string;
     defaultLanguage?: string;
+    superuserAccessExpiresAt?: string | null;
+}
+
+export type SuperuserAccessDuration = '24h' | '7d' | '30d';
+
+export interface TeamManager {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    isOwner: boolean;
+    mustChangePassword: boolean;
+    createdAt: string;
 }
 
 export interface TeamInfo {

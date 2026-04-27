@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getSubmissionById, getTeamConfig } from '@/lib/api';
+import { getSubmissionById, getTeamConfig, SuperuserAccessDisabledError } from '@/lib/api';
 import { Submission } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
@@ -20,6 +20,7 @@ export default function ViewSubmissionPage() {
   const [loading, setLoading] = useState(true);
   const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
   const [photoLightboxOpen, setPhotoLightboxOpen] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     if (!photoLightboxOpen) return;
@@ -40,7 +41,11 @@ export default function ViewSubmissionPage() {
       const data = await getSubmissionById(params.id as string, params.teamSlug as string);
       setSubmission(data);
     } catch (error) {
-      console.error('Error loading submission:', error);
+      if (error instanceof SuperuserAccessDisabledError) {
+        setAccessDenied(true);
+      } else {
+        console.error('Error loading submission:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -62,6 +67,26 @@ export default function ViewSubmissionPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-8">
+        <div className="max-w-md text-center rounded-2xl border border-yellow-300 bg-yellow-50 p-8 shadow-md">
+          <div className="text-5xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-yellow-900 mb-2">Superuser access disabled</h1>
+          <p className="text-yellow-800 mb-6">
+            This team has not granted superuser access. Submission details, photos, and PDFs are hidden until the team owner enables access from their Settings.
+          </p>
+          <button
+            onClick={() => router.push(`/${params.teamSlug}/manager/dashboard`)}
+            className="rounded bg-yellow-600 px-6 py-2 font-bold text-white hover:bg-yellow-700"
+          >
+            Back to dashboard
+          </button>
+        </div>
       </div>
     );
   }

@@ -2,9 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getTeamConfig, updateTeamConfig, addTeamManager } from '@/lib/api';
-import { TeamConfig } from '@/types/team';
+import {
+    getTeamConfig,
+    updateTeamConfig,
+    addTeamManager,
+    listTeamManagers,
+    deleteTeamManager,
+    resendManagerAccess,
+    setSuperuserAccess,
+} from '@/lib/api';
+import { TeamConfig, TeamManager, SuperuserAccessDuration } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
+
+function formatExpiry(expiresAt: string | null | undefined): string | null {
+    if (!expiresAt) return null;
+    const ms = new Date(expiresAt).getTime() - Date.now();
+    if (ms <= 0) return null;
+    const totalMinutes = Math.floor(ms / 60000);
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+    const minutes = totalMinutes % 60;
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+}
 
 const ALL_FIELD_KEYS = [
     'engineNumber', 'gearRatio', 'driveSprocket', 'drivenSprocket', 'carburatorNumber', 'sessionLaps', 'sparkplugType', 'sparkplugGap',
@@ -24,11 +45,30 @@ export default function ManagerSettings() {
     const [region, setRegion] = useState<string>('NorthAmerica');
     const [lang, setLang] = useState<Language>('en');
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+    const [isOwner, setIsOwner] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [newManagerEmail, setNewManagerEmail] = useState('');
     const [newManagerFirstName, setNewManagerFirstName] = useState('');
     const [newManagerLastName, setNewManagerLastName] = useState('');
     const [addingManager, setAddingManager] = useState(false);
     const [addManagerMessage, setAddManagerMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    // Superuser access toggle state
+    const [superuserExpiresAt, setSuperuserExpiresAt] = useState<string | null>(null);
+    const [superuserDuration, setSuperuserDuration] = useState<SuperuserAccessDuration>('24h');
+    const [savingSuperuserAccess, setSavingSuperuserAccess] = useState(false);
+    const [superuserMessage, setSuperuserMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [now, setNow] = useState<number>(Date.now());
+
+    // Managers list
+    const [managers, setManagers] = useState<TeamManager[]>([]);
+    const [managersLoading, setManagersLoading] = useState(false);
+    const [managerActionId, setManagerActionId] = useState<string | null>(null);
+    const [managerListMessage, setManagerListMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const canManageTeam = isOwner || isSuperAdmin;
+    const superuserActive = !!superuserExpiresAt && new Date(superuserExpiresAt).getTime() > now;
+    const expiryLabel = superuserActive ? formatExpiry(superuserExpiresAt) : null;
 
     useEffect(() => {
         const userStr = localStorage.getItem('managerUser');
@@ -36,9 +76,101 @@ export default function ManagerSettings() {
             try {
                 const user = JSON.parse(userStr);
                 setIsSuperAdmin(user.isSuperAdmin === true);
+                setIsOwner(user.isOwner === true);
+                setCurrentUserId(user.id || null);
             } catch {}
         }
     }, []);
+
+    // Tick the countdown once a minute while access is active
+    useEffect(() => {
+        if (!superuserActive) return;
+        const interval = setInterval(() => setNow(Date.now()), 60000);
+        return () => clearInterval(interval);
+    }, [superuserActive]);
+
+    // Auto-dismiss success messages after 5s so the page doesn't accumulate stale banners
+    useEffect(() => {
+        if (managerListMessage?.type !== 'success') return;
+        const t = setTimeout(() => setManagerListMessage(null), 5000);
+        return () => clearTimeout(t);
+    }, [managerListMessage]);
+    useEffect(() => {
+        if (superuserMessage?.type !== 'success') return;
+        const t = setTimeout(() => setSuperuserMessage(null), 5000);
+        return () => clearTimeout(t);
+    }, [superuserMessage]);
+    useEffect(() => {
+        if (addManagerMessage?.type !== 'success') return;
+        const t = setTimeout(() => setAddManagerMessage(null), 5000);
+        return () => clearTimeout(t);
+    }, [addManagerMessage]);
+
+    const loadManagers = async () => {
+        if (!canManageTeam) return;
+        setManagersLoading(true);
+        try {
+            const list = await listTeamManagers(teamSlug);
+            setManagers(list);
+        } catch (err: any) {
+            console.error('Error loading managers:', err);
+            setManagerListMessage({ type: 'error', text: err.message || 'Failed to load managers' });
+        } finally {
+            setManagersLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (canManageTeam) loadManagers();
+    }, [canManageTeam, teamSlug]);
+
+    const handleToggleSuperuser = async (enable: boolean) => {
+        setSavingSuperuserAccess(true);
+        setSuperuserMessage(null);
+        try {
+            const result = await setSuperuserAccess(teamSlug, enable ? superuserDuration : null);
+            setSuperuserExpiresAt(result.superuserAccessExpiresAt);
+            setNow(Date.now());
+            setSuperuserMessage({
+                type: 'success',
+                text: enable ? 'Superuser access enabled.' : 'Superuser access disabled.',
+            });
+        } catch (err: any) {
+            setSuperuserMessage({ type: 'error', text: err.message || 'Failed to update access' });
+        } finally {
+            setSavingSuperuserAccess(false);
+        }
+    };
+
+    const handleResendAccess = async (manager: TeamManager) => {
+        if (!confirm(`Send a new password to ${manager.email}? Their current password will stop working.`)) return;
+        setManagerActionId(manager.id);
+        setManagerListMessage(null);
+        try {
+            const res = await resendManagerAccess(teamSlug, manager.id);
+            setManagerListMessage({ type: 'success', text: res.message });
+            await loadManagers();
+        } catch (err: any) {
+            setManagerListMessage({ type: 'error', text: err.message || 'Failed to resend access' });
+        } finally {
+            setManagerActionId(null);
+        }
+    };
+
+    const handleDeleteManager = async (manager: TeamManager) => {
+        if (!confirm(`Remove ${manager.firstName} ${manager.lastName} from this team? They will no longer be able to log in.`)) return;
+        setManagerActionId(manager.id);
+        setManagerListMessage(null);
+        try {
+            await deleteTeamManager(teamSlug, manager.id);
+            setManagerListMessage({ type: 'success', text: `${manager.email} removed.` });
+            await loadManagers();
+        } catch (err: any) {
+            setManagerListMessage({ type: 'error', text: err.message || 'Failed to remove manager' });
+        } finally {
+            setManagerActionId(null);
+        }
+    };
 
     const handleAddManager = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,6 +187,7 @@ export default function ManagerSettings() {
             setNewManagerEmail('');
             setNewManagerFirstName('');
             setNewManagerLastName('');
+            await loadManagers();
         } catch (err: any) {
             setAddManagerMessage({ type: 'error', text: err.message || 'Failed to add manager' });
         } finally {
@@ -98,6 +231,8 @@ export default function ManagerSettings() {
                 if (teamConfig.region) {
                     setRegion(teamConfig.region);
                 }
+
+                setSuperuserExpiresAt(teamConfig.superuserAccessExpiresAt ?? null);
             }
         } catch (error) {
             console.error('Error loading config:', error);
@@ -209,8 +344,25 @@ export default function ManagerSettings() {
 
     const primaryColor = config?.primaryColor || '#dc2626';
 
+    const floatingToast = managerListMessage?.type === 'success' ? managerListMessage : null;
+
     return (
         <div className="min-h-[calc(100vh-64px)] relative overflow-hidden">
+            {floatingToast && (
+                <div className="fixed top-6 right-6 z-50 max-w-sm rounded-xl border border-green-500/40 bg-green-500/15 px-5 py-4 shadow-2xl backdrop-blur-lg flex items-start gap-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                    <span className="text-xl">✅</span>
+                    <div className="flex-1">
+                        <p className="text-sm font-bold text-green-200 uppercase tracking-wider">Done</p>
+                        <p className="text-sm text-green-100 mt-1">{floatingToast.text}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setManagerListMessage(null)}
+                        className="text-green-200 hover:text-white text-lg leading-none"
+                        aria-label="Dismiss"
+                    >×</button>
+                </div>
+            )}
             <div className="relative z-10 mx-auto max-w-4xl px-4 py-8">
                 <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
@@ -376,80 +528,245 @@ export default function ManagerSettings() {
                     </form>
                 </div>
 
-                {/* Add Manager Section - SuperAdmin Only */}
-                {isSuperAdmin && (
+                {/* Superuser Access — owner or superadmin */}
+                {canManageTeam && (
                     <div className="mt-8 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-xl p-6 sm:p-8">
-                        <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
-                            <span>👤</span> Add Manager
+                        <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-wider flex items-center gap-2">
+                            <span>🔒</span> Superuser Access
                         </h2>
                         <p className="text-gray-400 mb-6 text-sm">
-                            Add a new manager to this team. They will receive an email with auto-generated credentials and must change their password on first login.
+                            By default, the Overcut superuser cannot view your team's submissions, photos, or PDFs.
+                            Enable this only when you need our help with a specific issue. Access auto-expires.
                         </p>
 
-                        {addManagerMessage && (
+                        {superuserMessage && (
                             <div
-                                className={`rounded-xl border p-4 mb-6 ${addManagerMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
+                                className={`rounded-xl border p-4 mb-6 ${superuserMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
                             >
-                                {addManagerMessage.text}
+                                {superuserMessage.text}
                             </div>
                         )}
 
-                        <form onSubmit={handleAddManager} className="space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                        First Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newManagerFirstName}
-                                        onChange={(e) => setNewManagerFirstName(e.target.value)}
-                                        required
-                                        className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
-                                        placeholder="John"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                        Last Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newManagerLastName}
-                                        onChange={(e) => setNewManagerLastName(e.target.value)}
-                                        required
-                                        className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
-                                        placeholder="Doe"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                    Email
-                                </label>
+                        <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-5">
+                            <label className="flex items-start gap-3 cursor-pointer">
                                 <input
-                                    type="email"
-                                    value={newManagerEmail}
-                                    onChange={(e) => setNewManagerEmail(e.target.value)}
-                                    required
-                                    className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
-                                    placeholder="manager@example.com"
+                                    type="checkbox"
+                                    checked={superuserActive}
+                                    onChange={(e) => handleToggleSuperuser(e.target.checked)}
+                                    disabled={savingSuperuserAccess}
+                                    className="w-5 h-5 mt-0.5 rounded border-gray-500 bg-gray-700 cursor-pointer"
+                                    style={{ accentColor: primaryColor }}
                                 />
-                            </div>
-                            <div className="pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={addingManager}
-                                    className="rounded-lg px-8 py-3 font-bold text-white uppercase tracking-wider transition-all hover:opacity-90 shadow-lg disabled:opacity-50 flex items-center gap-2"
-                                    style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}4D` }}
-                                >
-                                    {addingManager && (
-                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                <div>
+                                    <span className="text-sm font-bold text-white uppercase tracking-wider">
+                                        Allow Overcut superuser to view this team's data
+                                    </span>
+                                    {superuserActive && expiryLabel && (
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Active — expires in <span className="text-white font-semibold">{expiryLabel}</span>
+                                        </p>
                                     )}
-                                    {addingManager ? 'Adding...' : 'Add Manager'}
-                                </button>
+                                    {!superuserActive && (
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Currently disabled. Submission list is visible but content is hidden.
+                                        </p>
+                                    )}
+                                </div>
+                            </label>
+
+                            {!superuserActive && (
+                                <div className="mt-5 pl-8">
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                        Grant access for
+                                    </label>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {(['24h', '7d', '30d'] as SuperuserAccessDuration[]).map((d) => (
+                                            <button
+                                                key={d}
+                                                type="button"
+                                                onClick={() => setSuperuserDuration(d)}
+                                                className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${superuserDuration === d ? 'text-white shadow-lg' : 'text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700'}`}
+                                                style={superuserDuration === d ? { backgroundColor: primaryColor } : {}}
+                                            >
+                                                {d === '24h' ? '24 hours' : d === '7d' ? '7 days' : '30 days'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {superuserActive && (
+                                <div className="mt-5 pl-8">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleToggleSuperuser(false)}
+                                        disabled={savingSuperuserAccess}
+                                        className="text-sm font-bold text-red-400 hover:text-red-300 uppercase tracking-wider disabled:opacity-50"
+                                    >
+                                        Disable now
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Managers list — owner or superadmin */}
+                {canManageTeam && (
+                    <div className="mt-8 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-xl p-6 sm:p-8">
+                        <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-wider flex items-center gap-2">
+                            <span>👥</span> Managers
+                        </h2>
+                        <p className="text-gray-400 mb-6 text-sm">
+                            Anyone with manager access can log in and view this team's dashboard. The owner can remove access or send a new password at any time.
+                        </p>
+
+                        {managerListMessage && (
+                            <div
+                                className={`rounded-xl border p-4 mb-6 ${managerListMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
+                            >
+                                {managerListMessage.text}
                             </div>
-                        </form>
+                        )}
+
+                        <div className="bg-gray-800/40 border border-gray-700 rounded-xl overflow-hidden">
+                            {managersLoading ? (
+                                <div className="p-6 text-center text-gray-400 text-sm">Loading managers...</div>
+                            ) : managers.length === 0 ? (
+                                <div className="p-6 text-center text-gray-400 text-sm">No managers yet.</div>
+                            ) : (
+                                <table className="min-w-full">
+                                    <thead>
+                                        <tr className="bg-gray-800/60 border-b border-gray-700">
+                                            <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Name</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Email</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Role</th>
+                                            <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-gray-400">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-800">
+                                        {managers.map((m) => {
+                                            const isSelf = m.id === currentUserId;
+                                            const busy = managerActionId === m.id;
+                                            return (
+                                                <tr key={m.id} className="hover:bg-gray-800/30 transition-colors">
+                                                    <td className="px-4 py-3 text-sm text-white font-semibold">{m.firstName} {m.lastName}</td>
+                                                    <td className="px-4 py-3 text-sm text-gray-300">{m.email}</td>
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {m.isOwner ? (
+                                                            <span
+                                                                className="inline-block px-2 py-1 rounded text-xs font-bold uppercase tracking-wider"
+                                                                style={{ backgroundColor: `${primaryColor}33`, color: primaryColor }}
+                                                            >
+                                                                Owner
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-400 text-xs">Manager</span>
+                                                        )}
+                                                        {m.mustChangePassword && (
+                                                            <span className="ml-2 text-xs text-yellow-400" title="Hasn't logged in yet — must change password on first login">⏳</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleResendAccess(m)}
+                                                                disabled={busy}
+                                                                className="px-3 py-1 rounded-lg bg-gray-700 text-gray-200 text-xs font-bold uppercase tracking-wider hover:bg-gray-600 disabled:opacity-50"
+                                                            >
+                                                                Resend
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteManager(m)}
+                                                                disabled={busy || m.isOwner || isSelf}
+                                                                title={m.isOwner ? 'Cannot remove the team owner' : isSelf ? 'You cannot remove yourself' : 'Remove manager'}
+                                                                className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider hover:bg-red-500/30 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+
+                        <div className="mt-8 pt-8 border-t border-gray-800">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">Add a new manager</h3>
+                            <p className="text-gray-400 mb-4 text-sm">
+                                They will receive an email with auto-generated credentials and must change their password on first login.
+                            </p>
+
+                            {addManagerMessage && (
+                                <div
+                                    className={`rounded-xl border p-4 mb-6 ${addManagerMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
+                                >
+                                    {addManagerMessage.text}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleAddManager} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                            First Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newManagerFirstName}
+                                            onChange={(e) => setNewManagerFirstName(e.target.value)}
+                                            required
+                                            className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
+                                            placeholder="John"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                            Last Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newManagerLastName}
+                                            onChange={(e) => setNewManagerLastName(e.target.value)}
+                                            required
+                                            className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
+                                            placeholder="Doe"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={newManagerEmail}
+                                        onChange={(e) => setNewManagerEmail(e.target.value)}
+                                        required
+                                        className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
+                                        placeholder="manager@example.com"
+                                    />
+                                </div>
+                                <div className="pt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={addingManager}
+                                        className="rounded-lg px-8 py-3 font-bold text-white uppercase tracking-wider transition-all hover:opacity-90 shadow-lg disabled:opacity-50 flex items-center gap-2"
+                                        style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}4D` }}
+                                    >
+                                        {addingManager && (
+                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                        )}
+                                        {addingManager ? 'Adding...' : 'Add Manager'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
             </div>

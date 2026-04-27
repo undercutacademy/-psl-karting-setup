@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllSubmissions, updateSubmission, getTeamConfig } from '@/lib/api';
+import { getAllSubmissions, updateSubmission, getTeamConfig, SubmissionAccessLevel } from '@/lib/api';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
 
@@ -60,6 +60,7 @@ export default function ManagerDashboard() {
   const [showFavorites, setShowFavorites] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
+  const [accessLevel, setAccessLevel] = useState<SubmissionAccessLevel>('full');
 
   useEffect(() => {
     loadSubmissions();
@@ -85,8 +86,9 @@ export default function ManagerDashboard() {
   const loadSubmissions = async () => {
     try {
       const data = await getAllSubmissions(teamSlug);
-      setSubmissions(data);
-      setFilteredSubmissions(data);
+      setSubmissions(data.submissions);
+      setFilteredSubmissions(data.submissions);
+      setAccessLevel(data.accessLevel);
     } catch (error: any) {
       console.error('Error loading submissions:', error);
       alert(error.message || 'Failed to load submissions. Please try again.');
@@ -154,7 +156,10 @@ export default function ManagerDashboard() {
 
   const handleExportPDF = async (submissionId: string) => {
     try {
-      const response = await fetch(`${API_URL}/submissions/${submissionId}/pdf?teamSlug=${encodeURIComponent(teamSlug)}`);
+      const managerEmail = typeof window !== 'undefined' ? localStorage.getItem('managerEmail') || '' : '';
+      const response = await fetch(`${API_URL}/submissions/${submissionId}/pdf?teamSlug=${encodeURIComponent(teamSlug)}`, {
+        headers: managerEmail ? { 'x-manager-email': managerEmail } : {},
+      });
       if (!response.ok) throw new Error('Failed to generate PDF');
 
       const blob = await response.blob();
@@ -501,6 +506,18 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
+        {accessLevel === 'list' && (
+          <div className="mb-6 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
+            <span className="text-2xl">🔒</span>
+            <div className="text-sm">
+              <p className="font-bold text-yellow-300 uppercase tracking-wider mb-1">Superuser access disabled</p>
+              <p className="text-yellow-200/90">
+                This team has not granted you access to view individual submissions. You can see the list of submissions below but cannot open them or download PDFs. Ask the team owner to enable Superuser Access in their Settings.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Table */}
         <div className="rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -625,20 +642,27 @@ export default function ManagerDashboard() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleView(submission.id)}
-                              className="px-3 py-1 rounded-lg bg-white/10 text-white font-semibold text-sm hover:bg-white/20 transition-colors"
+                              disabled={accessLevel !== 'full'}
+                              title={accessLevel !== 'full' ? 'This team has not granted superuser access' : undefined}
+                              className="px-3 py-1 rounded-lg bg-white/10 text-white font-semibold text-sm hover:bg-white/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                             >
+                              {accessLevel !== 'full' && <span>🔒</span>}
                               {t.view}
                             </button>
                             <button
                               onClick={() => handleExportPDF(submission.id)}
-                              className="px-3 py-1 rounded-lg font-semibold text-sm transition-colors"
+                              disabled={accessLevel !== 'full'}
+                              title={accessLevel !== 'full' ? 'This team has not granted superuser access' : undefined}
+                              className="px-3 py-1 rounded-lg font-semibold text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                               style={{ backgroundColor: `${primaryColor}33`, color: primaryColor }}
                             >
                               PDF
                             </button>
                             <button
                               onClick={() => handleEdit(submission.id)}
-                              className="px-3 py-1 rounded-lg bg-gray-700 text-gray-300 font-semibold text-sm hover:bg-gray-600 transition-colors"
+                              disabled={accessLevel !== 'full'}
+                              title={accessLevel !== 'full' ? 'This team has not granted superuser access' : undefined}
+                              className="px-3 py-1 rounded-lg bg-gray-700 text-gray-300 font-semibold text-sm hover:bg-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {t.edit}
                             </button>

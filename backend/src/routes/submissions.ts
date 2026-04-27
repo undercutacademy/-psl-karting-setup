@@ -4,6 +4,7 @@ import fs from 'fs';
 import { PrismaClient, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@prisma/client';
 import { sendUserConfirmationEmail, sendManagerNotificationEmail, sendManagerNotificationEmailBatch } from '../services/emailService';
 import { generateSubmissionPDF } from '../services/pdfService';
+import { requireManager, resolveSubmissionAccess, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -166,7 +167,7 @@ function transformSubmissionData(data: any): any {
 }
 
 // Get all submissions for a team
-router.get('/', async (req, res) => {
+router.get('/', requireManager, async (req: AuthRequest, res) => {
   try {
     const { teamSlug } = req.query;
 
@@ -180,6 +181,11 @@ router.get('/', async (req, res) => {
 
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const accessLevel = resolveSubmissionAccess(req.user, team);
+    if (accessLevel === 'none') {
+      return res.status(403).json({ error: 'Not authorized for this team' });
     }
 
     const submissions = await prisma.submission.findMany({
@@ -196,7 +202,7 @@ router.get('/', async (req, res) => {
         createdAt: 'desc',
       },
     });
-    res.json(submissions);
+    res.json({ submissions, accessLevel });
   } catch (error) {
     console.error('Error fetching submissions:', error);
     res.status(500).json({ error: 'Failed to fetch submissions' });
@@ -234,16 +240,27 @@ router.get('/last/:email', async (req, res) => {
 });
 
 // Get submission by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', requireManager, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const submission = await prisma.submission.findUnique({
       where: { id },
-      include: { user: true },
+      include: { user: true, team: true },
     });
 
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (!submission.team) {
+      return res.status(404).json({ error: 'Submission has no team' });
+    }
+
+    const accessLevel = resolveSubmissionAccess(req.user, submission.team);
+    if (accessLevel !== 'full') {
+      return res.status(403).json({
+        error: accessLevel === 'list' ? 'superuser_access_disabled' : 'Not authorized for this team',
+      });
     }
 
     res.json(submission);
@@ -254,9 +271,9 @@ router.get('/:id', async (req, res) => {
 });
 
 // Export submission as PDF
-router.get('/:id/pdf', async (req, res) => {
+router.get('/:id/pdf', requireManager, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { teamSlug } = req.query;
     const submission = await prisma.submission.findUnique({
       where: { id },
@@ -265,6 +282,17 @@ router.get('/:id/pdf', async (req, res) => {
 
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (!submission.team) {
+      return res.status(404).json({ error: 'Submission has no team' });
+    }
+
+    const pdfAccessLevel = resolveSubmissionAccess(req.user, submission.team);
+    if (pdfAccessLevel !== 'full') {
+      return res.status(403).json({
+        error: pdfAccessLevel === 'list' ? 'superuser_access_disabled' : 'Not authorized for this team',
+      });
     }
 
     // Get team language and branding
@@ -395,6 +423,18 @@ router.post('/', async (req, res) => {
         // Add default manager email if set (backward compatibility)
         if (process.env.MANAGER_EMAIL) {
           managerEmails.add(process.env.MANAGER_EMAIL.trim().toLowerCase());
+        }
+
+        // In production, strip every superadmin email from recipients — superadmins
+        // shouldn't receive customer notifications. In dev, keep them so we can test.
+        if (process.env.NODE_ENV === 'production') {
+          const superadmins = await prisma.user.findMany({
+            where: { isSuperAdmin: true },
+            select: { email: true },
+          });
+          for (const sa of superadmins) {
+            managerEmails.delete(sa.email.trim().toLowerCase());
+          }
         }
 
         console.log(`Sending notification emails to ${managerEmails.size} managers for team ${team.slug}`);

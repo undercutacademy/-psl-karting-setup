@@ -1,8 +1,20 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-import { requireManager, AuthRequest } from '../middleware/auth';
+import { requireManager, requireOwner, AuthRequest } from '../middleware/auth';
 import { sendManagerWelcomeEmail } from '../services/emailService';
+
+const SUPERUSER_ACCESS_DURATIONS_MS: Record<string, number> = {
+    '24h': 24 * 60 * 60 * 1000,
+    '7d': 7 * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000,
+};
+
+function generateManagerPassword(): { plain: string; hashed: string } {
+    const plain = crypto.randomBytes(6).toString('base64url').slice(0, 8);
+    const hashed = crypto.createHash('sha256').update(plain).digest('hex');
+    return { plain, hashed };
+}
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -122,6 +134,7 @@ router.get('/:slug/config', async (req, res) => {
                 customLabels: true,
                 region: true,
                 defaultLanguage: true,
+                superuserAccessExpiresAt: true,
             },
         });
 
@@ -153,6 +166,7 @@ router.get('/:slug/config', async (req, res) => {
             customLabels: team.customLabels || {},
             region: teamRegion,
             defaultLanguage: team.defaultLanguage || 'en',
+            superuserAccessExpiresAt: team.superuserAccessExpiresAt,
         });
     } catch (error) {
         console.error('Error fetching team config:', error);
@@ -275,14 +289,9 @@ router.put('/:slug/config', async (req, res) => {
     }
 });
 
-// Add a new manager to a team (superadmin only)
-router.post('/:slug/managers', requireManager, async (req: AuthRequest, res) => {
+// Add a new manager to a team (owner or superadmin)
+router.post('/:slug/managers', requireManager, requireOwner, async (req: AuthRequest, res) => {
     try {
-        // Verify superadmin access
-        if (!req.user?.isSuperAdmin) {
-            return res.status(403).json({ error: 'Only super admins can add managers' });
-        }
-
         const slug = req.params.slug as string;
         const { email, firstName, lastName } = req.body;
 
@@ -297,25 +306,32 @@ router.post('/:slug/managers', requireManager, async (req: AuthRequest, res) => 
         }
 
         // Check if email is already registered
-        const existingUser = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        const normalizedEmail = email.trim().toLowerCase();
+        const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
         if (existingUser) {
             return res.status(409).json({ error: 'This email is already registered. The manager may exist on another team.' });
         }
 
-        // Generate random 8-character password
-        const plainPassword = crypto.randomBytes(6).toString('base64url').slice(0, 8);
-        const hashedPassword = crypto.createHash('sha256').update(plainPassword).digest('hex');
+        // Defensive: if no owner exists yet for this team (e.g., legacy team
+        // pre-backfill), promote this first manager to owner.
+        const existingOwnerCount = await prisma.user.count({
+            where: { teamId: team.id, isOwner: true },
+        });
+        const shouldBeOwner = existingOwnerCount === 0;
+
+        const { plain: plainPassword, hashed: hashedPassword } = generateManagerPassword();
 
         // Create user and update team managerEmails atomically
         const [newUser] = await prisma.$transaction([
             prisma.user.create({
                 data: {
-                    email: email.trim().toLowerCase(),
+                    email: normalizedEmail,
                     firstName: firstName.trim(),
                     lastName: lastName.trim(),
                     password: hashedPassword,
                     isManager: true,
                     isSuperAdmin: false,
+                    isOwner: shouldBeOwner,
                     mustChangePassword: true,
                     teamId: team.id,
                 },
@@ -324,7 +340,7 @@ router.post('/:slug/managers', requireManager, async (req: AuthRequest, res) => 
                 where: { slug },
                 data: {
                     managerEmails: {
-                        push: email.trim().toLowerCase(),
+                        push: normalizedEmail,
                     },
                 },
             }),
@@ -333,7 +349,7 @@ router.post('/:slug/managers', requireManager, async (req: AuthRequest, res) => 
         // Send welcome email (fire-and-forget, don't fail the request)
         let emailWarning = '';
         try {
-            await sendManagerWelcomeEmail(email.trim().toLowerCase(), plainPassword, slug, team.name);
+            await sendManagerWelcomeEmail(normalizedEmail, plainPassword, slug, team.name);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
             emailWarning = ' (welcome email failed to send)';
@@ -347,11 +363,159 @@ router.post('/:slug/managers', requireManager, async (req: AuthRequest, res) => 
                 email: newUser.email,
                 firstName: newUser.firstName,
                 lastName: newUser.lastName,
+                isOwner: newUser.isOwner,
             },
         });
     } catch (error) {
         console.error('Error adding manager:', error);
         res.status(500).json({ error: 'Failed to add manager' });
+    }
+});
+
+// List managers for a team (owner or superadmin)
+router.get('/:slug/managers', requireManager, requireOwner, async (req: AuthRequest, res) => {
+    try {
+        const slug = req.params.slug as string;
+        const team = await prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+
+        const managers = await prisma.user.findMany({
+            where: { teamId: team.id, isManager: true },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                isOwner: true,
+                mustChangePassword: true,
+                createdAt: true,
+            },
+            orderBy: [{ isOwner: 'desc' }, { createdAt: 'asc' }],
+        });
+
+        res.json({ managers });
+    } catch (error) {
+        console.error('Error listing managers:', error);
+        res.status(500).json({ error: 'Failed to list managers' });
+    }
+});
+
+// Remove a manager (owner or superadmin). Cannot remove the owner or self.
+router.delete('/:slug/managers/:userId', requireManager, requireOwner, async (req: AuthRequest, res) => {
+    try {
+        const slug = req.params.slug as string;
+        const userId = req.params.userId as string;
+        const team = await prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+
+        const target = await prisma.user.findUnique({ where: { id: userId } });
+        if (!target || target.teamId !== team.id || !target.isManager) {
+            return res.status(404).json({ error: 'Manager not found on this team' });
+        }
+
+        if (target.isOwner) {
+            return res.status(400).json({ error: 'Cannot remove the team owner' });
+        }
+        if (target.isSuperAdmin) {
+            return res.status(400).json({ error: 'Cannot remove a superadmin from this view' });
+        }
+        if (req.user && target.id === req.user.id) {
+            return res.status(400).json({ error: 'Cannot remove yourself' });
+        }
+
+        await prisma.$transaction([
+            prisma.user.delete({ where: { id: target.id } }),
+            prisma.team.update({
+                where: { id: team.id },
+                data: {
+                    managerEmails: team.managerEmails.filter(
+                        (e) => e.toLowerCase() !== target.email.toLowerCase()
+                    ),
+                },
+            }),
+        ]);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error removing manager:', error);
+        res.status(500).json({ error: 'Failed to remove manager' });
+    }
+});
+
+// Resend access (regenerate password + re-send welcome email)
+router.post('/:slug/managers/:userId/resend-access', requireManager, requireOwner, async (req: AuthRequest, res) => {
+    try {
+        const slug = req.params.slug as string;
+        const userId = req.params.userId as string;
+        const team = await prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+
+        const target = await prisma.user.findUnique({ where: { id: userId } });
+        if (!target || target.teamId !== team.id || !target.isManager) {
+            return res.status(404).json({ error: 'Manager not found on this team' });
+        }
+
+        const { plain: plainPassword, hashed: hashedPassword } = generateManagerPassword();
+
+        await prisma.user.update({
+            where: { id: target.id },
+            data: {
+                password: hashedPassword,
+                mustChangePassword: true,
+            },
+        });
+
+        let emailWarning = '';
+        try {
+            await sendManagerWelcomeEmail(target.email, plainPassword, slug, team.name);
+        } catch (emailError) {
+            console.error('Failed to send resend-access email:', emailError);
+            emailWarning = ' (email failed to send)';
+        }
+
+        res.json({ success: true, message: `New password emailed to ${target.email}${emailWarning}` });
+    } catch (error) {
+        console.error('Error resending access:', error);
+        res.status(500).json({ error: 'Failed to resend access' });
+    }
+});
+
+// Toggle / extend / disable customer-controlled superuser access
+router.put('/:slug/superuser-access', requireManager, requireOwner, async (req: AuthRequest, res) => {
+    try {
+        const slug = req.params.slug as string;
+        const { duration } = req.body as { duration?: '24h' | '7d' | '30d' | null };
+
+        let expiresAt: Date | null = null;
+        if (duration === null || duration === undefined) {
+            expiresAt = null;
+        } else if (typeof duration === 'string' && SUPERUSER_ACCESS_DURATIONS_MS[duration]) {
+            expiresAt = new Date(Date.now() + SUPERUSER_ACCESS_DURATIONS_MS[duration]);
+        } else {
+            return res.status(400).json({ error: 'Invalid duration. Expected one of: 24h, 7d, 30d, or null.' });
+        }
+
+        const team = await prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+
+        const updated = await prisma.team.update({
+            where: { slug },
+            data: { superuserAccessExpiresAt: expiresAt },
+            select: { superuserAccessExpiresAt: true },
+        });
+
+        res.json({ success: true, superuserAccessExpiresAt: updated.superuserAccessExpiresAt });
+    } catch (error) {
+        console.error('Error updating superuser access:', error);
+        res.status(500).json({ error: 'Failed to update superuser access' });
     }
 });
 

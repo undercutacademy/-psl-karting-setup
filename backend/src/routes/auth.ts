@@ -66,6 +66,7 @@ router.post('/manager/login', async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         isSuperAdmin: user.isSuperAdmin,
+        isOwner: user.isOwner,
         teamId: user.teamId,
         mustChangePassword: user.mustChangePassword,
       },

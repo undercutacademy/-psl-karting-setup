@@ -20,6 +20,10 @@ async function main() {
             isManager: true,
             isSuperAdmin: true,
             password: hashedPassword,
+            // Decouple from any team — superadmin must NOT belong to a team,
+            // otherwise the team's owner could remove them via the manager list.
+            teamId: null,
+            isOwner: false,
         },
         create: {
             email,
