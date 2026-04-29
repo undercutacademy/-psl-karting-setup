@@ -46,14 +46,15 @@ const REGION_DROPDOWN_OPTIONS: Record<string, { tracks: string[], championships:
             'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
             'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
             'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex', 'Portimao',
-            'Tucson', 'Lorraine', 'K1 Circuit'
+            'Tucson', 'Lorraine', 'K1 Circuit', 'Monticello Karting', 'Bushnell Motorsport Park', 'Jacksonville NFKC'
         ],
         championships: [
             'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
             'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
             'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
             'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'USPKS',
-            'Champions of the Future Americas', 'Route 66 Sprint Series'
+            'Champions of the Future Americas', 'Route 66 Sprint Series',
+            'FLKC - Florida Karting Championship'
         ]
     },
     Brazil: {

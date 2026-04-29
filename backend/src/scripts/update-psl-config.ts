@@ -31,13 +31,14 @@ const PSL_KARTING_CONFIG = {
             'Las Vegas Motor Speedway 2023', 'Charlotte Speedway', 'MCC Cinccinati', 'PittRace', 'Trackhouse',
             'Supernats 2024', 'Quaker City', 'ROK Rio 2025', 'Supernats 2025',
             'Hamilton', 'Tremblant', 'Tremblant CCW', 'Icar', 'SH Karting', 'Mosport', 'Supernats 2026', 'T4 Kartplex', 'Portimao',
-            'Tucson', 'Lorraine'
+            'Tucson', 'Lorraine', 'Monticello Karting', 'Bushnell Motorsport Park', 'Jacksonville NFKC'
         ],
         championships: [
             'Skusa Winter Series', 'Florida Winter Tour', 'Rotax Winter Trophy', 'Pro Tour',
             'Skusa Vegas', 'ROK Vegas', 'Stars Championship Series', 'Rotax US East Trophy',
             'Rotax US Final', 'Canada National', 'Champions of the Future', 'World Championship',
-            'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'USPKS'
+            'Supernats 2024', 'Coupe de Montreal', 'Canadian Open', 'Supernats 2025', 'USPKS',
+            'FLKC - Florida Karting Championship'
         ],
         divisions: [
             'Micro', 'Mini', 'KA100 Jr', 'KA100 Sr', 'KA100 Master', 'Pro Shifter', 'Shifter Master',
