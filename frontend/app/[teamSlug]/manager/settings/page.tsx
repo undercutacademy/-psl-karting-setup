@@ -43,6 +43,8 @@ export default function ManagerSettings() {
     const [saving, setSaving] = useState(false);
     const [enabledFields, setEnabledFields] = useState<string[]>([]);
     const [region, setRegion] = useState<string>('NorthAmerica');
+    const [tyreAgeMode, setTyreAgeMode] = useState<'sessions' | 'laps'>('sessions');
+    const [tyrePressureMode, setTyrePressureMode] = useState<'lowest' | 'four'>('lowest');
     const [lang, setLang] = useState<Language>('en');
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [isOwner, setIsOwner] = useState(false);
@@ -233,6 +235,13 @@ export default function ManagerSettings() {
                 }
 
                 setSuperuserExpiresAt(teamConfig.superuserAccessExpiresAt ?? null);
+
+                if (teamConfig.formConfig?.tyreAgeMode) {
+                    setTyreAgeMode(teamConfig.formConfig.tyreAgeMode);
+                }
+                if (teamConfig.formConfig?.tyrePressureMode) {
+                    setTyrePressureMode(teamConfig.formConfig.tyrePressureMode);
+                }
             }
         } catch (error) {
             console.error('Error loading config:', error);
@@ -256,7 +265,9 @@ export default function ManagerSettings() {
         try {
             const updatedFormConfig = {
                 ...config.formConfig,
-                enabledFields
+                enabledFields,
+                tyreAgeMode,
+                tyrePressureMode,
             };
             await updateTeamConfig(teamSlug, {
                 formConfig: updatedFormConfig,
@@ -511,6 +522,51 @@ export default function ManagerSettings() {
                                 </div>
                             </div>
                         ))}
+
+                        {/* Tyre Age Unit */}
+                        <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                            <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-1">Tyre Age Unit</h3>
+                            <p className="text-gray-400 text-sm mb-4">
+                                Choose whether tyre age is tracked in sessions or laps. This changes the label drivers see on the form.
+                            </p>
+                            <div className="flex bg-gray-900/50 p-1 rounded-xl border border-gray-700 w-fit gap-1">
+                                {(['sessions', 'laps'] as const).map((mode) => (
+                                    <button
+                                        key={mode}
+                                        type="button"
+                                        onClick={() => setTyreAgeMode(mode)}
+                                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tyreAgeMode === mode ? 'text-white shadow-lg' : 'text-gray-400 hover:text-gray-300'}`}
+                                        style={tyreAgeMode === mode ? { backgroundColor: primaryColor } : {}}
+                                    >
+                                        {mode === 'sessions' ? 'Sessions' : 'Laps'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Tyre Pressure Mode */}
+                        <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                            <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-1">Tyre Pressure Mode</h3>
+                            <p className="text-gray-400 text-sm mb-4">
+                                "Lowest pressure" shows a single input. "All 4 tyres" shows separate RF, LF, RR, LR fields — the lowest value is saved as the summary pressure.
+                            </p>
+                            <div className="flex bg-gray-900/50 p-1 rounded-xl border border-gray-700 w-fit gap-1">
+                                {([
+                                    { key: 'lowest', label: 'Lowest pressure' },
+                                    { key: 'four', label: 'All 4 tyres' },
+                                ] as const).map(({ key, label }) => (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        onClick={() => setTyrePressureMode(key)}
+                                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tyrePressureMode === key ? 'text-white shadow-lg' : 'text-gray-400 hover:text-gray-300'}`}
+                                        style={tyrePressureMode === key ? { backgroundColor: primaryColor } : {}}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
                         <div className="pt-6 border-t border-gray-800 flex justify-end">
                             <button
