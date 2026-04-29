@@ -254,12 +254,30 @@ export default function ViewSubmissionPage() {
                 <p className={valueClass}>{submission.tyreModel}</p>
               </div>
               <div>
-                <p className={labelClass}>{t.tyreAge}</p>
+                <p className={labelClass}>
+                  {t.tyreAge}
+                  {submission.customData?.tyreAgeMode
+                    ? ` (${submission.customData.tyreAgeMode === 'sessions' ? 'Sessions' : 'Laps'})`
+                    : ''}
+                </p>
                 <p className={valueClass}>{submission.tyreAge}</p>
               </div>
               <div>
                 <p className={labelClass}>{t.tyreColdPressure}</p>
-                <p className={valueClass}>{submission.tyreColdPressure}</p>
+                {submission.customData?.tyrePressureMode === 'four' ? (
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+                    {(['RF', 'LF', 'RR', 'LR'] as const).map((corner) => (
+                      <div key={corner} className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-500 uppercase w-6">{corner}</span>
+                        <span className={valueClass}>
+                          {submission.customData?.[`tyrePressure${corner}`] || '—'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={valueClass}>{submission.tyreColdPressure}</p>
+                )}
               </div>
             </div>
           </div>
