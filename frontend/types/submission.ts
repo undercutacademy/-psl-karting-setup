@@ -61,6 +61,11 @@ export enum FrontBar {
   Standard = 'Standard',
   Black = 'Black',
   None = 'None',
+  Flat = 'Flat',
+  Vertical = 'Vertical',
+  Gold = 'Gold',
+  Chrome = 'Chrome',
+  Gray = 'Gray',
 }
 
 export enum Spindle {
