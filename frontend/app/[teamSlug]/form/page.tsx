@@ -1268,12 +1268,11 @@ export default function FormPage() {
                     </div>
                     <input
                       type="text"
-                      inputMode="decimal"
-                      value={formData.caster}
-                      onChange={(e) => handleNumberChange('caster', e.target.value)}
+                      value={formData.caster || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, caster: e.target.value }))}
                       required
                       className={inputClass}
-                      placeholder="e.g., 28"
+                      placeholder="e.g., +2mm, half, full caster"
                     />
                   </div>
                 )}
@@ -1285,12 +1284,11 @@ export default function FormPage() {
                     </div>
                     <input
                       type="text"
-                      inputMode="decimal"
                       value={formData.camber || ''}
-                      onChange={(e) => handleNumberChange('camber', e.target.value)}
+                      onChange={(e) => setFormData(prev => ({ ...prev, camber: e.target.value }))}
                       required
                       className={inputClass}
-                      placeholder="e.g., -4"
+                      placeholder="e.g., -2mm, +4mm, full"
                     />
                   </div>
                 )}
