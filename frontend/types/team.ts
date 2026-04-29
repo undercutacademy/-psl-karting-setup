@@ -3,6 +3,8 @@
 export interface FormConfig {
     enabledFields: string[];
     requiredFields: string[];
+    tyreAgeMode?: 'sessions' | 'laps';
+    tyrePressureMode?: 'lowest' | 'four';
 }
 
 export interface DropdownOptions {
