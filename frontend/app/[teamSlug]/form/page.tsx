@@ -120,6 +120,10 @@ export default function FormPage() {
   const [dashPhotoCompressing, setDashPhotoCompressing] = useState(false);
   const [dashPhotoError, setDashPhotoError] = useState<string | null>(null);
   const [dashPhotoSizeLabel, setDashPhotoSizeLabel] = useState<string | null>(null);
+  const [pressureRF, setPressureRF] = useState('');
+  const [pressureLF, setPressureLF] = useState('');
+  const [pressureRR, setPressureRR] = useState('');
+  const [pressureLR, setPressureLR] = useState('');
 
   // Mapping of field names to their measurement guide SVG images
   const MEASUREMENT_GUIDE_IMAGES: Record<string, string> = {
@@ -200,6 +204,8 @@ export default function FormPage() {
   const CHAMPIONSHIPS = teamConfig?.dropdownOptions?.championships || regionDefaults.championships;
   const DIVISIONS = teamConfig?.dropdownOptions?.divisions || regionDefaults.divisions;
   const TYRE_MODELS = teamConfig?.dropdownOptions?.tyreModels || DEFAULT_TYRE_MODELS;
+  const tyreAgeMode = teamConfig?.formConfig?.tyreAgeMode ?? 'sessions';
+  const tyrePressureMode = teamConfig?.formConfig?.tyrePressureMode ?? 'lowest';
 
   const [formData, setFormData] = useState<Partial<Submission>>({
     sessionType: SessionType.Practice1,
@@ -343,7 +349,28 @@ export default function FormPage() {
 
     setSubmitting(true);
     try {
-      const submissionData = { ...formData };
+      const submissionData: any = { ...formData };
+
+      // Record tyreAgeMode in customData
+      const customData: Record<string, any> = { ...(submissionData.customData || {}) };
+      customData.tyreAgeMode = tyreAgeMode;
+
+      // Handle 4-tyre pressure mode
+      if (tyrePressureMode === 'four') {
+        const pressures = [pressureRF, pressureLF, pressureRR, pressureLR]
+          .map(Number)
+          .filter(n => !isNaN(n) && n > 0);
+        submissionData.tyreColdPressure = pressures.length > 0
+          ? String(Math.min(...pressures))
+          : '';
+        customData.tyrePressureMode = 'four';
+        customData.tyrePressureRF = pressureRF;
+        customData.tyrePressureLF = pressureLF;
+        customData.tyrePressureRR = pressureRR;
+        customData.tyrePressureLR = pressureLR;
+      }
+
+      submissionData.customData = customData;
 
       // Append the layout name to the track cleanly for the database
       if (selectedLayout && submissionData.track && TRACK_LAYOUTS[submissionData.track]) {
@@ -966,7 +993,9 @@ export default function FormPage() {
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelClass}>{getLabel('tyreAge')} *</label>
+                  <label className={labelClass}>
+                    {getLabel('tyreAge')} ({tyreAgeMode === 'sessions' ? 'Sessions' : 'Laps'}) *
+                  </label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -974,20 +1003,47 @@ export default function FormPage() {
                     onChange={(e) => handleNumberChange('tyreAge', e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="e.g., 2"
+                    placeholder={tyreAgeMode === 'sessions' ? 'e.g., 2 sessions' : 'e.g., 42 laps'}
                   />
                 </div>
-                <div>
+                <div className={tyrePressureMode === 'four' ? 'md:col-span-2' : ''}>
                   <label className={labelClass}>{getLabel('tyreColdPressure')} *</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={formData.tyreColdPressure}
-                    onChange={(e) => handleNumberChange('tyreColdPressure', e.target.value)}
-                    required
-                    className={inputClass}
-                    placeholder="e.g., 9.5"
-                  />
+                  {tyrePressureMode === 'lowest' ? (
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={formData.tyreColdPressure}
+                      onChange={(e) => handleNumberChange('tyreColdPressure', e.target.value)}
+                      required
+                      className={inputClass}
+                      placeholder="e.g., 9.5"
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3 mt-1">
+                      {([
+                        { label: 'RF', value: pressureRF, set: setPressureRF },
+                        { label: 'LF', value: pressureLF, set: setPressureLF },
+                        { label: 'RR', value: pressureRR, set: setPressureRR },
+                        { label: 'LR', value: pressureLR, set: setPressureLR },
+                      ] as const).map(({ label, value, set }) => (
+                        <div key={label}>
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={value}
+                            onChange={(e) => {
+                              const clean = e.target.value.replace(/[^0-9.]/g, '').replace(/(\.\d*)\./g, '$1');
+                              set(clean);
+                            }}
+                            required
+                            className={inputClass}
+                            placeholder="e.g., 9.5"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex gap-4">
@@ -1380,23 +1436,52 @@ export default function FormPage() {
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className={tyrePressureMode === 'four' ? 'md:col-span-2' : ''}>
                   <label className={labelClass}>{getLabel('tyreColdPressure')} *</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={formData.tyreColdPressure || ''}
-                    onChange={(e) => handleNumberChange('tyreColdPressure', e.target.value)}
-                    required
-                    className={inputClass}
-                    placeholder="e.g., 9.5"
-                  />
+                  {tyrePressureMode === 'lowest' ? (
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={formData.tyreColdPressure || ''}
+                      onChange={(e) => handleNumberChange('tyreColdPressure', e.target.value)}
+                      required
+                      className={inputClass}
+                      placeholder="e.g., 9.5"
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3 mt-1">
+                      {([
+                        { label: 'RF', value: pressureRF, set: setPressureRF },
+                        { label: 'LF', value: pressureLF, set: setPressureLF },
+                        { label: 'RR', value: pressureRR, set: setPressureRR },
+                        { label: 'LR', value: pressureLR, set: setPressureLR },
+                      ] as const).map(({ label, value, set }) => (
+                        <div key={label}>
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={value}
+                            onChange={(e) => {
+                              const clean = e.target.value.replace(/[^0-9.]/g, '').replace(/(\.\d*)\./g, '$1');
+                              set(clean);
+                            }}
+                            required
+                            className={inputClass}
+                            placeholder="e.g., 9.5"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
               {hasSetupChanged === false && (
                 <div>
-                  <label className={labelClass}>{getLabel('tyreAge')} *</label>
+                  <label className={labelClass}>
+                    {getLabel('tyreAge')} ({tyreAgeMode === 'sessions' ? 'Sessions' : 'Laps'}) *
+                  </label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -1404,7 +1489,7 @@ export default function FormPage() {
                     onChange={(e) => handleNumberChange('tyreAge', e.target.value)}
                     required
                     className={inputClass}
-                    placeholder="e.g., 2"
+                    placeholder={tyreAgeMode === 'sessions' ? 'e.g., 2 sessions' : 'e.g., 42 laps'}
                   />
                 </div>
               )}
