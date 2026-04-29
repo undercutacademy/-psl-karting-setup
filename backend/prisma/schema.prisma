@@ -75,6 +75,11 @@ enum FrontBar {
   Standard
   Black
   None
+  Flat
+  Vertical
+  Gold
+  Chrome
+  Gray
 }
 
 enum Spindle {
