@@ -1601,7 +1601,14 @@ export default function FormPage() {
               <div className="flex gap-4">
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(hasSetupChanged === false ? 1 : 4)}
+                  onClick={() => {
+                    if (hasSetupChanged === false) {
+                      setHasSetupChanged(null);
+                      setCurrentStep(1);
+                    } else {
+                      setCurrentStep(4);
+                    }
+                  }}
                   className="flex-1 rounded-lg bg-gray-700 px-6 py-4 font-bold text-white uppercase tracking-wider transition-all hover:bg-gray-600"
                 >
                   ← {t.back}
