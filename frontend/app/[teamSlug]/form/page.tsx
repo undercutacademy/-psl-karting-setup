@@ -44,9 +44,20 @@ const REGION_DATA: Record<string, { tracks: string[], championships: string[], d
     divisions: DEFAULT_DIVISIONS,
   },
   CentralAmerica: {
-    tracks: [],
-    championships: [],
-    divisions: [],
+    tracks: [
+      'Autodromo Panama - Original',
+      'Autodromo Panama - Reverse',
+      'Autodromo Panama - 2',
+      'P1 Speedway',
+      'P1 Speedway Rev'
+    ],
+    championships: [
+      'SKAPA', 'Centroamericano', 'International', 'Copa Amistad', 'Latinoamericano'
+    ],
+    divisions: [
+      'Micro', 'Mini', 'Promo', 'VLR Junior', 'VLR Senior', 'VLR Master',
+      'X30 Junior', 'X30 Senior', 'X30 Master', 'Tillotson'
+    ],
   },
   Brazil: {
     tracks: [

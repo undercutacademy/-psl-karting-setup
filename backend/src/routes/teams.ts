@@ -90,10 +90,13 @@ const REGION_DROPDOWN_OPTIONS: Record<string, { tracks: string[], championships:
     CentralAmerica: {
         tracks: [
             'Autodromo Panama - Original',
-            'Autodromo Panama - Reverse'
+            'Autodromo Panama - Reverse',
+            'Autodromo Panama - 2',
+            'P1 Speedway',
+            'P1 Speedway Rev'
         ],
         championships: [
-            'SKAPA', 'Centroamericano', 'International', 'Copa Amistad'
+            'SKAPA', 'Centroamericano', 'International', 'Copa Amistad', 'Latinoamericano'
         ],
         divisions: [
             'Micro', 'Mini', 'Promo', 'VLR Junior', 'VLR Senior', 'VLR Master',
