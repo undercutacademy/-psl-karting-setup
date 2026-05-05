@@ -459,7 +459,14 @@ router.post('/', async (req, res) => {
   } catch (error: any) {
     console.error('Error creating submission:', error);
     console.error('Error details:', error.message, error.code);
-    res.status(500).json({ error: 'Failed to create submission' });
+    // Surface the underlying Prisma/DB error so the frontend can show
+    // something more useful than a generic 500. Prisma errors are
+    // descriptive (e.g. invalid enum value, unknown column) and don't
+    // leak credentials.
+    res.status(500).json({
+      error: error?.message || 'Failed to create submission',
+      code: error?.code,
+    });
   }
 });
 
