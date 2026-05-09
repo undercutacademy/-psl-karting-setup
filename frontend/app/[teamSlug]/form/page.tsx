@@ -122,6 +122,10 @@ export default function FormPage() {
   const [lastSubmission, setLastSubmission] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Synchronous re-entry guard: the disabled-prop on the button is only
+  // applied after React re-renders, so very rapid taps (within one frame)
+  // can fire handleSubmit twice. This ref blocks the second call.
+  const submittingRef = useRef(false);
   const [teamConfig, setTeamConfig] = useState<TeamConfig | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
   const [lang, setLang] = useState<Language>('en');
@@ -282,7 +286,9 @@ export default function FormPage() {
   };
 
   const handleNumberChange = (field: keyof Submission, value: string) => {
-    const cleanValue = value.replace(/[^0-9.]/g, '');
+    // Accept either comma or dot as decimal separator (mobile keyboards in
+    // some locales only expose one of the two). Normalize to dot before save.
+    const cleanValue = value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
     const parts = cleanValue.split('.');
     const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : cleanValue;
     setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
@@ -348,6 +354,8 @@ export default function FormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (submittingRef.current) return;
+
     if (!email) {
       alert('Please enter your email address');
       return;
@@ -358,6 +366,7 @@ export default function FormPage() {
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       const submissionData: any = { ...formData };
@@ -395,6 +404,7 @@ export default function FormPage() {
       alert(error.message || 'Error submitting form. Please try again.');
     } finally {
       setSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
@@ -423,6 +433,20 @@ export default function FormPage() {
       className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden"
       style={{ '--team-primary': primaryColor } as React.CSSProperties}
     >
+      {/* Full-screen overlay while submitting — blocks taps and gives the
+          user an unambiguous "we got it" signal on slow connections. */}
+      {submitting && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-sm">
+          <div className="text-center px-6">
+            <div
+              className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-t-transparent mb-6"
+              style={{ borderColor: primaryColor, borderTopColor: 'transparent' }}
+            ></div>
+            <p className="text-2xl font-bold text-white uppercase tracking-wider">{t.submitting}</p>
+          </div>
+        </div>
+      )}
+
       {/* Help Modal */}
       {helpModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setHelpModal(null)}>
@@ -946,11 +970,16 @@ export default function FormPage() {
                 <div>
                   <label className={labelClass}>{getLabel('sparkplugGap')}</label>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="decimal"
-                    step="0.01"
-                    value={formData.sparkplugGap || ''}
-                    onChange={(e) => setFormData({ ...formData, sparkplugGap: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    value={formData.sparkplugGap ?? ''}
+                    onChange={(e) => {
+                      const normalized = e.target.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                      const parts = normalized.split('.');
+                      const sanitized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                      const parsed = sanitized === '' || sanitized === '.' ? undefined : parseFloat(sanitized);
+                      setFormData({ ...formData, sparkplugGap: Number.isNaN(parsed as number) ? undefined : parsed });
+                    }}
                     className={inputClass}
                     placeholder="e.g., 0.55"
                   />
