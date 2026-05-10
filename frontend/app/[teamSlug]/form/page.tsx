@@ -240,7 +240,7 @@ export default function FormPage() {
     rearHubsMaterial: RearHubsMaterial.Aluminium,
     rearHubsLength: '',
     frontHeight: FrontHeight.Standard,
-    backHeight: BackHeight.Standard,
+    backHeight: BackHeight.Medium,
     frontHubsMaterial: FrontHubsMaterial.Aluminium,
     frontBar: FrontBar.Standard,
     spindle: Spindle.Standard,
@@ -648,6 +648,9 @@ export default function FormPage() {
                           observation: '',
                           lapTime: '',
                           tyreAge: '',
+                          // Standard was retired from the UI; coerce legacy data so the select
+                          // doesn't render with a value that has no matching option.
+                          backHeight: lastSubmission.backHeight === BackHeight.Standard ? BackHeight.Medium : lastSubmission.backHeight,
                         });
                         setCurrentStep(5);
                       }}
@@ -663,7 +666,8 @@ export default function FormPage() {
                           ...lastSubmission,
                           sessionType: lastSubmission.sessionType,
                           observation: '',
-                          lapTime: ''
+                          lapTime: '',
+                          backHeight: lastSubmission.backHeight === BackHeight.Standard ? BackHeight.Medium : lastSubmission.backHeight,
                         });
                         // Stay on step 1 so the driver can change championship/track/division if needed
                       }}
@@ -1251,7 +1255,7 @@ export default function FormPage() {
                       required
                       className={selectClass}
                     >
-                      {Object.values(BackHeight).map((height) => (
+                      {Object.values(BackHeight).filter((h) => h !== BackHeight.Standard).map((height) => (
                         <option key={height} value={height}>{height}</option>
                       ))}
                     </select>

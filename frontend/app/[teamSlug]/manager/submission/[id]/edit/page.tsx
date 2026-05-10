@@ -433,9 +433,11 @@ export default function EditSubmissionPage() {
                   required
                   className={selectClass}
                 >
-                  {Object.values(BackHeight).map((height) => (
-                    <option key={height} value={height}>{height}</option>
-                  ))}
+                  {Object.values(BackHeight)
+                    .filter((h) => h !== BackHeight.Standard || formData.backHeight === BackHeight.Standard)
+                    .map((height) => (
+                      <option key={height} value={height}>{height}</option>
+                    ))}
                 </select>
               </div>
               <div>

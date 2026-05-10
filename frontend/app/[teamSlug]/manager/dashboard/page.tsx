@@ -55,6 +55,7 @@ export default function ManagerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTrack, setFilterTrack] = useState('');
   const [filterSession, setFilterSession] = useState('');
+  const [filterYear, setFilterYear] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
@@ -69,7 +70,7 @@ export default function ManagerDashboard() {
 
   useEffect(() => {
     filterSubmissions();
-  }, [searchTerm, filterTrack, filterSession, submissions]);
+  }, [searchTerm, filterTrack, filterSession, filterYear, submissions]);
 
   const loadTeamConfig = async () => {
     try {
@@ -123,6 +124,12 @@ export default function ManagerDashboard() {
       filtered = filtered.filter((sub) => sub.sessionType === filterSession);
     }
 
+    if (filterYear) {
+      filtered = filtered.filter((sub) => {
+        if (!sub.createdAt) return false;
+        return new Date(sub.createdAt).getFullYear().toString() === filterYear;
+      });
+    }
 
     if (showFavorites) {
       filtered = filtered.filter((sub) => sub.isFavorite);
@@ -345,11 +352,18 @@ export default function ManagerDashboard() {
 
   const uniqueTracks = Array.from(new Set(submissions.map((s) => s.track).filter(Boolean)));
   const uniqueSessions = Array.from(new Set(submissions.map((s) => s.sessionType).filter(Boolean)));
+  const uniqueYears = Array.from(
+    new Set(
+      submissions
+        .map((s) => (s.createdAt ? new Date(s.createdAt).getFullYear() : null))
+        .filter((y): y is number => y !== null)
+    )
+  ).sort((a, b) => b - a);
 
   // Re-run filter when showFavorites changes or submissions update
   useEffect(() => {
     filterSubmissions();
-  }, [showFavorites, submissions, searchTerm, filterTrack, filterSession]);
+  }, [showFavorites, submissions, searchTerm, filterTrack, filterSession, filterYear]);
 
   const allSelected = filteredSubmissions.length > 0 && selectedIds.size === filteredSubmissions.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < filteredSubmissions.length;
@@ -466,7 +480,7 @@ export default function ManagerDashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className={labelClass}>{t.search}</label>
               <input
@@ -500,6 +514,19 @@ export default function ManagerDashboard() {
                 <option value="">{t.allSessions}</option>
                 {uniqueSessions.map((session) => (
                   <option key={session} value={session}>{session}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>{t.filterByYear}</label>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                className={selectClass}
+              >
+                <option value="">{t.allYears}</option>
+                {uniqueYears.map((year) => (
+                  <option key={year} value={year.toString()}>{year}</option>
                 ))}
               </select>
             </div>
