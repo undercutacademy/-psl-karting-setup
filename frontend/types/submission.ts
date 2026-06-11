@@ -121,6 +121,9 @@ export interface Submission {
   kartRearWidth?: string;
   sessionLaps?: string;
   dashSummaryPhoto?: string | null;
+  weatherTempC?: number | null;
+  weatherPressureHpa?: number | null;
+  weatherHumidityPct?: number | null;
   isFavorite?: boolean;
   createdAt?: string;
   updatedAt?: string;
