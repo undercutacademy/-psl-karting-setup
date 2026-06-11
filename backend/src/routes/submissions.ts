@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import path from 'path';
 import fs from 'fs';
-import { PrismaClient, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@prisma/client';
+import { SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@prisma/client';
 import { sendUserConfirmationEmail, sendManagerNotificationEmail, sendManagerNotificationEmailBatch } from '../services/emailService';
 import { generateSubmissionPDF } from '../services/pdfService';
 import { requireManager, resolveSubmissionAccess, AuthRequest } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
+import { normalizeWeatherFields } from '../lib/weather';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Enum mappings: Frontend friendly values -> Prisma enum values
 const sessionTypeMap: Record<string, SessionType> = {
@@ -381,6 +382,8 @@ router.post('/', async (req, res) => {
     }
     delete cleanSubmissionData.dashSummaryPhoto;
 
+    normalizeWeatherFields(cleanSubmissionData);
+
     // Transform enum values from frontend format to Prisma format
     const transformedData = transformSubmissionData(cleanSubmissionData);
 
@@ -420,11 +423,6 @@ router.post('/', async (req, res) => {
           teamManagers.forEach((m) => managerEmails.add(m.email.trim().toLowerCase()));
         }
 
-        // Add default manager email if set (backward compatibility)
-        if (process.env.MANAGER_EMAIL) {
-          managerEmails.add(process.env.MANAGER_EMAIL.trim().toLowerCase());
-        }
-
         // In production, strip every superadmin email from recipients — superadmins
         // shouldn't receive customer notifications. In dev, keep them so we can test.
         if (process.env.NODE_ENV === 'production') {
@@ -435,6 +433,13 @@ router.post('/', async (req, res) => {
           for (const sa of superadmins) {
             managerEmails.delete(sa.email.trim().toLowerCase());
           }
+        }
+
+        // Add default manager email if set. Added after the superadmin strip:
+        // setting MANAGER_EMAIL is an explicit opt-in to receive all notifications,
+        // even if that address is also a superadmin account.
+        if (process.env.MANAGER_EMAIL) {
+          managerEmails.add(process.env.MANAGER_EMAIL.trim().toLowerCase());
         }
 
         console.log(`Sending notification emails to ${managerEmails.size} managers for team ${team.slug}`);
@@ -562,6 +567,8 @@ router.put('/:id', async (req, res) => {
       normalizedPhoto = photoResult.value;
       delete cleanData.dashSummaryPhoto;
     }
+
+    normalizeWeatherFields(cleanData);
 
     // Transform enum values
     const transformedData = transformSubmissionData(cleanData);
