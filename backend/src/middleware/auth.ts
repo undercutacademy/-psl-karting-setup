@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, Team } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { Team } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
 export interface AuthRequest extends Request {
   user?: {

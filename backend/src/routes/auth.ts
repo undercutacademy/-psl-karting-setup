@@ -1,10 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { requireManager, AuthRequest } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Simple password hashing (for production, use bcrypt)
 function hashPassword(password: string): string {
