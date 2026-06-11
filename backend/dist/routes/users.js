@@ -1,14 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../lib/prisma");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 // Get user by email
 router.get('/email/:email', async (req, res) => {
     try {
         const { email } = req.params;
-        const user = await prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { email },
         });
         if (!user) {

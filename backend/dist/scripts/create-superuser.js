@@ -1,0 +1,54 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const client_1 = require("@prisma/client");
+const crypto_1 = __importDefault(require("crypto"));
+const prisma = new client_1.PrismaClient();
+function hashPassword(password) {
+    return crypto_1.default.createHash('sha256').update(password).digest('hex');
+}
+async function main() {
+    const email = 'overcutacademy@gmail.com';
+    const password = 'Overcut@7748';
+    const hashedPassword = hashPassword(password);
+    console.log(`Creating superuser: ${email}`);
+    const superuser = await prisma.user.upsert({
+        where: { email },
+        update: {
+            isManager: true,
+            isSuperAdmin: true,
+            password: hashedPassword,
+            // Decouple from any team — superadmin must NOT belong to a team,
+            // otherwise the team's owner could remove them via the manager list.
+            teamId: null,
+            isOwner: false,
+        },
+        create: {
+            email,
+            firstName: 'Overcut',
+            lastName: 'Academy',
+            password: hashedPassword,
+            isManager: true,
+            isSuperAdmin: true,
+            // No teamId - superadmin can access all teams
+        },
+    });
+    console.log('✅ Superuser created/updated successfully:');
+    console.log(`   Email: ${superuser.email}`);
+    console.log(`   Name: ${superuser.firstName} ${superuser.lastName}`);
+    console.log(`   isSuperAdmin: ${superuser.isSuperAdmin}`);
+    console.log('\n=== Login Credentials ===');
+    console.log(`Email: ${email}`);
+    console.log(`Password: ${password}`);
+    console.log('=========================\n');
+}
+main()
+    .catch((e) => {
+    console.error(e);
+    process.exit(1);
+})
+    .finally(async () => {
+    await prisma.$disconnect();
+});
