@@ -266,7 +266,8 @@ export async function sendManagerWelcomeEmail(
   managerEmail: string,
   password: string,
   teamSlug: string,
-  teamName: string
+  teamName: string,
+  teamBranding?: { logoUrl?: string | null; primaryColor?: string | null; emailFromName?: string | null }
 ): Promise<void> {
   console.log(`Sending welcome email to new manager: ${managerEmail}`);
 
@@ -275,38 +276,55 @@ export async function sendManagerWelcomeEmail(
     throw new Error('Email service not configured');
   }
 
-  const loginUrl = `https://setups.overcutacademy.com/${teamSlug}/manager/login`;
+  const baseUrl = 'https://setups.overcutacademy.com';
+  const loginUrl = `${baseUrl}/${teamSlug}/manager/login`;
+  const primaryColor = teamBranding?.primaryColor || '#dc2626';
+  // Team logos are designed for the app's dark theme (often white-on-transparent),
+  // so they sit on a dark header band rather than the white email body.
+  const headerContent = teamBranding?.logoUrl
+    ? `<img src="${baseUrl}${teamBranding.logoUrl}" alt="${teamName}" style="max-height: 64px; max-width: 80%;" />`
+    : `<span style="color: #ffffff; font-size: 22px; font-weight: bold; letter-spacing: 1px;">${teamName}</span>`;
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
-      <p style="font-size: 16px; margin-bottom: 20px;">Welcome to <strong>setups.overcutacademy.com</strong>!</p>
-
-      <p style="font-size: 14px; margin-bottom: 5px;">Here are your credentials:</p>
-
-      <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
-        <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${managerEmail}</p>
-        <p style="margin: 4px 0; font-size: 14px;"><strong>Password:</strong> ${password}</p>
+      <div style="background-color: ${primaryColor}; height: 6px; border-radius: 8px 8px 0 0;"></div>
+      <div style="background-color: #0b0b0f; padding: 28px 24px; text-align: center;">
+        ${headerContent}
       </div>
 
-      <p style="margin: 20px 0;">
-        <a href="${loginUrl}" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-          Click here to login and create your own password
-        </a>
-      </p>
+      <div style="padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <p style="font-size: 16px; margin: 0 0 20px;">Welcome! You've been added as a manager for <strong>${teamName}</strong> on <strong>setups.overcutacademy.com</strong>.</p>
 
-      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+        <p style="font-size: 14px; margin-bottom: 5px;">Here are your credentials:</p>
 
-      <p style="font-size: 14px; margin-bottom: 4px;"><strong>Lucas Nogueira</strong> — Founder</p>
-      <img src="https://setups.overcutacademy.com/overcut-logo.png" alt="Overcut Academy" style="height: 40px; margin: 8px 0;" />
-      <p style="font-size: 12px; color: #6b7280;">www.overcutacademy.com</p>
+        <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${managerEmail}</p>
+          <p style="margin: 4px 0; font-size: 14px;"><strong>Password:</strong> ${password}</p>
+        </div>
+
+        <p style="margin: 20px 0;">
+          <a href="${loginUrl}" style="background-color: ${primaryColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+            Click here to login and create your own password
+          </a>
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+
+        <p style="font-size: 14px; margin-bottom: 4px;"><strong>Lucas Nogueira</strong> — Founder</p>
+        <span style="display: inline-block; background-color: #0b0b0f; border-radius: 8px; padding: 8px 14px;">
+          <img src="${baseUrl}/overcut-academy-logo.png" alt="Overcut Academy" style="height: 36px; display: block;" />
+        </span>
+        <p style="font-size: 12px; color: #6b7280;">www.overcutacademy.com</p>
+      </div>
     </div>
   `;
 
   try {
     const cleanEmail = managerEmail.trim().toLowerCase();
+    const fromName = teamBranding?.emailFromName || 'Overcut Academy';
 
     const { data, error } = await resend.emails.send({
-      from: `Overcut Academy <setup@overcutacademy.com>`,
+      from: `${fromName} <setup@overcutacademy.com>`,
       to: cleanEmail,
       subject: `Welcome to ${teamName} Setups — Your Manager Credentials`,
       html: htmlContent,

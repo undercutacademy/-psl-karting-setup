@@ -423,9 +423,9 @@ router.post('/', async (req, res) => {
           teamManagers.forEach((m) => managerEmails.add(m.email.trim().toLowerCase()));
         }
 
-        // In production, strip every superadmin email from recipients — superadmins
-        // shouldn't receive customer notifications. In dev, keep them so we can test.
         if (process.env.NODE_ENV === 'production') {
+          // In production, only the team's managers get notified. Strip every
+          // superadmin email — superadmins shouldn't receive customer notifications.
           const superadmins = await prisma.user.findMany({
             where: { isSuperAdmin: true },
             select: { email: true },
@@ -433,12 +433,9 @@ router.post('/', async (req, res) => {
           for (const sa of superadmins) {
             managerEmails.delete(sa.email.trim().toLowerCase());
           }
-        }
-
-        // Add default manager email if set. Added after the superadmin strip:
-        // setting MANAGER_EMAIL is an explicit opt-in to receive all notifications,
-        // even if that address is also a superadmin account.
-        if (process.env.MANAGER_EMAIL) {
+        } else if (process.env.MANAGER_EMAIL) {
+          // In dev, also send to MANAGER_EMAIL so local testing is observable
+          // without a real team manager configured.
           managerEmails.add(process.env.MANAGER_EMAIL.trim().toLowerCase());
         }
 

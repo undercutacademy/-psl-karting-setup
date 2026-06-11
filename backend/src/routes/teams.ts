@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { prisma } from '../lib/prisma';
 import { requireManager, requireOwner, AuthRequest } from '../middleware/auth';
 import { sendManagerWelcomeEmail } from '../services/emailService';
 
@@ -17,7 +17,6 @@ function generateManagerPassword(): { plain: string; hashed: string } {
 }
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Default form configuration (used when team doesn't have custom config)
 const DEFAULT_FORM_CONFIG = {
@@ -355,7 +354,11 @@ router.post('/:slug/managers', requireManager, requireOwner, async (req: AuthReq
         // Send welcome email (fire-and-forget, don't fail the request)
         let emailWarning = '';
         try {
-            await sendManagerWelcomeEmail(normalizedEmail, plainPassword, slug, team.name);
+            await sendManagerWelcomeEmail(normalizedEmail, plainPassword, slug, team.name, {
+                logoUrl: team.logoUrl,
+                primaryColor: team.primaryColor,
+                emailFromName: team.emailFromName,
+            });
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
             emailWarning = ' (welcome email failed to send)';
@@ -479,7 +482,11 @@ router.post('/:slug/managers/:userId/resend-access', requireManager, requireOwne
 
         let emailWarning = '';
         try {
-            await sendManagerWelcomeEmail(target.email, plainPassword, slug, team.name);
+            await sendManagerWelcomeEmail(target.email, plainPassword, slug, team.name, {
+                logoUrl: team.logoUrl,
+                primaryColor: team.primaryColor,
+                emailFromName: team.emailFromName,
+            });
         } catch (emailError) {
             console.error('Failed to send resend-access email:', emailError);
             emailWarning = ' (email failed to send)';

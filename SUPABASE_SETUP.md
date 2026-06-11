@@ -51,7 +51,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=lucasnogueira48@gmail.com
 SMTP_PASS=Overcut@7748
-MANAGER_EMAIL=pslkartingdata@gmail.com
+MANAGER_EMAIL=overcutacademy@gmail.com
 ```
 
 **Important**: 
