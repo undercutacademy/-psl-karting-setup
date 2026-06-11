@@ -46,15 +46,16 @@ export async function fetchCurrentWeather(): Promise<WeatherData | null> {
   }
 }
 
-// "24.3 °C · 62% · 1013 hPa" from whichever readings are present; '' if none.
-export function formatConditions(s: {
-  weatherTempC?: number | null;
-  weatherPressureHpa?: number | null;
-  weatherHumidityPct?: number | null;
-}): string {
-  const parts: string[] = [];
-  if (s.weatherTempC != null) parts.push(`${s.weatherTempC.toFixed(1)} °C`);
-  if (s.weatherHumidityPct != null) parts.push(`${Math.round(s.weatherHumidityPct)}%`);
-  if (s.weatherPressureHpa != null) parts.push(`${Math.round(s.weatherPressureHpa)} hPa`);
-  return parts.join(' · ');
+// Value formatters shared by the form card and the detail view. Pressure is
+// displayed in mbar — numerically identical to the stored hPa value.
+export function formatTemp(tempC?: number | null): string | null {
+  return tempC != null ? `${tempC.toFixed(1)} °C` : null;
+}
+
+export function formatHumidity(humidityPct?: number | null): string | null {
+  return humidityPct != null ? `${Math.round(humidityPct)}%` : null;
+}
+
+export function formatPressure(pressureHpa?: number | null): string | null {
+  return pressureHpa != null ? `${Math.round(pressureHpa)} mbar` : null;
 }

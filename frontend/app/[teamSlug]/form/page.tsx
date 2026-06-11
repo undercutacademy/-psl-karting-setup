@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 import { getLastSubmissionByEmail, createSubmission, getTeamConfig } from '@/lib/api';
-import { fetchCurrentWeather, formatConditions, WeatherData } from '@/lib/weather';
+import { fetchCurrentWeather, formatTemp, formatHumidity, formatPressure, WeatherData } from '@/lib/weather';
 import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
@@ -311,6 +311,18 @@ export default function FormPage() {
     const parts = cleanValue.split('.');
     const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : cleanValue;
     setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
+  };
+
+  const handleLapTimeChange = (value: string) => {
+    // Lap time accepts plain seconds ("64.456") or minute notation
+    // ("1:04.456" / "1:04:456" — both separators work before the millis).
+    let cleanValue = value.replace(/,/g, '.').replace(/[^0-9.:]/g, '');
+    // Decimal-only mobile keyboards have no colon key, so a second dot acts
+    // as the minute separator: 1.04.456 → 1:04.456.
+    if (!cleanValue.includes(':') && (cleanValue.match(/\./g) || []).length >= 2) {
+      cleanValue = cleanValue.replace('.', ':');
+    }
+    setFormData(prev => ({ ...prev, lapTime: cleanValue }));
   };
 
   // Matches the server cap (500 KB string ≈ 375 KB binary). Aggressive client
@@ -1500,19 +1512,26 @@ export default function FormPage() {
                       {t.detectingConditions}
                     </span>
                   )}
-                  {weatherStatus === 'done' && weather && (
-                    <span className="font-bold text-white">
-                      {formatConditions({
-                        weatherTempC: weather.tempC,
-                        weatherPressureHpa: weather.pressureHpa,
-                        weatherHumidityPct: weather.humidityPct,
-                      })}
-                    </span>
-                  )}
                   {weatherStatus === 'unavailable' && (
                     <span className="text-sm text-gray-500">{t.conditionsUnavailable}</span>
                   )}
                 </div>
+                {weatherStatus === 'done' && weather && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="text-center">
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.temperature}</div>
+                      <div className="mt-1 font-bold text-white">{formatTemp(weather.tempC)}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.humidity}</div>
+                      <div className="mt-1 font-bold text-white">{formatHumidity(weather.humidityPct)}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.pressure}</div>
+                      <div className="mt-1 font-bold text-white">{formatPressure(weather.pressureHpa)}</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1593,9 +1612,9 @@ export default function FormPage() {
                   type="text"
                   inputMode="decimal"
                   value={formData.lapTime || ''}
-                  onChange={(e) => handleNumberChange('lapTime', e.target.value)}
+                  onChange={(e) => handleLapTimeChange(e.target.value)}
                   className={inputClass}
-                  placeholder="e.g., 45.123"
+                  placeholder="e.g., 64.456 or 1:04.456"
                 />
               </div>
               <div>

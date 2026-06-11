@@ -2,7 +2,7 @@ import PDFDocument from 'pdfkit';
 import { Submission } from '@prisma/client';
 import path from 'path';
 import fs from 'fs';
-import { formatConditions } from '../lib/weather';
+import { formatTemp, formatHumidity, formatPressure } from '../lib/weather';
 
 // Team branding info passed to PDF generation
 interface TeamBranding {
@@ -39,7 +39,9 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     setupSheet: 'SETUP SHEET',
     generated: 'Generated',
     generalInfo: 'General Information',
-    conditions: 'Conditions',
+    temperature: 'Temperature',
+    humidity: 'Humidity',
+    pressure: 'Pressure',
     championship: 'Championship',
     division: 'Division',
     classCode: 'Class Code',
@@ -79,7 +81,9 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     setupSheet: 'FICHA DE CONFIGURAÇÃO',
     generated: 'Gerado',
     generalInfo: 'Informações Gerais',
-    conditions: 'Condições',
+    temperature: 'Temperatura',
+    humidity: 'Umidade',
+    pressure: 'Pressão',
     championship: 'Campeonato',
     division: 'Categoria',
     classCode: 'Código da Classe',
@@ -119,7 +123,9 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     setupSheet: 'HOJA DE CONFIGURACIÓN',
     generated: 'Generado',
     generalInfo: 'Información General',
-    conditions: 'Condiciones',
+    temperature: 'Temperatura',
+    humidity: 'Humedad',
+    pressure: 'Presión',
     championship: 'Campeonato',
     division: 'Categoría',
     classCode: 'Código de Clase',
@@ -295,9 +301,17 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
     yPos = drawSectionHeader(t.generalInfo, yPos);
     yPos = drawDataRow(t.championship, submission.championship, t.division, submission.division, yPos);
     yPos = drawDataRow(t.classCode, submission.classCode, t.session, submission.sessionType, yPos);
-    const conditions = formatConditions(submission);
-    if (conditions) {
-      yPos = drawDataRow(t.conditions, conditions, '', '', yPos);
+    if (
+      submission.weatherTempC != null ||
+      submission.weatherHumidityPct != null ||
+      submission.weatherPressureHpa != null
+    ) {
+      yPos = drawDataRow(
+        t.temperature, formatTemp(submission.weatherTempC) || '-',
+        t.humidity, formatHumidity(submission.weatherHumidityPct) || '-',
+        yPos
+      );
+      yPos = drawDataRow(t.pressure, formatPressure(submission.weatherPressureHpa) || '-', '', '', yPos);
     }
     yPos += 5;
 

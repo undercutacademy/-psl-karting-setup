@@ -7,7 +7,7 @@ import { Submission } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
 import { TRACK_LAYOUTS, getTrackLayoutImage, getTrackLayoutName } from '@/lib/trackLayouts';
-import { formatConditions } from '@/lib/weather';
+import { formatTemp, formatHumidity, formatPressure } from '@/lib/weather';
 
 // Styling classes for consistent look
 const labelClass = "text-sm font-bold text-black uppercase tracking-wide";
@@ -182,10 +182,22 @@ export default function ViewSubmissionPage() {
                     : '-'}
                 </p>
               </div>
-              {formatConditions(submission) && (
+              {submission.weatherTempC != null && (
                 <div>
-                  <p className={labelClass}>{t.trackConditions}</p>
-                  <p className={valueClass}>{formatConditions(submission)}</p>
+                  <p className={labelClass}>{t.temperature}</p>
+                  <p className={valueClass}>{formatTemp(submission.weatherTempC)}</p>
+                </div>
+              )}
+              {submission.weatherHumidityPct != null && (
+                <div>
+                  <p className={labelClass}>{t.humidity}</p>
+                  <p className={valueClass}>{formatHumidity(submission.weatherHumidityPct)}</p>
+                </div>
+              )}
+              {submission.weatherPressureHpa != null && (
+                <div>
+                  <p className={labelClass}>{t.pressure}</p>
+                  <p className={valueClass}>{formatPressure(submission.weatherPressureHpa)}</p>
                 </div>
               )}
             </div>

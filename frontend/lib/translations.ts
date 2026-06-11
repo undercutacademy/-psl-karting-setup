@@ -60,6 +60,9 @@ export const TRANSLATIONS = {
         trackConditions: 'Track Conditions',
         detectingConditions: 'Detecting conditions...',
         conditionsUnavailable: 'Conditions unavailable',
+        temperature: 'Temperature',
+        humidity: 'Humidity',
+        pressure: 'Pressure',
 
         // Buttons & UI
         nextStep: 'Next Step',
@@ -205,6 +208,9 @@ export const TRANSLATIONS = {
         trackConditions: 'Condiciones de Pista',
         detectingConditions: 'Detectando condiciones...',
         conditionsUnavailable: 'Condiciones no disponibles',
+        temperature: 'Temperatura',
+        humidity: 'Humedad',
+        pressure: 'Presión',
 
         // Buttons & UI
         nextStep: 'Siguiente',
@@ -350,6 +356,9 @@ export const TRANSLATIONS = {
         trackConditions: 'Condições da Pista',
         detectingConditions: 'Detectando condições...',
         conditionsUnavailable: 'Condições indisponíveis',
+        temperature: 'Temperatura',
+        humidity: 'Umidade',
+        pressure: 'Pressão',
 
         // Buttons & UI
         nextStep: 'Próxima Etapa',
@@ -495,6 +504,9 @@ export const TRANSLATIONS = {
         trackConditions: 'Condizioni della Pista',
         detectingConditions: 'Rilevamento condizioni...',
         conditionsUnavailable: 'Condizioni non disponibili',
+        temperature: 'Temperatura',
+        humidity: 'Umidità',
+        pressure: 'Pressione',
 
         // Buttons & UI
         nextStep: 'Prossimo Passo',

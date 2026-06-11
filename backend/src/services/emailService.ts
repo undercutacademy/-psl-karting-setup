@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { Submission, Team } from '@prisma/client';
-import { formatConditions } from '../lib/weather';
+import { formatTemp, formatHumidity, formatPressure } from '../lib/weather';
 
 // Initialize Resend with API key
 const resendApiKey = process.env.RESEND_API_KEY;
@@ -64,10 +64,15 @@ function buildSubmissionNotificationHtml(
     `
     : '';
 
-  const conditions = formatConditions(submission);
-  const conditionsLine = conditions
-    ? `<div><strong>Conditions:</strong> ${conditions}</div>`
-    : '';
+  const weatherEntries: Array<[string, string | null]> = [
+    ['Temperature', formatTemp(submission.weatherTempC)],
+    ['Humidity', formatHumidity(submission.weatherHumidityPct)],
+    ['Pressure', formatPressure(submission.weatherPressureHpa)],
+  ];
+  const conditionsLine = weatherEntries
+    .filter(([, value]) => value)
+    .map(([label, value]) => `<div><strong>${label}:</strong> ${value}</div>`)
+    .join('');
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #1f2937;">

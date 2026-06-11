@@ -16,7 +16,8 @@ setup.
 |---|---|
 | Capture UX | Visible to the driver, auto-filled, **read-only** (no manual editing) |
 | Location denied / unavailable | Skip weather, submit normally (fields stay null) |
-| Units | Metric everywhere: °C, hPa, % |
+| Units | Metric everywhere: °C, mbar, % (pressure stored as hPa — numerically identical to mbar) |
+| Display format | Labeled values on every surface — Temperature / Humidity / Pressure as named rows, not a combined string (revised 2026-06-10 after first browser test) |
 | Architecture | **Approach A** — frontend fetches Open-Meteo directly, values submitted with the form, backend validates and stores |
 | Weather provider | Open-Meteo (`api.open-meteo.com/v1/forecast`), free, no API key, CORS-enabled |
 | Pressure variable | `surface_pressure` (station-level at track elevation), **not** sea-level corrected — carburation cares about actual air density |
