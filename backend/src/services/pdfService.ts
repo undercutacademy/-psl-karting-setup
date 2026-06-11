@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import { Submission } from '@prisma/client';
 import path from 'path';
 import fs from 'fs';
+import { formatConditions } from '../lib/weather';
 
 // Team branding info passed to PDF generation
 interface TeamBranding {
@@ -38,6 +39,7 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     setupSheet: 'SETUP SHEET',
     generated: 'Generated',
     generalInfo: 'General Information',
+    conditions: 'Conditions',
     championship: 'Championship',
     division: 'Division',
     classCode: 'Class Code',
@@ -77,6 +79,7 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     setupSheet: 'FICHA DE CONFIGURAÇÃO',
     generated: 'Gerado',
     generalInfo: 'Informações Gerais',
+    conditions: 'Condições',
     championship: 'Campeonato',
     division: 'Categoria',
     classCode: 'Código da Classe',
@@ -116,6 +119,7 @@ const PDF_TRANSLATIONS: Record<string, Record<string, string>> = {
     setupSheet: 'HOJA DE CONFIGURACIÓN',
     generated: 'Generado',
     generalInfo: 'Información General',
+    conditions: 'Condiciones',
     championship: 'Campeonato',
     division: 'Categoría',
     classCode: 'Código de Clase',
@@ -291,6 +295,10 @@ export function generateSubmissionPDF(submission: Submission, userName: string, 
     yPos = drawSectionHeader(t.generalInfo, yPos);
     yPos = drawDataRow(t.championship, submission.championship, t.division, submission.division, yPos);
     yPos = drawDataRow(t.classCode, submission.classCode, t.session, submission.sessionType, yPos);
+    const conditions = formatConditions(submission);
+    if (conditions) {
+      yPos = drawDataRow(t.conditions, conditions, '', '', yPos);
+    }
     yPos += 5;
 
     // Track Layout Image (if available)

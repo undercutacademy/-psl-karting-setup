@@ -7,6 +7,7 @@ import { Submission } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
 import { TRACK_LAYOUTS, getTrackLayoutImage, getTrackLayoutName } from '@/lib/trackLayouts';
+import { formatConditions } from '@/lib/weather';
 
 // Styling classes for consistent look
 const labelClass = "text-sm font-bold text-black uppercase tracking-wide";
@@ -181,6 +182,12 @@ export default function ViewSubmissionPage() {
                     : '-'}
                 </p>
               </div>
+              {formatConditions(submission) && (
+                <div>
+                  <p className={labelClass}>{t.trackConditions}</p>
+                  <p className={valueClass}>{formatConditions(submission)}</p>
+                </div>
+              )}
             </div>
           </div>
 

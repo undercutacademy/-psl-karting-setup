@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { Submission, Team } from '@prisma/client';
+import { formatConditions } from '../lib/weather';
 
 // Initialize Resend with API key
 const resendApiKey = process.env.RESEND_API_KEY;
@@ -63,6 +64,11 @@ function buildSubmissionNotificationHtml(
     `
     : '';
 
+  const conditions = formatConditions(submission);
+  const conditionsLine = conditions
+    ? `<div><strong>Conditions:</strong> ${conditions}</div>`
+    : '';
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #1f2937;">
       <div style="background-color: ${primary}; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -79,6 +85,7 @@ function buildSubmissionNotificationHtml(
           <div><strong>Track:</strong> ${val(submission.track)}</div>
           <div><strong>Championship:</strong> ${val(submission.championship)}</div>
           <div><strong>Division:</strong> ${val(submission.division)}</div>
+          ${conditionsLine}
         </div>
 
         <!-- Engine Setup -->
