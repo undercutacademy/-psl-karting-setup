@@ -185,6 +185,9 @@ model Submission {
   sessionLaps       String?
   customData        Json?             // Team-specific field values
   dashSummaryPhoto  String?           // Optional dash summary photo (base64 data URL, JPEG)
+  weatherTempC       Float?           // Auto-captured at submit: air temperature, °C
+  weatherPressureHpa Float?           // Auto-captured at submit: surface pressure at track elevation, hPa
+  weatherHumidityPct Float?           // Auto-captured at submit: relative humidity, %
   isFavorite        Boolean           @default(false)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
