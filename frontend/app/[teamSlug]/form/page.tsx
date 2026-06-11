@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 import { getLastSubmissionByEmail, createSubmission, getTeamConfig } from '@/lib/api';
+import { fetchCurrentWeather, formatConditions, WeatherData } from '@/lib/weather';
 import { Submission, SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@/types/submission';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
@@ -139,6 +140,11 @@ export default function FormPage() {
   const [pressureLF, setPressureLF] = useState('');
   const [pressureRR, setPressureRR] = useState('');
   const [pressureLR, setPressureLR] = useState('');
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherStatus, setWeatherStatus] = useState<'idle' | 'loading' | 'done' | 'unavailable'>('idle');
+  // The capture must fire exactly once even if the driver navigates back
+  // and forth between steps.
+  const weatherRequestedRef = useRef(false);
 
   // Mapping of field names to their measurement guide SVG images
   const MEASUREMENT_GUIDE_IMAGES: Record<string, string> = {
@@ -211,6 +217,19 @@ export default function FormPage() {
         });
     }
   }, [teamSlug]);
+
+  // Capture conditions once, when the driver first reaches the final step.
+  // Both paths land on step 5 (the full form and the "setup unchanged" skip),
+  // so every submission gets a capture attempt.
+  useEffect(() => {
+    if (currentStep !== 5 || weatherRequestedRef.current) return;
+    weatherRequestedRef.current = true;
+    setWeatherStatus('loading');
+    fetchCurrentWeather().then((data) => {
+      setWeather(data);
+      setWeatherStatus(data ? 'done' : 'unavailable');
+    });
+  }, [currentStep]);
 
   // Dynamic dropdown options from team config or region defaults
   const regionKey = teamConfig?.region || 'NorthAmerica';
@@ -391,6 +410,12 @@ export default function FormPage() {
       }
 
       submissionData.customData = customData;
+
+      // Always overwrite with the fresh capture (or null) — formData may
+      // carry stale weather prefilled from the driver's previous submission.
+      submissionData.weatherTempC = weather?.tempC ?? null;
+      submissionData.weatherPressureHpa = weather?.pressureHpa ?? null;
+      submissionData.weatherHumidityPct = weather?.humidityPct ?? null;
 
       // Append the layout name to the track cleanly for the database
       if (selectedLayout && submissionData.track && TRACK_LAYOUTS[submissionData.track]) {
@@ -691,7 +716,7 @@ export default function FormPage() {
                         onChange={(e) => setFirstName(e.target.value)}
                         required
                         className={inputClass}
-                        placeholder={teamSlug === 'hotz' ? 'Josh' : 'John'}
+                        placeholder={teamSlug === 'hotz' ? 'Josh' : teamSlug === 'rpg' ? 'Mike' : 'John'}
                       />
                     </div>
                     <div>
@@ -702,7 +727,7 @@ export default function FormPage() {
                         onChange={(e) => setLastName(e.target.value)}
                         required
                         className={inputClass}
-                        placeholder={teamSlug === 'hotz' ? 'Hotz' : 'Speed'}
+                        placeholder={teamSlug === 'hotz' ? 'Hotz' : teamSlug === 'rpg' ? 'Rolison' : 'Speed'}
                       />
                     </div>
                   </div>
@@ -1465,6 +1490,30 @@ export default function FormPage() {
                   <p className="text-green-400 font-semibold">✓ {t.usingPrevious}</p>
                 </div>
               )}
+
+              <div className="rounded-xl border-2 border-gray-700 bg-gray-800/50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className={labelClass}>🌤 {t.trackConditions}</span>
+                  {weatherStatus === 'loading' && (
+                    <span className="flex items-center gap-2 text-sm text-gray-400">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent"></span>
+                      {t.detectingConditions}
+                    </span>
+                  )}
+                  {weatherStatus === 'done' && weather && (
+                    <span className="font-bold text-white">
+                      {formatConditions({
+                        weatherTempC: weather.tempC,
+                        weatherPressureHpa: weather.pressureHpa,
+                        weatherHumidityPct: weather.humidityPct,
+                      })}
+                    </span>
+                  )}
+                  {weatherStatus === 'unavailable' && (
+                    <span className="text-sm text-gray-500">{t.conditionsUnavailable}</span>
+                  )}
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

@@ -57,6 +57,9 @@ export const TRANSLATIONS = {
         photoAttached: 'Photo attached',
         photoError: 'Could not process this photo — please try again.',
         photoTooLarge: 'Photo too large — please try a different shot.',
+        trackConditions: 'Track Conditions',
+        detectingConditions: 'Detecting conditions...',
+        conditionsUnavailable: 'Conditions unavailable',
 
         // Buttons & UI
         nextStep: 'Next Step',
@@ -199,6 +202,9 @@ export const TRANSLATIONS = {
         photoAttached: 'Foto adjuntada',
         photoError: 'No se pudo procesar esta foto — intenta de nuevo.',
         photoTooLarge: 'Foto demasiado grande — prueba con otra imagen.',
+        trackConditions: 'Condiciones de Pista',
+        detectingConditions: 'Detectando condiciones...',
+        conditionsUnavailable: 'Condiciones no disponibles',
 
         // Buttons & UI
         nextStep: 'Siguiente',
@@ -341,6 +347,9 @@ export const TRANSLATIONS = {
         photoAttached: 'Foto anexada',
         photoError: 'Não foi possível processar esta foto — tente novamente.',
         photoTooLarge: 'Foto muito grande — tente outra imagem.',
+        trackConditions: 'Condições da Pista',
+        detectingConditions: 'Detectando condições...',
+        conditionsUnavailable: 'Condições indisponíveis',
 
         // Buttons & UI
         nextStep: 'Próxima Etapa',
@@ -483,6 +492,9 @@ export const TRANSLATIONS = {
         photoAttached: 'Foto allegata',
         photoError: 'Impossibile elaborare questa foto — riprova.',
         photoTooLarge: 'Foto troppo grande — prova con un\'altra immagine.',
+        trackConditions: 'Condizioni della Pista',
+        detectingConditions: 'Rilevamento condizioni...',
+        conditionsUnavailable: 'Condizioni non disponibili',
 
         // Buttons & UI
         nextStep: 'Prossimo Passo',
