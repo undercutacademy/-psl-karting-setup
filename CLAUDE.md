@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Multi-team karting setup management app. Drivers fill out a setup form (engine, tyres, chassis, etc.) keyed by email; managers see submissions per team in a dashboard with PDF export and per-team configuration. Originally PSL Karting only — now serves multiple teams (PSL, TKG BirelArt, GPM/EmiliaKart, Prime Powerteam, Bravar Sports, HOTZ Driver Development, Demo) under a single deployment, distinguished by URL slug.
+Multi-team karting setup management app. Drivers fill out a setup form (engine, tyres, chassis, etc.) keyed by email; managers see submissions per team in a dashboard with PDF export and per-team configuration. Originally PSL Karting only — now serves multiple teams (PSL, TKG BirelArt, GPM/EmiliaKart, Prime Powerteam, Bravar Sports, HOTZ Driver Development, RPG, Demo) under a single deployment, distinguished by URL slug.
 
 Two halves of the codebase, deployed separately:
 - **`frontend/`** — Next.js 16 App Router, React 19, Tailwind v4. Deployed to Netlify (`netlify.toml`). Single page app — every route lives under `app/[teamSlug]/...` so the team slug is part of every URL.
@@ -38,6 +38,8 @@ start_app.bat
 ```
 
 The backend has a `postinstall` that runs `prisma generate`, so `npm install` is enough to get a working Prisma client. If you see "PrismaClient has no exported member", run `npx prisma generate` from `backend/`.
+
+**`backend/dist/` is committed to git** (the deploy host runs `node dist/server.js` from the repo). After changing backend source, run `npm run build` from `backend/` and commit the regenerated `dist/` alongside your `src/` changes — otherwise the deployed backend won't pick them up.
 
 ## Architecture: the team-slug model
 
@@ -79,11 +81,14 @@ Some fields are gated by **division name pattern**, not config: `SHIFTER_DIVISIO
 3. Submit → `POST /api/submissions` creates/upserts the user (per email per team) and inserts the submission. Email notifications fire via Resend (`services/emailService.ts`) — both confirmation to driver and notification to all addresses in `team.managerEmails`. If a `dashSummaryPhoto` (base64 data URL) is included, it's inlined as a `cid:` image in the manager email and attached to the PDF.
 4. Manager opens dashboard → `GET /api/submissions?teamSlug=...` returns the list (photo stripped). Detail view + PDF refetch the photo on demand.
 
+**Weather capture**: on the final form step the client fetches current conditions (temp, humidity, surface pressure) from Open-Meteo using device geolocation (`frontend/lib/weather.ts`). It returns `null` on *any* failure — weather never blocks a submission. The backend range-validates via `normalizeWeatherFields` (`backend/src/lib/weather.ts`): out-of-range values become `null`, absent keys stay absent so PUT doesn't clobber stored values. Weather shows in the detail view, PDF, and manager email — always as labeled name + value + unit, with pressure in **mbar** (numerically identical to the stored hPa).
+
 The dash photo size cap is enforced in two places: the client compresses with `browser-image-compression` to ~300 KB, and the route rejects strings >500 KB with HTTP 413. The body size limit is 1 MB at the Express layer (`server.ts`). If you need to raise the photo limit, raise both the Express limit and `DASH_SUMMARY_PHOTO_MAX_LENGTH`.
 
 ## Database & migrations
 
-- Postgres on Supabase. `DATABASE_URL` (pooled) and optional `DIRECT_URL` (direct, for migrations) in `backend/.env`.
+- Postgres on Supabase. `DATABASE_URL` (pooled) and optional `DIRECT_URL` (direct, for migrations) in `backend/.env`. Production `DATABASE_URL` must use the **transaction pooler (port 6543)** — the session pooler (5432) caps at 15 clients and exhausts under load.
+- **One Prisma client for the whole process**: import `prisma` from `backend/src/lib/prisma.ts`. Never `new PrismaClient()` in a route — per-route clients each open a pool and exhaust Supabase's pooler ("max clients reached in session mode" 500s).
 - Schema is in `backend/prisma/schema.prisma`. Lots of enums for setup choices (SessionType, ClassCode, Spindle, etc.) — adding a new option means a Prisma migration.
 - Migrations are committed under `backend/prisma/migrations/`. Always create new ones with `npx prisma migrate dev --name <description>` rather than editing existing ones.
 - Many `backend/src/scripts/*.ts` files are one-off seed/admin tasks (create a team, add tracks to a region, sync managerEmails). Run them with `npx ts-node src/scripts/<name>.ts`. Most are not idempotent — read the script before running.
@@ -91,6 +96,9 @@ The dash photo size cap is enforced in two places: the client compresses with `b
 ## Email
 
 Uses **Resend** (`RESEND_API_KEY`), not Nodemailer SMTP, despite what the older `README.md` says. The README's SMTP_USER/SMTP_PASS section is stale documentation — the actual sender is `services/emailService.ts` and it imports `resend`. Outgoing manager emails iterate over `team.managerEmails`; that list is mirrored when managers are added/removed via the team routes.
+
+- The `MANAGER_EMAIL` env var is a **dev-only** fallback notification target. In production only `team.managerEmails` are notified (superadmin addresses are stripped).
+- Manager welcome emails are team-branded: team logo, `team.primaryColor` accents, and `team.emailFromName` as the sender name.
 
 ## Frontend conventions
 
@@ -122,5 +130,7 @@ Uses **Resend** (`RESEND_API_KEY`), not Nodemailer SMTP, despite what the older 
 | Team CRUD + form-config defaults | [backend/src/routes/teams.ts](backend/src/routes/teams.ts) |
 | Manager auth + access resolution | [backend/src/middleware/auth.ts](backend/src/middleware/auth.ts) |
 | Email (Resend) + PDF rendering | [backend/src/services/emailService.ts](backend/src/services/emailService.ts), [backend/src/services/pdfService.ts](backend/src/services/pdfService.ts) |
+| Shared Prisma client | [backend/src/lib/prisma.ts](backend/src/lib/prisma.ts) |
+| Weather fetch (client) / validation + formatters (server) | [frontend/lib/weather.ts](frontend/lib/weather.ts), [backend/src/lib/weather.ts](backend/src/lib/weather.ts) |
 | Schema + migrations | [backend/prisma/schema.prisma](backend/prisma/schema.prisma), [backend/prisma/migrations/](backend/prisma/migrations/) |
 | iPhone testing guide | [Plans/testing-on-iphone.md](Plans/testing-on-iphone.md) |
