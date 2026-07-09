@@ -29,8 +29,8 @@ router.post('/manager/login', async (req, res) => {
             where: { email },
             include: { team: true },
         });
-        if (!user || !user.isManager) {
-            return res.status(401).json({ error: 'Unauthorized: Manager access required' });
+        if (!user || (!user.isManager && !user.isDriver)) {
+            return res.status(401).json({ error: 'Unauthorized: Access required' });
         }
         // Verify password
         if (!user.password || !verifyPassword(password, user.password)) {
@@ -56,6 +56,8 @@ router.post('/manager/login', async (req, res) => {
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName,
+                isManager: user.isManager,
+                isDriver: user.isDriver,
                 isSuperAdmin: user.isSuperAdmin,
                 isOwner: user.isOwner,
                 teamId: user.teamId,
@@ -83,7 +85,7 @@ router.get('/manager/check/:email', async (req, res) => {
     }
 });
 // Change password (for first-login password change and general use)
-router.put('/manager/change-password', auth_1.requireManager, async (req, res) => {
+router.put('/manager/change-password', auth_1.requireDashboardUser, async (req, res) => {
     try {
         const { email, currentPassword, newPassword } = req.body;
         if (!email || !currentPassword || !newPassword) {

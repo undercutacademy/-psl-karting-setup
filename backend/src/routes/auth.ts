@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { requireManager, AuthRequest } from '../middleware/auth';
+import { requireManager, requireDashboardUser, AuthRequest } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 
 const router = Router();
@@ -32,8 +32,8 @@ router.post('/manager/login', async (req, res) => {
       include: { team: true },
     });
 
-    if (!user || !user.isManager) {
-      return res.status(401).json({ error: 'Unauthorized: Manager access required' });
+    if (!user || (!user.isManager && !user.isDriver)) {
+      return res.status(401).json({ error: 'Unauthorized: Access required' });
     }
 
     // Verify password
@@ -64,6 +64,8 @@ router.post('/manager/login', async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        isManager: user.isManager,
+        isDriver: user.isDriver,
         isSuperAdmin: user.isSuperAdmin,
         isOwner: user.isOwner,
         teamId: user.teamId,
@@ -92,7 +94,7 @@ router.get('/manager/check/:email', async (req, res) => {
 });
 
 // Change password (for first-login password change and general use)
-router.put('/manager/change-password', requireManager, async (req: AuthRequest, res) => {
+router.put('/manager/change-password', requireDashboardUser, async (req: AuthRequest, res) => {
   try {
     const { email, currentPassword, newPassword } = req.body;
 

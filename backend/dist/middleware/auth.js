@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireManager = requireManager;
+exports.requireDashboardUser = requireDashboardUser;
 exports.isSuperuserAccessActive = isSuperuserAccessActive;
 exports.resolveSubmissionAccess = resolveSubmissionAccess;
 exports.requireOwner = requireOwner;
@@ -23,6 +24,7 @@ async function requireManager(req, res, next) {
             id: user.id,
             email: user.email,
             isManager: user.isManager,
+            isDriver: user.isDriver,
             isSuperAdmin: user.isSuperAdmin,
             isOwner: user.isOwner,
             teamId: user.teamId,
@@ -31,6 +33,38 @@ async function requireManager(req, res, next) {
     }
     catch (error) {
         console.error('Error in manager auth middleware:', error);
+        res.status(500).json({ error: 'Authentication error' });
+    }
+}
+// Accepts managers OR drivers. Drivers get per-submission access decided by
+// resolveSubmissionAccess ('own') in the route.
+async function requireDashboardUser(req, res, next) {
+    try {
+        const email = req.headers['x-manager-email'];
+        if (!email) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+        const user = await prisma_1.prisma.user.findUnique({
+            where: { email },
+        });
+        if (!user || (!user.isManager && !user.isDriver)) {
+            res.status(403).json({ error: 'Dashboard access required' });
+            return;
+        }
+        req.user = {
+            id: user.id,
+            email: user.email,
+            isManager: user.isManager,
+            isDriver: user.isDriver,
+            isSuperAdmin: user.isSuperAdmin,
+            isOwner: user.isOwner,
+            teamId: user.teamId,
+        };
+        next();
+    }
+    catch (error) {
+        console.error('Error in dashboard auth middleware:', error);
         res.status(500).json({ error: 'Authentication error' });
     }
 }
@@ -44,6 +78,8 @@ function resolveSubmissionAccess(user, team) {
         return 'full';
     if (user.isSuperAdmin)
         return isSuperuserAccessActive(team) ? 'full' : 'list';
+    if (user.isDriver && user.teamId === team.id)
+        return 'own';
     return 'none';
 }
 /**

@@ -7,6 +7,7 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     isManager: boolean;
+    isDriver: boolean;
     isSuperAdmin: boolean;
     isOwner: boolean;
     teamId: string | null;
@@ -39,6 +40,7 @@ export async function requireManager(
       id: user.id,
       email: user.email,
       isManager: user.isManager,
+      isDriver: user.isDriver,
       isSuperAdmin: user.isSuperAdmin,
       isOwner: user.isOwner,
       teamId: user.teamId,
@@ -51,7 +53,48 @@ export async function requireManager(
   }
 }
 
-export type SubmissionAccessLevel = 'full' | 'list' | 'none';
+// Accepts managers OR drivers. Drivers get per-submission access decided by
+// resolveSubmissionAccess ('own') in the route.
+export async function requireDashboardUser(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const email = req.headers['x-manager-email'] as string;
+
+    if (!email) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user || (!user.isManager && !user.isDriver)) {
+      res.status(403).json({ error: 'Dashboard access required' });
+      return;
+    }
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      isManager: user.isManager,
+      isDriver: user.isDriver,
+      isSuperAdmin: user.isSuperAdmin,
+      isOwner: user.isOwner,
+      teamId: user.teamId,
+    };
+
+    next();
+  } catch (error) {
+    console.error('Error in dashboard auth middleware:', error);
+    res.status(500).json({ error: 'Authentication error' });
+  }
+}
+
+export type SubmissionAccessLevel = 'full' | 'list' | 'own' | 'none';
 
 export function isSuperuserAccessActive(team: Pick<Team, 'superuserAccessExpiresAt'>): boolean {
   return !!team.superuserAccessExpiresAt && team.superuserAccessExpiresAt.getTime() > Date.now();
@@ -64,6 +107,7 @@ export function resolveSubmissionAccess(
   if (!user) return 'none';
   if (user.isManager && user.teamId === team.id) return 'full';
   if (user.isSuperAdmin) return isSuperuserAccessActive(team) ? 'full' : 'list';
+  if (user.isDriver && user.teamId === team.id) return 'own';
   return 'none';
 }
 
