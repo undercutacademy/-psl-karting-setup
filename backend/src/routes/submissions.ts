@@ -4,7 +4,7 @@ import fs from 'fs';
 import { SessionType, RearHubsMaterial, FrontHeight, BackHeight, FrontHubsMaterial, FrontBar, Spindle, FrontWheelType } from '@prisma/client';
 import { sendUserConfirmationEmail, sendManagerNotificationEmail, sendManagerNotificationEmailBatch } from '../services/emailService';
 import { generateSubmissionPDF } from '../services/pdfService';
-import { requireManager, resolveSubmissionAccess, AuthRequest } from '../middleware/auth';
+import { requireManager, requireDashboardUser, resolveSubmissionAccess, AuthRequest } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 import { normalizeWeatherFields } from '../lib/weather';
 
@@ -168,7 +168,7 @@ function transformSubmissionData(data: any): any {
 }
 
 // Get all submissions for a team
-router.get('/', requireManager, async (req: AuthRequest, res) => {
+router.get('/', requireDashboardUser, async (req: AuthRequest, res) => {
   try {
     const { teamSlug } = req.query;
 
@@ -192,6 +192,8 @@ router.get('/', requireManager, async (req: AuthRequest, res) => {
     const submissions = await prisma.submission.findMany({
       where: {
         teamId: team.id,
+        // Drivers only ever see their own submissions.
+        ...(accessLevel === 'own' ? { userId: req.user!.id } : {}),
       },
       // Exclude dashSummaryPhoto from list responses — it can be hundreds
       // of KB per row and is only needed on the detail view / PDF.
@@ -241,7 +243,7 @@ router.get('/last/:email', async (req, res) => {
 });
 
 // Get submission by ID
-router.get('/:id', requireManager, async (req: AuthRequest, res) => {
+router.get('/:id', requireDashboardUser, async (req: AuthRequest, res) => {
   try {
     const id = req.params.id as string;
     const submission = await prisma.submission.findUnique({
@@ -258,7 +260,8 @@ router.get('/:id', requireManager, async (req: AuthRequest, res) => {
     }
 
     const accessLevel = resolveSubmissionAccess(req.user, submission.team);
-    if (accessLevel !== 'full') {
+    const isOwn = accessLevel === 'own' && submission.userId === req.user!.id;
+    if (accessLevel !== 'full' && !isOwn) {
       return res.status(403).json({
         error: accessLevel === 'list' ? 'superuser_access_disabled' : 'Not authorized for this team',
       });
@@ -473,7 +476,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update submission
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireDashboardUser, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { firstName, lastName, userEmail, email, teamSlug, ...submissionData } = req.body;
@@ -484,11 +487,29 @@ router.put('/:id', async (req, res) => {
     // Get current submission to check existing user
     const currentSubmission = await prisma.submission.findUnique({
       where: { id },
-      include: { user: true },
+      include: { user: true, team: true },
     });
 
     if (!currentSubmission) {
       return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (!currentSubmission.team) {
+      return res.status(404).json({ error: 'Submission has no team' });
+    }
+
+    const accessLevel = resolveSubmissionAccess(req.user, currentSubmission.team);
+    const isOwn = accessLevel === 'own' && currentSubmission.userId === req.user!.id;
+    if (accessLevel !== 'full' && !isOwn) {
+      return res.status(403).json({ error: 'Not authorized to edit this submission' });
+    }
+
+    // Drivers cannot reassign a setup to a different email/user.
+    if (isOwn) {
+      const requestedEmail = (userEmail || email || '').trim().toLowerCase();
+      if (requestedEmail && requestedEmail !== currentSubmission.user.email.toLowerCase()) {
+        return res.status(403).json({ error: 'Drivers cannot reassign setups to another driver' });
+      }
     }
 
     let updatedUserId = currentSubmission.userId;
@@ -587,10 +608,24 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete single submission
-router.delete('/:id', async (req, res) => {
+// Delete single submission (managers with full team access only)
+router.delete('/:id', requireManager, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
+
+    const submission = await prisma.submission.findUnique({
+      where: { id },
+      include: { team: true },
+    });
+
+    if (!submission || !submission.team) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    if (resolveSubmissionAccess(req.user, submission.team) !== 'full') {
+      return res.status(403).json({ error: 'Not authorized to delete submissions for this team' });
+    }
+
     await prisma.submission.delete({
       where: { id },
     });
@@ -603,7 +638,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Bulk delete submissions
-router.post('/bulk-delete', async (req, res) => {
+router.post('/bulk-delete', requireManager, async (req: AuthRequest, res) => {
   try {
     const { ids, teamSlug } = req.body;
 
@@ -621,6 +656,10 @@ router.post('/bulk-delete', async (req, res) => {
 
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
+    }
+
+    if (resolveSubmissionAccess(req.user, team) !== 'full') {
+      return res.status(403).json({ error: 'Not authorized to delete submissions for this team' });
     }
 
     const result = await prisma.submission.deleteMany({
