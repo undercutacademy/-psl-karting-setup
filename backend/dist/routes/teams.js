@@ -219,7 +219,7 @@ router.get('/', async (req, res) => {
     }
 });
 // Update team configuration
-router.put('/:slug/config', async (req, res) => {
+router.put('/:slug/config', auth_1.requireManager, async (req, res) => {
     try {
         const slug = req.params.slug;
         const { customLabels, formConfig: newFormConfig } = req.body;
@@ -459,6 +459,202 @@ router.post('/:slug/managers/:userId/resend-access', auth_1.requireManager, auth
     }
     catch (error) {
         console.error('Error resending access:', error);
+        res.status(500).json({ error: 'Failed to resend access' });
+    }
+});
+// ---- Driver accounts (any manager of the team) -------------------------
+// Drivers can log in to the dashboard and see/edit only their own setups.
+// They are never added to team.managerEmails, so they get no notifications.
+// Managers of this team only (requireManager alone also passes managers of
+// OTHER teams and superadmins, so check membership explicitly).
+function canManageDrivers(user, teamId) {
+    if (!user)
+        return false;
+    return user.isSuperAdmin || (user.isManager && user.teamId === teamId);
+}
+// Add a driver: find-or-create the user by email (drivers usually already
+// exist from form submissions), grant login, email credentials.
+router.post('/:slug/drivers', auth_1.requireManager, async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const { email, firstName, lastName } = req.body;
+        if (!email || !firstName || !lastName) {
+            return res.status(400).json({ error: 'Email, first name, and last name are required' });
+        }
+        const team = await prisma_1.prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+        if (!canManageDrivers(req.user, team.id)) {
+            return res.status(403).json({ error: 'Not authorized for this team' });
+        }
+        const normalizedEmail = email.trim().toLowerCase();
+        const existingUser = await prisma_1.prisma.user.findUnique({ where: { email: normalizedEmail } });
+        if (existingUser?.isManager) {
+            return res.status(409).json({ error: 'This email belongs to a manager and already has full access.' });
+        }
+        if (existingUser?.teamId && existingUser.teamId !== team.id) {
+            return res.status(409).json({ error: 'This email is registered on another team.' });
+        }
+        if (existingUser?.isDriver && existingUser.teamId === team.id) {
+            return res.status(409).json({ error: 'This email is already a driver on this team. Use "Resend" to send new credentials.' });
+        }
+        const { plain: plainPassword, hashed: hashedPassword } = generateManagerPassword();
+        const driver = existingUser
+            ? await prisma_1.prisma.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    firstName: firstName.trim(),
+                    lastName: lastName.trim(),
+                    password: hashedPassword,
+                    isDriver: true,
+                    mustChangePassword: true,
+                    teamId: team.id,
+                },
+            })
+            : await prisma_1.prisma.user.create({
+                data: {
+                    email: normalizedEmail,
+                    firstName: firstName.trim(),
+                    lastName: lastName.trim(),
+                    password: hashedPassword,
+                    isDriver: true,
+                    mustChangePassword: true,
+                    teamId: team.id,
+                },
+            });
+        let emailWarning = '';
+        try {
+            await (0, emailService_1.sendManagerWelcomeEmail)(normalizedEmail, plainPassword, slug, team.name, {
+                logoUrl: team.logoUrl,
+                primaryColor: team.primaryColor,
+                emailFromName: team.emailFromName,
+                role: 'driver',
+            });
+        }
+        catch (emailError) {
+            console.error('Failed to send driver welcome email:', emailError);
+            emailWarning = ' (welcome email failed to send)';
+        }
+        res.status(201).json({
+            success: true,
+            message: `Driver added successfully${emailWarning}`,
+            driver: {
+                id: driver.id,
+                email: driver.email,
+                firstName: driver.firstName,
+                lastName: driver.lastName,
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error adding driver:', error);
+        res.status(500).json({ error: 'Failed to add driver' });
+    }
+});
+// List drivers for a team
+router.get('/:slug/drivers', auth_1.requireManager, async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const team = await prisma_1.prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+        if (!canManageDrivers(req.user, team.id)) {
+            return res.status(403).json({ error: 'Not authorized for this team' });
+        }
+        const drivers = await prisma_1.prisma.user.findMany({
+            where: { teamId: team.id, isDriver: true },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                mustChangePassword: true,
+                createdAt: true,
+            },
+            orderBy: { createdAt: 'asc' },
+        });
+        res.json({ drivers });
+    }
+    catch (error) {
+        console.error('Error listing drivers:', error);
+        res.status(500).json({ error: 'Failed to list drivers' });
+    }
+});
+// Remove a driver: revoke login only. The user row and all submissions stay
+// visible to managers; the driver just can't log in anymore.
+router.delete('/:slug/drivers/:userId', auth_1.requireManager, async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const userId = req.params.userId;
+        const team = await prisma_1.prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+        if (!canManageDrivers(req.user, team.id)) {
+            return res.status(403).json({ error: 'Not authorized for this team' });
+        }
+        const target = await prisma_1.prisma.user.findUnique({ where: { id: userId } });
+        if (!target || target.teamId !== team.id || !target.isDriver) {
+            return res.status(404).json({ error: 'Driver not found on this team' });
+        }
+        await prisma_1.prisma.user.update({
+            where: { id: target.id },
+            data: {
+                isDriver: false,
+                password: null,
+                mustChangePassword: false,
+            },
+        });
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error('Error removing driver:', error);
+        res.status(500).json({ error: 'Failed to remove driver' });
+    }
+});
+// Resend driver access (regenerate password + re-send welcome email)
+router.post('/:slug/drivers/:userId/resend-access', auth_1.requireManager, async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const userId = req.params.userId;
+        const team = await prisma_1.prisma.team.findUnique({ where: { slug } });
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+        if (!canManageDrivers(req.user, team.id)) {
+            return res.status(403).json({ error: 'Not authorized for this team' });
+        }
+        const target = await prisma_1.prisma.user.findUnique({ where: { id: userId } });
+        if (!target || target.teamId !== team.id || !target.isDriver) {
+            return res.status(404).json({ error: 'Driver not found on this team' });
+        }
+        const { plain: plainPassword, hashed: hashedPassword } = generateManagerPassword();
+        await prisma_1.prisma.user.update({
+            where: { id: target.id },
+            data: {
+                password: hashedPassword,
+                mustChangePassword: true,
+            },
+        });
+        let emailWarning = '';
+        try {
+            await (0, emailService_1.sendManagerWelcomeEmail)(target.email, plainPassword, slug, team.name, {
+                logoUrl: team.logoUrl,
+                primaryColor: team.primaryColor,
+                emailFromName: team.emailFromName,
+                role: 'driver',
+            });
+        }
+        catch (emailError) {
+            console.error('Failed to send driver resend-access email:', emailError);
+            emailWarning = ' (email failed to send)';
+        }
+        res.json({ success: true, message: `New password emailed to ${target.email}${emailWarning}` });
+    }
+    catch (error) {
+        console.error('Error resending driver access:', error);
         res.status(500).json({ error: 'Failed to resend access' });
     }
 });
