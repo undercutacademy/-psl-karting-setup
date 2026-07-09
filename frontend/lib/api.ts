@@ -1,9 +1,9 @@
 import { Submission, User } from '@/types/submission';
-import { TeamConfig, TeamInfo, TeamManager, SuperuserAccessDuration } from '@/types/team';
+import { TeamConfig, TeamInfo, TeamManager, TeamDriver, SuperuserAccessDuration } from '@/types/team';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
-export type SubmissionAccessLevel = 'full' | 'list';
+export type SubmissionAccessLevel = 'full' | 'list' | 'own';
 
 function managerAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {};
@@ -71,6 +71,9 @@ export async function getAllSubmissions(
       headers: managerAuthHeaders(),
     });
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new UnauthorizedError();
+      }
       throw new Error('Failed to fetch submissions');
     }
     return await response.json();
@@ -86,6 +89,13 @@ export class SuperuserAccessDisabledError extends Error {
   constructor() {
     super('superuser_access_disabled');
     this.name = 'SuperuserAccessDisabledError';
+  }
+}
+
+export class UnauthorizedError extends Error {
+  constructor() {
+    super('unauthorized');
+    this.name = 'UnauthorizedError';
   }
 }
 
@@ -153,6 +163,7 @@ export async function updateTeamConfig(teamSlug: string, configData: Partial<Tea
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...managerAuthHeaders(),
       },
       body: JSON.stringify(configData),
     });
@@ -239,6 +250,63 @@ export async function resendManagerAccess(
 ): Promise<{ success: boolean; message: string }> {
   const response = await fetch(
     `${API_URL}/teams/${encodeURIComponent(teamSlug)}/managers/${encodeURIComponent(userId)}/resend-access`,
+    { method: 'POST', headers: managerAuthHeaders() }
+  );
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to resend access');
+  }
+  return data;
+}
+
+export async function addTeamDriver(
+  teamSlug: string,
+  driverData: { email: string; firstName: string; lastName: string }
+): Promise<{ success: boolean; message: string; driver?: { id: string; email: string; firstName: string; lastName: string } }> {
+  const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/drivers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...managerAuthHeaders(),
+    },
+    body: JSON.stringify(driverData),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to add driver');
+  }
+  return data;
+}
+
+export async function listTeamDrivers(teamSlug: string): Promise<TeamDriver[]> {
+  const response = await fetch(`${API_URL}/teams/${encodeURIComponent(teamSlug)}/drivers`, {
+    headers: managerAuthHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to load drivers');
+  }
+  return data.drivers as TeamDriver[];
+}
+
+export async function deleteTeamDriver(teamSlug: string, userId: string): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/teams/${encodeURIComponent(teamSlug)}/drivers/${encodeURIComponent(userId)}`,
+    { method: 'DELETE', headers: managerAuthHeaders() }
+  );
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to remove driver');
+  }
+}
+
+export async function resendDriverAccess(
+  teamSlug: string,
+  userId: string
+): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(
+    `${API_URL}/teams/${encodeURIComponent(teamSlug)}/drivers/${encodeURIComponent(userId)}/resend-access`,
     { method: 'POST', headers: managerAuthHeaders() }
   );
   const data = await response.json();

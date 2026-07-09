@@ -40,6 +40,15 @@ export interface TeamManager {
     createdAt: string;
 }
 
+export interface TeamDriver {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    mustChangePassword: boolean;
+    createdAt: string;
+}
+
 export interface TeamInfo {
     id: string;
     slug: string;
