@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllSubmissions, updateSubmission, getTeamConfig, SubmissionAccessLevel } from '@/lib/api';
+import { getAllSubmissions, updateSubmission, getTeamConfig, SubmissionAccessLevel, UnauthorizedError } from '@/lib/api';
 import { TeamConfig } from '@/types/team';
 import { TRANSLATIONS, Language } from '@/lib/translations';
 
@@ -91,6 +91,12 @@ export default function ManagerDashboard() {
       setFilteredSubmissions(data.submissions);
       setAccessLevel(data.accessLevel);
     } catch (error: any) {
+      if (error instanceof UnauthorizedError) {
+        localStorage.removeItem('managerEmail');
+        localStorage.removeItem('managerUser');
+        router.push(`/${teamSlug}/manager/login`);
+        return;
+      }
       console.error('Error loading submissions:', error);
       alert(error.message || 'Failed to load submissions. Please try again.');
     } finally {
@@ -219,11 +225,13 @@ export default function ManagerDashboard() {
     console.log("User confirmed deletion. Starting request...");
     setDeleting(true);
     try {
+      const managerEmail = typeof window !== 'undefined' ? localStorage.getItem('managerEmail') || '' : '';
       const response = await fetch(`${API_URL}/submissions/bulk-delete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          ...(managerEmail ? { 'x-manager-email': managerEmail } : {}),
         },
         body: JSON.stringify({ ids: Array.from(selectedIds), teamSlug }),
       });
@@ -421,18 +429,20 @@ export default function ManagerDashboard() {
                   <span>📊</span>
                   {t.exportCSV} ({selectedIds.size})
                 </button>
-                <button
-                  onClick={promptBulkDelete}
-                  disabled={deleting}
-                  className="px-4 py-2 rounded-lg bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  {deleting ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  ) : (
-                    <span>🗑️</span>
-                  )}
-                  {t.deleteSelected} ({selectedIds.size})
-                </button>
+                {accessLevel !== 'own' && (
+                  <button
+                    onClick={promptBulkDelete}
+                    disabled={deleting}
+                    className="px-4 py-2 rounded-lg bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {deleting ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    ) : (
+                      <span>🗑️</span>
+                    )}
+                    {t.deleteSelected} ({selectedIds.size})
+                  </button>
+                )}
               </>
             )}
             <div
@@ -669,26 +679,28 @@ export default function ManagerDashboard() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleView(submission.id)}
-                              disabled={accessLevel !== 'full'}
-                              title={accessLevel !== 'full' ? 'This team has not granted superuser access' : undefined}
+                              disabled={accessLevel === 'list'}
+                              title={accessLevel === 'list' ? 'This team has not granted superuser access' : undefined}
                               className="px-3 py-1 rounded-lg bg-white/10 text-white font-semibold text-sm hover:bg-white/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                             >
-                              {accessLevel !== 'full' && <span>🔒</span>}
+                              {accessLevel === 'list' && <span>🔒</span>}
                               {t.view}
                             </button>
-                            <button
-                              onClick={() => handleExportPDF(submission.id)}
-                              disabled={accessLevel !== 'full'}
-                              title={accessLevel !== 'full' ? 'This team has not granted superuser access' : undefined}
-                              className="px-3 py-1 rounded-lg font-semibold text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                              style={{ backgroundColor: `${primaryColor}33`, color: primaryColor }}
-                            >
-                              PDF
-                            </button>
+                            {accessLevel !== 'own' && (
+                              <button
+                                onClick={() => handleExportPDF(submission.id)}
+                                disabled={accessLevel === 'list'}
+                                title={accessLevel === 'list' ? 'This team has not granted superuser access' : undefined}
+                                className="px-3 py-1 rounded-lg font-semibold text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: `${primaryColor}33`, color: primaryColor }}
+                              >
+                                PDF
+                              </button>
+                            )}
                             <button
                               onClick={() => handleEdit(submission.id)}
-                              disabled={accessLevel !== 'full'}
-                              title={accessLevel !== 'full' ? 'This team has not granted superuser access' : undefined}
+                              disabled={accessLevel === 'list'}
+                              title={accessLevel === 'list' ? 'This team has not granted superuser access' : undefined}
                               className="px-3 py-1 rounded-lg bg-gray-700 text-gray-300 font-semibold text-sm hover:bg-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {t.edit}

@@ -17,6 +17,7 @@ export default function ManagerLayout({
   const teamSlug = params.teamSlug as string;
   const { config: teamConfig } = useTeamConfig(teamSlug);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isDriver, setIsDriver] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Determine the expected login path for this team
@@ -38,6 +39,7 @@ export default function ManagerLayout({
       // Check if user must change password
       try {
         const managerUser = JSON.parse(managerUserStr);
+        setIsDriver(managerUser.isDriver === true && managerUser.isManager !== true);
         if (managerUser.mustChangePassword && pathname !== changePasswordPath) {
           router.push(changePasswordPath);
           return;
@@ -103,7 +105,7 @@ export default function ManagerLayout({
               </Link>
               <div className="hidden md:block">
                 <span className="text-lg font-bold text-white uppercase tracking-wider">
-                  Manager <span style={{ color: teamConfig?.primaryColor || '#ef4444' }}>Portal</span>
+                  {isDriver ? 'Driver' : 'Manager'} <span style={{ color: teamConfig?.primaryColor || '#ef4444' }}>Portal</span>
                 </span>
               </div>
             </div>
@@ -114,12 +116,14 @@ export default function ManagerLayout({
               >
                 📊 Dashboard
               </Link>
-              <Link
-                href={`/${teamSlug}/manager/settings`}
-                className={`text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors ${pathname === `/${teamSlug}/manager/settings` ? 'bg-gray-800 text-white' : ''}`}
-              >
-                ⚙️ Settings
-              </Link>
+              {!isDriver && (
+                <Link
+                  href={`/${teamSlug}/manager/settings`}
+                  className={`text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors ${pathname === `/${teamSlug}/manager/settings` ? 'bg-gray-800 text-white' : ''}`}
+                >
+                  ⚙️ Settings
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors"
