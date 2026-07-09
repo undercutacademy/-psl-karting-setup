@@ -243,6 +243,9 @@ router.put('/:slug/config', requireManager, async (req: AuthRequest, res) => {
         if (!team) {
             return res.status(404).json({ error: 'Team not found' });
         }
+        if (!isTeamManagerOrSuperadmin(req.user, team.id)) {
+            return res.status(403).json({ error: 'Not authorized for this team' });
+        }
 
         const updatedTeam = await prisma.team.update({
             where: { slug },
@@ -506,7 +509,7 @@ router.post('/:slug/managers/:userId/resend-access', requireManager, requireOwne
 
 // Managers of this team only (requireManager alone also passes managers of
 // OTHER teams and superadmins, so check membership explicitly).
-function canManageDrivers(user: AuthRequest['user'], teamId: string): boolean {
+function isTeamManagerOrSuperadmin(user: AuthRequest['user'], teamId: string): boolean {
     if (!user) return false;
     return user.isSuperAdmin || (user.isManager && user.teamId === teamId);
 }
@@ -526,7 +529,7 @@ router.post('/:slug/drivers', requireManager, async (req: AuthRequest, res) => {
         if (!team) {
             return res.status(404).json({ error: 'Team not found' });
         }
-        if (!canManageDrivers(req.user, team.id)) {
+        if (!isTeamManagerOrSuperadmin(req.user, team.id)) {
             return res.status(403).json({ error: 'Not authorized for this team' });
         }
 
@@ -606,7 +609,7 @@ router.get('/:slug/drivers', requireManager, async (req: AuthRequest, res) => {
         if (!team) {
             return res.status(404).json({ error: 'Team not found' });
         }
-        if (!canManageDrivers(req.user, team.id)) {
+        if (!isTeamManagerOrSuperadmin(req.user, team.id)) {
             return res.status(403).json({ error: 'Not authorized for this team' });
         }
 
@@ -640,7 +643,7 @@ router.delete('/:slug/drivers/:userId', requireManager, async (req: AuthRequest,
         if (!team) {
             return res.status(404).json({ error: 'Team not found' });
         }
-        if (!canManageDrivers(req.user, team.id)) {
+        if (!isTeamManagerOrSuperadmin(req.user, team.id)) {
             return res.status(403).json({ error: 'Not authorized for this team' });
         }
 
@@ -674,7 +677,7 @@ router.post('/:slug/drivers/:userId/resend-access', requireManager, async (req: 
         if (!team) {
             return res.status(404).json({ error: 'Team not found' });
         }
-        if (!canManageDrivers(req.user, team.id)) {
+        if (!isTeamManagerOrSuperadmin(req.user, team.id)) {
             return res.status(403).json({ error: 'Not authorized for this team' });
         }
 
