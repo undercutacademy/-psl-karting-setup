@@ -182,7 +182,7 @@ router.get('/', auth_1.requireDashboardUser, async (req, res) => {
             // of KB per row and is only needed on the detail view / PDF.
             omit: { dashSummaryPhoto: true },
             include: {
-                user: true,
+                user: { omit: { password: true } },
             },
             orderBy: {
                 createdAt: 'desc',
@@ -212,7 +212,7 @@ router.get('/last/:email', async (req, res) => {
                 team: { slug: teamSlug },
             },
             omit: { dashSummaryPhoto: true },
-            include: { user: true },
+            include: { user: { omit: { password: true } } },
             orderBy: { createdAt: 'desc' },
         });
         res.json(submission);
@@ -228,7 +228,10 @@ router.get('/:id', auth_1.requireDashboardUser, async (req, res) => {
         const id = req.params.id;
         const submission = await prisma_1.prisma.submission.findUnique({
             where: { id },
-            include: { user: true, team: true },
+            include: {
+                user: { omit: { password: true } },
+                team: { select: { id: true, superuserAccessExpiresAt: true } },
+            },
         });
         if (!submission) {
             return res.status(404).json({ error: 'Submission not found' });
@@ -243,7 +246,8 @@ router.get('/:id', auth_1.requireDashboardUser, async (req, res) => {
                 error: accessLevel === 'list' ? 'superuser_access_disabled' : 'Not authorized for this team',
             });
         }
-        res.json(submission);
+        const { team: _team, ...submissionResponse } = submission;
+        res.json(submissionResponse);
     }
     catch (error) {
         console.error('Error fetching submission:', error);
@@ -357,8 +361,8 @@ router.post('/', async (req, res) => {
                 teamId: team.id,
             },
             include: {
-                user: true,
-                team: true,
+                user: { omit: { password: true } },
+                team: { select: { id: true, slug: true, name: true } },
             },
         });
         // Send response immediately - don't wait for email
@@ -403,7 +407,11 @@ router.post('/', async (req, res) => {
                 // Send a single batch email to all managers instead of individual emails
                 // This helps avoid Resend free tier limitations on per-recipient verification
                 try {
-                    await (0, emailService_1.sendManagerNotificationEmailBatch)(Array.from(managerEmails), `${user.firstName} ${user.lastName}`, submission);
+                    await (0, emailService_1.sendManagerNotificationEmailBatch)(Array.from(managerEmails), `${user.firstName} ${user.lastName}`, 
+                    // Email branding needs the full team row (primaryColor, slug,
+                    // emailFromName); the API response above only carries a narrow
+                    // team select, so re-attach the route-level team here.
+                    { ...submission, team });
                     console.log(`✅ Batch notification sent successfully to ${managerEmails.size} managers`);
                 }
                 catch (emailError) {
@@ -532,7 +540,7 @@ router.put('/:id', auth_1.requireDashboardUser, async (req, res) => {
                 ...(photoProvided ? { dashSummaryPhoto: normalizedPhoto } : {}),
                 userId: updatedUserId,
             },
-            include: { user: true },
+            include: { user: { omit: { password: true } } },
         });
         res.json(submission);
     }

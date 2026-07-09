@@ -199,7 +199,7 @@ router.get('/', requireDashboardUser, async (req: AuthRequest, res) => {
       // of KB per row and is only needed on the detail view / PDF.
       omit: { dashSummaryPhoto: true },
       include: {
-        user: true,
+        user: { omit: { password: true } },
       },
       orderBy: {
         createdAt: 'desc',
@@ -231,7 +231,7 @@ router.get('/last/:email', async (req, res) => {
         team: { slug: teamSlug },
       },
       omit: { dashSummaryPhoto: true },
-      include: { user: true },
+      include: { user: { omit: { password: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -248,7 +248,10 @@ router.get('/:id', requireDashboardUser, async (req: AuthRequest, res) => {
     const id = req.params.id as string;
     const submission = await prisma.submission.findUnique({
       where: { id },
-      include: { user: true, team: true },
+      include: {
+        user: { omit: { password: true } },
+        team: { select: { id: true, superuserAccessExpiresAt: true } },
+      },
     });
 
     if (!submission) {
@@ -267,7 +270,8 @@ router.get('/:id', requireDashboardUser, async (req: AuthRequest, res) => {
       });
     }
 
-    res.json(submission);
+    const { team: _team, ...submissionResponse } = submission;
+    res.json(submissionResponse);
   } catch (error) {
     console.error('Error fetching submission:', error);
     res.status(500).json({ error: 'Failed to fetch submission' });
@@ -398,8 +402,8 @@ router.post('/', async (req, res) => {
         teamId: team.id,
       },
       include: {
-        user: true,
-        team: true,
+        user: { omit: { password: true } },
+        team: { select: { id: true, slug: true, name: true } },
       },
     });
 
@@ -451,7 +455,10 @@ router.post('/', async (req, res) => {
           await sendManagerNotificationEmailBatch(
             Array.from(managerEmails),
             `${user.firstName} ${user.lastName}`,
-            submission
+            // Email branding needs the full team row (primaryColor, slug,
+            // emailFromName); the API response above only carries a narrow
+            // team select, so re-attach the route-level team here.
+            { ...submission, team }
           );
           console.log(`✅ Batch notification sent successfully to ${managerEmails.size} managers`);
         } catch (emailError: any) {
@@ -598,7 +605,7 @@ router.put('/:id', requireDashboardUser, async (req: AuthRequest, res) => {
         ...(photoProvided ? { dashSummaryPhoto: normalizedPhoto } : {}),
         userId: updatedUserId,
       },
-      include: { user: true },
+      include: { user: { omit: { password: true } } },
     });
 
     res.json(submission);

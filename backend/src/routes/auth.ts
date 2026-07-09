@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { requireManager, requireDashboardUser, AuthRequest } from '../middleware/auth';
+import { requireDashboardUser, AuthRequest } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 
 const router = Router();

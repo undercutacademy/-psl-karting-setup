@@ -635,7 +635,8 @@ export default function ManagerDashboard() {
                             />
                             <button
                               onClick={(e) => toggleFavorite(e, submission)}
-                              className="focus:outline-none transition-transform hover:scale-110"
+                              disabled={accessLevel === 'list'}
+                              className="focus:outline-none transition-transform hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                               {submission.isFavorite ? (
                                 <span className="text-xl">⭐</span>
