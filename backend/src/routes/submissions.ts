@@ -485,7 +485,7 @@ router.post('/', async (req, res) => {
 // Update submission
 router.put('/:id', requireDashboardUser, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { firstName, lastName, userEmail, email, teamSlug, ...submissionData } = req.body;
 
     // Normalize email field name (support both 'userEmail' and 'email')
@@ -618,7 +618,7 @@ router.put('/:id', requireDashboardUser, async (req: AuthRequest, res) => {
 // Delete single submission (managers with full team access only)
 router.delete('/:id', requireManager, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const submission = await prisma.submission.findUnique({
       where: { id },
