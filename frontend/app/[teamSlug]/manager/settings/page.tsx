@@ -53,11 +53,12 @@ export default function ManagerSettings() {
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [isOwner, setIsOwner] = useState(false);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const [newManagerEmail, setNewManagerEmail] = useState('');
-    const [newManagerFirstName, setNewManagerFirstName] = useState('');
-    const [newManagerLastName, setNewManagerLastName] = useState('');
-    const [addingManager, setAddingManager] = useState(false);
-    const [addManagerMessage, setAddManagerMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [newMemberEmail, setNewMemberEmail] = useState('');
+    const [newMemberFirstName, setNewMemberFirstName] = useState('');
+    const [newMemberLastName, setNewMemberLastName] = useState('');
+    const [newMemberRole, setNewMemberRole] = useState<'manager' | 'driver'>('driver');
+    const [addingMember, setAddingMember] = useState(false);
+    const [addMemberMessage, setAddMemberMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     // Superuser access toggle state
     const [superuserExpiresAt, setSuperuserExpiresAt] = useState<string | null>(null);
@@ -66,22 +67,13 @@ export default function ManagerSettings() {
     const [superuserMessage, setSuperuserMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [now, setNow] = useState<number>(Date.now());
 
-    // Managers list
+    // Team members: managers (visible to owner/superadmin only) + drivers (visible to any manager)
     const [managers, setManagers] = useState<TeamManager[]>([]);
     const [managersLoading, setManagersLoading] = useState(false);
-    const [managerActionId, setManagerActionId] = useState<string | null>(null);
-    const [managerListMessage, setManagerListMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-    // Drivers list (manageable by any manager)
     const [drivers, setDrivers] = useState<TeamDriver[]>([]);
     const [driversLoading, setDriversLoading] = useState(false);
-    const [driverActionId, setDriverActionId] = useState<string | null>(null);
-    const [driverListMessage, setDriverListMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const [newDriverEmail, setNewDriverEmail] = useState('');
-    const [newDriverFirstName, setNewDriverFirstName] = useState('');
-    const [newDriverLastName, setNewDriverLastName] = useState('');
-    const [addingDriver, setAddingDriver] = useState(false);
-    const [addDriverMessage, setAddDriverMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [memberActionId, setMemberActionId] = useState<string | null>(null);
+    const [memberListMessage, setMemberListMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const canManageTeam = isOwner || isSuperAdmin;
     const superuserActive = !!superuserExpiresAt && new Date(superuserExpiresAt).getTime() > now;
@@ -112,30 +104,20 @@ export default function ManagerSettings() {
 
     // Auto-dismiss success messages after 5s so the page doesn't accumulate stale banners
     useEffect(() => {
-        if (managerListMessage?.type !== 'success') return;
-        const t = setTimeout(() => setManagerListMessage(null), 5000);
+        if (memberListMessage?.type !== 'success') return;
+        const t = setTimeout(() => setMemberListMessage(null), 5000);
         return () => clearTimeout(t);
-    }, [managerListMessage]);
+    }, [memberListMessage]);
     useEffect(() => {
         if (superuserMessage?.type !== 'success') return;
         const t = setTimeout(() => setSuperuserMessage(null), 5000);
         return () => clearTimeout(t);
     }, [superuserMessage]);
     useEffect(() => {
-        if (addManagerMessage?.type !== 'success') return;
-        const t = setTimeout(() => setAddManagerMessage(null), 5000);
+        if (addMemberMessage?.type !== 'success') return;
+        const t = setTimeout(() => setAddMemberMessage(null), 5000);
         return () => clearTimeout(t);
-    }, [addManagerMessage]);
-    useEffect(() => {
-        if (driverListMessage?.type !== 'success') return;
-        const t = setTimeout(() => setDriverListMessage(null), 5000);
-        return () => clearTimeout(t);
-    }, [driverListMessage]);
-    useEffect(() => {
-        if (addDriverMessage?.type !== 'success') return;
-        const t = setTimeout(() => setAddDriverMessage(null), 5000);
-        return () => clearTimeout(t);
-    }, [addDriverMessage]);
+    }, [addMemberMessage]);
 
     const loadManagers = async () => {
         if (!canManageTeam) return;
@@ -145,7 +127,7 @@ export default function ManagerSettings() {
             setManagers(list);
         } catch (err: any) {
             console.error('Error loading managers:', err);
-            setManagerListMessage({ type: 'error', text: err.message || 'Failed to load managers' });
+            setMemberListMessage({ type: 'error', text: err.message || 'Failed to load managers' });
         } finally {
             setManagersLoading(false);
         }
@@ -175,54 +157,31 @@ export default function ManagerSettings() {
 
     const handleResendAccess = async (manager: TeamManager) => {
         if (!confirm(`Send a new password to ${manager.email}? Their current password will stop working.`)) return;
-        setManagerActionId(manager.id);
-        setManagerListMessage(null);
+        setMemberActionId(manager.id);
+        setMemberListMessage(null);
         try {
             const res = await resendManagerAccess(teamSlug, manager.id);
-            setManagerListMessage({ type: 'success', text: res.message });
+            setMemberListMessage({ type: 'success', text: res.message });
             await loadManagers();
         } catch (err: any) {
-            setManagerListMessage({ type: 'error', text: err.message || 'Failed to resend access' });
+            setMemberListMessage({ type: 'error', text: err.message || 'Failed to resend access' });
         } finally {
-            setManagerActionId(null);
+            setMemberActionId(null);
         }
     };
 
     const handleDeleteManager = async (manager: TeamManager) => {
         if (!confirm(`Remove ${manager.firstName} ${manager.lastName} from this team? They will no longer be able to log in.`)) return;
-        setManagerActionId(manager.id);
-        setManagerListMessage(null);
+        setMemberActionId(manager.id);
+        setMemberListMessage(null);
         try {
             await deleteTeamManager(teamSlug, manager.id);
-            setManagerListMessage({ type: 'success', text: `${manager.email} removed.` });
+            setMemberListMessage({ type: 'success', text: `${manager.email} removed.` });
             await loadManagers();
         } catch (err: any) {
-            setManagerListMessage({ type: 'error', text: err.message || 'Failed to remove manager' });
+            setMemberListMessage({ type: 'error', text: err.message || 'Failed to remove manager' });
         } finally {
-            setManagerActionId(null);
-        }
-    };
-
-    const handleAddManager = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setAddingManager(true);
-        setAddManagerMessage(null);
-
-        try {
-            const result = await addTeamManager(teamSlug, {
-                email: newManagerEmail,
-                firstName: newManagerFirstName,
-                lastName: newManagerLastName,
-            });
-            setAddManagerMessage({ type: 'success', text: result.message });
-            setNewManagerEmail('');
-            setNewManagerFirstName('');
-            setNewManagerLastName('');
-            await loadManagers();
-        } catch (err: any) {
-            setAddManagerMessage({ type: 'error', text: err.message || 'Failed to add manager' });
-        } finally {
-            setAddingManager(false);
+            setMemberActionId(null);
         }
     };
 
@@ -233,7 +192,7 @@ export default function ManagerSettings() {
             setDrivers(list);
         } catch (err: any) {
             console.error('Error loading drivers:', err);
-            setDriverListMessage({ type: 'error', text: err.message || 'Failed to load drivers' });
+            setMemberListMessage({ type: 'error', text: err.message || 'Failed to load drivers' });
         } finally {
             setDriversLoading(false);
         }
@@ -245,56 +204,71 @@ export default function ManagerSettings() {
 
     const handleResendDriverAccess = async (driver: TeamDriver) => {
         if (!confirm(`Send a new password to ${driver.email}? Their current password will stop working.`)) return;
-        setDriverActionId(driver.id);
-        setDriverListMessage(null);
+        setMemberActionId(driver.id);
+        setMemberListMessage(null);
         try {
             const res = await resendDriverAccess(teamSlug, driver.id);
-            setDriverListMessage({ type: 'success', text: res.message });
+            setMemberListMessage({ type: 'success', text: res.message });
             await loadDrivers();
         } catch (err: any) {
-            setDriverListMessage({ type: 'error', text: err.message || 'Failed to resend access' });
+            setMemberListMessage({ type: 'error', text: err.message || 'Failed to resend access' });
         } finally {
-            setDriverActionId(null);
+            setMemberActionId(null);
         }
     };
 
     const handleDeleteDriver = async (driver: TeamDriver) => {
         if (!confirm(`Remove ${driver.firstName} ${driver.lastName}'s dashboard access? Their setups stay visible to managers, but they will no longer be able to log in.`)) return;
-        setDriverActionId(driver.id);
-        setDriverListMessage(null);
+        setMemberActionId(driver.id);
+        setMemberListMessage(null);
         try {
             await deleteTeamDriver(teamSlug, driver.id);
-            setDriverListMessage({ type: 'success', text: `${driver.email} removed.` });
+            setMemberListMessage({ type: 'success', text: `${driver.email} removed.` });
             await loadDrivers();
         } catch (err: any) {
-            setDriverListMessage({ type: 'error', text: err.message || 'Failed to remove driver' });
+            setMemberListMessage({ type: 'error', text: err.message || 'Failed to remove driver' });
         } finally {
-            setDriverActionId(null);
+            setMemberActionId(null);
         }
     };
 
-    const handleAddDriver = async (e: React.FormEvent) => {
+    const handleAddMember = async (e: React.FormEvent) => {
         e.preventDefault();
-        setAddingDriver(true);
-        setAddDriverMessage(null);
+        setAddingMember(true);
+        setAddMemberMessage(null);
 
         try {
-            const result = await addTeamDriver(teamSlug, {
-                email: newDriverEmail,
-                firstName: newDriverFirstName,
-                lastName: newDriverLastName,
-            });
-            setAddDriverMessage({ type: 'success', text: result.message });
-            setNewDriverEmail('');
-            setNewDriverFirstName('');
-            setNewDriverLastName('');
-            await loadDrivers();
+            const memberData = {
+                email: newMemberEmail,
+                firstName: newMemberFirstName,
+                lastName: newMemberLastName,
+            };
+            const result = newMemberRole === 'manager'
+                ? await addTeamManager(teamSlug, memberData)
+                : await addTeamDriver(teamSlug, memberData);
+            setAddMemberMessage({ type: 'success', text: result.message });
+            setNewMemberEmail('');
+            setNewMemberFirstName('');
+            setNewMemberLastName('');
+            if (newMemberRole === 'manager') await loadManagers();
+            else await loadDrivers();
         } catch (err: any) {
-            setAddDriverMessage({ type: 'error', text: err.message || 'Failed to add driver' });
+            setAddMemberMessage({ type: 'error', text: err.message || `Failed to add ${newMemberRole}` });
         } finally {
-            setAddingDriver(false);
+            setAddingMember(false);
         }
     };
+
+    // Combined rows for the Team Access card. Managers are only listed for
+    // owners/superadmins (the backend rejects the listing for anyone else).
+    type MemberRow =
+        | (TeamManager & { kind: 'manager' })
+        | (TeamDriver & { kind: 'driver' });
+    const members: MemberRow[] = [
+        ...(canManageTeam ? managers.map((m) => ({ ...m, kind: 'manager' as const })) : []),
+        ...drivers.map((d) => ({ ...d, kind: 'driver' as const })),
+    ];
+    const membersLoading = managersLoading || driversLoading;
 
     useEffect(() => {
         const savedLang = localStorage.getItem('preferred_language') as Language;
@@ -454,7 +428,7 @@ export default function ManagerSettings() {
 
     const primaryColor = config?.primaryColor || '#dc2626';
 
-    const floatingToast = managerListMessage?.type === 'success' ? managerListMessage : null;
+    const floatingToast = memberListMessage?.type === 'success' ? memberListMessage : null;
 
     return (
         <div className="min-h-[calc(100vh-64px)] relative overflow-hidden">
@@ -467,7 +441,7 @@ export default function ManagerSettings() {
                     </div>
                     <button
                         type="button"
-                        onClick={() => setManagerListMessage(null)}
+                        onClick={() => setMemberListMessage(null)}
                         className="text-green-200 hover:text-white text-lg leading-none"
                         aria-label="Dismiss"
                     >×</button>
@@ -766,207 +740,59 @@ export default function ManagerSettings() {
                     </div>
                 )}
 
-                {/* Managers list — owner or superadmin */}
-                {canManageTeam && (
-                    <div className="mt-8 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-xl p-6 sm:p-8">
-                        <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-wider flex items-center gap-2">
-                            <span>👥</span> Managers
-                        </h2>
-                        <p className="text-gray-400 mb-6 text-sm">
-                            Anyone with manager access can log in and view this team's dashboard. The owner can remove access or send a new password at any time.
-                        </p>
-
-                        {managerListMessage && (
-                            <div
-                                className={`rounded-xl border p-4 mb-6 ${managerListMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
-                            >
-                                {managerListMessage.text}
-                            </div>
-                        )}
-
-                        <div className="bg-gray-800/40 border border-gray-700 rounded-xl overflow-hidden">
-                            {managersLoading ? (
-                                <div className="p-6 text-center text-gray-400 text-sm">Loading managers...</div>
-                            ) : managers.length === 0 ? (
-                                <div className="p-6 text-center text-gray-400 text-sm">No managers yet.</div>
-                            ) : (
-                                <table className="min-w-full">
-                                    <thead>
-                                        <tr className="bg-gray-800/60 border-b border-gray-700">
-                                            <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Name</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Email</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Role</th>
-                                            <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-gray-400">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-800">
-                                        {managers.map((m) => {
-                                            const isSelf = m.id === currentUserId;
-                                            const busy = managerActionId === m.id;
-                                            return (
-                                                <tr key={m.id} className="hover:bg-gray-800/30 transition-colors">
-                                                    <td className="px-4 py-3 text-sm text-white font-semibold">{m.firstName} {m.lastName}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-300">{m.email}</td>
-                                                    <td className="px-4 py-3 text-sm">
-                                                        {m.isOwner ? (
-                                                            <span
-                                                                className="inline-block px-2 py-1 rounded text-xs font-bold uppercase tracking-wider"
-                                                                style={{ backgroundColor: `${primaryColor}33`, color: primaryColor }}
-                                                            >
-                                                                Owner
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-gray-400 text-xs">Manager</span>
-                                                        )}
-                                                        {m.mustChangePassword && (
-                                                            <span className="ml-2 text-xs text-yellow-400" title="Hasn't logged in yet — must change password on first login">⏳</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleResendAccess(m)}
-                                                                disabled={busy}
-                                                                className="px-3 py-1 rounded-lg bg-gray-700 text-gray-200 text-xs font-bold uppercase tracking-wider hover:bg-gray-600 disabled:opacity-50"
-                                                            >
-                                                                Resend
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleDeleteManager(m)}
-                                                                disabled={busy || m.isOwner || isSelf}
-                                                                title={m.isOwner ? 'Cannot remove the team owner' : isSelf ? 'You cannot remove yourself' : 'Remove manager'}
-                                                                className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider hover:bg-red-500/30 disabled:opacity-30 disabled:cursor-not-allowed"
-                                                            >
-                                                                Remove
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-
-                        <div className="mt-8 pt-8 border-t border-gray-800">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">Add a new manager</h3>
-                            <p className="text-gray-400 mb-4 text-sm">
-                                They will receive an email with auto-generated credentials and must change their password on first login.
-                            </p>
-
-                            {addManagerMessage && (
-                                <div
-                                    className={`rounded-xl border p-4 mb-6 ${addManagerMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
-                                >
-                                    {addManagerMessage.text}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleAddManager} className="space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                            First Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newManagerFirstName}
-                                            onChange={(e) => setNewManagerFirstName(e.target.value)}
-                                            required
-                                            className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
-                                            placeholder="John"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                            Last Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newManagerLastName}
-                                            onChange={(e) => setNewManagerLastName(e.target.value)}
-                                            required
-                                            className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
-                                            placeholder="Doe"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={newManagerEmail}
-                                        onChange={(e) => setNewManagerEmail(e.target.value)}
-                                        required
-                                        className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
-                                        placeholder="manager@example.com"
-                                    />
-                                </div>
-                                <div className="pt-2">
-                                    <button
-                                        type="submit"
-                                        disabled={addingManager}
-                                        className="rounded-lg px-8 py-3 font-bold text-white uppercase tracking-wider transition-all hover:opacity-90 shadow-lg disabled:opacity-50 flex items-center gap-2"
-                                        style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}4D` }}
-                                    >
-                                        {addingManager && (
-                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                                        )}
-                                        {addingManager ? 'Adding...' : 'Add Manager'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* Drivers list — any manager can add/remove driver accounts */}
+                {/* Team Access — managers (owner-managed) and drivers in one card */}
                 <div className="mt-8 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-xl p-6 sm:p-8">
                     <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-wider flex items-center gap-2">
-                        <span>🏎️</span> Drivers
+                        <span>👥</span> Team Access
                     </h2>
                     <p className="text-gray-400 mb-6 text-sm">
-                        Drivers can log in to the dashboard and view or edit only their own setups. They cannot see other drivers, download PDFs, or delete anything, and they receive no setup emails. Removing a driver revokes their login; their setups stay visible to managers.
+                        Managers can log in and view every setup on this team's dashboard{canManageTeam ? '' : ' (only the team owner can manage them)'}. Drivers can view or edit only their own setups — no other drivers, no PDFs, no deleting, and no setup emails. Removing someone revokes their login; their setups stay visible to managers.
                     </p>
 
-                    {driverListMessage && (
+                    {memberListMessage && (
                         <div
-                            className={`rounded-xl border p-4 mb-6 ${driverListMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
+                            className={`rounded-xl border p-4 mb-6 ${memberListMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
                         >
-                            {driverListMessage.text}
+                            {memberListMessage.text}
                         </div>
                     )}
 
                     <div className="bg-gray-800/40 border border-gray-700 rounded-xl overflow-hidden">
-                        {driversLoading ? (
-                            <div className="p-6 text-center text-gray-400 text-sm">Loading drivers...</div>
-                        ) : drivers.length === 0 ? (
-                            <div className="p-6 text-center text-gray-400 text-sm">No drivers yet.</div>
+                        {membersLoading ? (
+                            <div className="p-6 text-center text-gray-400 text-sm">Loading team members...</div>
+                        ) : members.length === 0 ? (
+                            <div className="p-6 text-center text-gray-400 text-sm">{canManageTeam ? 'No team members yet.' : 'No drivers yet.'}</div>
                         ) : (
                             <table className="min-w-full">
                                 <thead>
                                     <tr className="bg-gray-800/60 border-b border-gray-700">
                                         <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Name</th>
                                         <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Email</th>
-                                        <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>
+                                        <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Role</th>
                                         <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-gray-400">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-800">
-                                    {drivers.map((d) => {
-                                        const busy = driverActionId === d.id;
+                                    {members.map((m) => {
+                                        const isSelf = m.id === currentUserId;
+                                        const busy = memberActionId === m.id;
+                                        const isOwnerRow = m.kind === 'manager' && m.isOwner;
                                         return (
-                                            <tr key={d.id} className="hover:bg-gray-800/30 transition-colors">
-                                                <td className="px-4 py-3 text-sm text-white font-semibold">{d.firstName} {d.lastName}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-300">{d.email}</td>
+                                            <tr key={`${m.kind}-${m.id}`} className="hover:bg-gray-800/30 transition-colors">
+                                                <td className="px-4 py-3 text-sm text-white font-semibold">{m.firstName} {m.lastName}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-300">{m.email}</td>
                                                 <td className="px-4 py-3 text-sm">
-                                                    <span className="text-gray-400 text-xs">Driver</span>
-                                                    {d.mustChangePassword && (
+                                                    {isOwnerRow ? (
+                                                        <span
+                                                            className="inline-block px-2 py-1 rounded text-xs font-bold uppercase tracking-wider"
+                                                            style={{ backgroundColor: `${primaryColor}33`, color: primaryColor }}
+                                                        >
+                                                            Owner
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-400 text-xs">{m.kind === 'manager' ? 'Manager' : 'Driver'}</span>
+                                                    )}
+                                                    {m.mustChangePassword && (
                                                         <span className="ml-2 text-xs text-yellow-400" title="Hasn't logged in yet — must change password on first login">⏳</span>
                                                     )}
                                                 </td>
@@ -974,7 +800,7 @@ export default function ManagerSettings() {
                                                     <div className="flex justify-end gap-2">
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleResendDriverAccess(d)}
+                                                            onClick={() => (m.kind === 'manager' ? handleResendAccess(m) : handleResendDriverAccess(m))}
                                                             disabled={busy}
                                                             className="px-3 py-1 rounded-lg bg-gray-700 text-gray-200 text-xs font-bold uppercase tracking-wider hover:bg-gray-600 disabled:opacity-50"
                                                         >
@@ -982,9 +808,9 @@ export default function ManagerSettings() {
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleDeleteDriver(d)}
-                                                            disabled={busy}
-                                                            title="Remove driver access"
+                                                            onClick={() => (m.kind === 'manager' ? handleDeleteManager(m) : handleDeleteDriver(m))}
+                                                            disabled={busy || isOwnerRow || (m.kind === 'manager' && isSelf)}
+                                                            title={isOwnerRow ? 'Cannot remove the team owner' : m.kind === 'manager' && isSelf ? 'You cannot remove yourself' : m.kind === 'manager' ? 'Remove manager' : 'Remove driver access'}
                                                             className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider hover:bg-red-500/30 disabled:opacity-30 disabled:cursor-not-allowed"
                                                         >
                                                             Remove
@@ -1000,20 +826,35 @@ export default function ManagerSettings() {
                     </div>
 
                     <div className="mt-8 pt-8 border-t border-gray-800">
-                        <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">Add a new driver</h3>
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-3">{canManageTeam ? 'Add a manager or driver' : 'Add a new driver'}</h3>
                         <p className="text-gray-400 mb-4 text-sm">
-                            They will receive an email with auto-generated credentials and must change their password on first login. Use the same email the driver uses on the setup form so their existing setups appear in their dashboard.
+                            They will receive an email with auto-generated credentials and must change their password on first login.{newMemberRole === 'driver' ? ' Use the same email the driver uses on the setup form so their existing setups appear in their dashboard.' : ''}
                         </p>
 
-                        {addDriverMessage && (
+                        {addMemberMessage && (
                             <div
-                                className={`rounded-xl border p-4 mb-6 ${addDriverMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
+                                className={`rounded-xl border p-4 mb-6 ${addMemberMessage.type === 'success' ? 'text-green-400 bg-green-500/10 border-green-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}
                             >
-                                {addDriverMessage.text}
+                                {addMemberMessage.text}
                             </div>
                         )}
 
-                        <form onSubmit={handleAddDriver} className="space-y-4">
+                        <form onSubmit={handleAddMember} className="space-y-4">
+                            {canManageTeam && (
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                        Role
+                                    </label>
+                                    <select
+                                        value={newMemberRole}
+                                        onChange={(e) => setNewMemberRole(e.target.value as 'manager' | 'driver')}
+                                        className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 hover:border-gray-600 cursor-pointer"
+                                    >
+                                        <option value="driver">Driver — sees and edits only their own setups</option>
+                                        <option value="manager">Manager — full access to the team dashboard</option>
+                                    </select>
+                                </div>
+                            )}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -1021,8 +862,8 @@ export default function ManagerSettings() {
                                     </label>
                                     <input
                                         type="text"
-                                        value={newDriverFirstName}
-                                        onChange={(e) => setNewDriverFirstName(e.target.value)}
+                                        value={newMemberFirstName}
+                                        onChange={(e) => setNewMemberFirstName(e.target.value)}
                                         required
                                         className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
                                         placeholder="John"
@@ -1034,8 +875,8 @@ export default function ManagerSettings() {
                                     </label>
                                     <input
                                         type="text"
-                                        value={newDriverLastName}
-                                        onChange={(e) => setNewDriverLastName(e.target.value)}
+                                        value={newMemberLastName}
+                                        onChange={(e) => setNewMemberLastName(e.target.value)}
                                         required
                                         className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
                                         placeholder="Doe"
@@ -1048,29 +889,30 @@ export default function ManagerSettings() {
                                 </label>
                                 <input
                                     type="email"
-                                    value={newDriverEmail}
-                                    onChange={(e) => setNewDriverEmail(e.target.value)}
+                                    value={newMemberEmail}
+                                    onChange={(e) => setNewMemberEmail(e.target.value)}
                                     required
                                     className="block w-full rounded-lg border-2 border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-500 transition-all focus:outline-none focus:ring-2 hover:border-gray-600"
-                                    placeholder="driver@example.com"
+                                    placeholder={newMemberRole === 'manager' ? 'manager@example.com' : 'driver@example.com'}
                                 />
                             </div>
                             <div className="pt-2">
                                 <button
                                     type="submit"
-                                    disabled={addingDriver}
+                                    disabled={addingMember}
                                     className="rounded-lg px-8 py-3 font-bold text-white uppercase tracking-wider transition-all hover:opacity-90 shadow-lg disabled:opacity-50 flex items-center gap-2"
                                     style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}4D` }}
                                 >
-                                    {addingDriver && (
+                                    {addingMember && (
                                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                                     )}
-                                    {addingDriver ? 'Adding...' : 'Add Driver'}
+                                    {addingMember ? 'Adding...' : newMemberRole === 'manager' ? 'Add Manager' : 'Add Driver'}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+
             </div>
         </div>
     );
